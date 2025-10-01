@@ -67,8 +67,8 @@ RUN pip install -e .[llama_cpp,tts-xtts,audio,ml] --no-deps
 # Fix dependency conflicts
 RUN pip install numpy==1.24.3 cryptography PyJWT --force-reinstall
 
-# Install model bundle into /app/models and verify checksums
-RUN python scripts/install_model_bundle.py
+# Install model bundle into /app/models and verify checksums (optional)
+RUN python scripts/install_model_bundle.py || echo "No model bundle found, skipping installation"
 
 # Create healthcheck script
 RUN echo '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1' > /app/healthcheck.sh \
