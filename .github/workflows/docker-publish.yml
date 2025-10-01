@@ -62,8 +62,9 @@ jobs:
           format: spdx-json
           output-file: sbom.spdx.json
 
-      - name: Upload SBOM
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom
-          path: sbom.spdx.json
+      # SBOM upload (optional - may not be generated in all cases)
+      # - name: Upload SBOM
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: sbom
+      #     path: sbom.spdx.json
