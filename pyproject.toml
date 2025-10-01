@@ -31,7 +31,7 @@ sentencepiece = "^0.1.99"
 
 # Audio processing
 librosa = "^0.10.0"
-soundfile = "^0.12.1"
+soundfile = "^0.13.1"
 torchaudio = "2.3.1"  # Fixed version to match torch
 # scipy = "^1.10.0"  # Installed via Makefile due to complex conflicts
 llvmlite = "^0.42.0"  # Required for numba/librosa
