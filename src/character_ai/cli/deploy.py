@@ -343,45 +343,6 @@ def restore(backup_dir: str) -> None:
 
 
 @deploy_commands.command()
-@click.option(
-    "--environment",
-    type=click.Choice(["development", "production", "demo"]),
-    default="production",
-    help="Deployment environment",
-)
-@click.option("--api-key", help="API key for submission")
-@click.option(
-    "--dry-run", is_flag=True, help="Perform dry run without actual submission"
-)
-def submit(environment: str, api_key: Optional[str], dry_run: bool) -> None:
-    """Submit platform to Hasbro API challenge."""
-    try:
-        if dry_run:
-            click.echo("Dry run mode - no actual submission will be made")
-
-        click.echo(f"Preparing submission for {environment} environment...")
-
-        # This would integrate with the existing hasbro_api_challenge.py script
-        # For now, just show the path to the script
-        script_path = Path("scripts/hasbro_api_challenge.py")
-
-        if script_path.exists():
-            click.echo(f"Use the submission script: {script_path}")
-            click.echo("Run: python scripts/hasbro_api_challenge.py")
-        else:
-            click.echo(
-                "Submission script not found. Please ensure scripts/hasbro_api_challenge.py exists."
-            )
-
-        click.echo("\nSubmission preparation not yet integrated into CLI")
-        click.echo("Use the dedicated submission script for now")
-
-    except Exception as e:
-        click.echo(f"Error preparing submission: {e}", err=True)
-        raise click.Abort()
-
-
-@deploy_commands.command()
 def status() -> None:
     """Show deployment status."""
     try:
@@ -429,65 +390,26 @@ def status() -> None:
 
 
 @deploy_commands.command()
-@click.argument("character")
-@click.argument("franchise")
-@click.option("--environment", default="production", help="Deployment environment")
-@click.option("--scale", default="1", help="Number of replicas to deploy")
-@click.option("--bundle-path", help="Path to character bundle (optional)")
-def deploy_character(character: str, franchise: str, environment: str, scale: str, bundle_path: Optional[str]) -> None:
-    """Deploy specific character to production."""
+@click.option(
+    "--environment",
+    type=click.Choice(["development", "production", "demo"]),
+    default="production",
+    help="Deployment environment",
+)
+@click.option("--force", is_flag=True, help="Force update without confirmation")
+def update(environment: str, force: bool) -> None:
+    """Update deployment."""
     try:
-        click.echo(f"🚀 Deploying character '{character}' from franchise '{franchise}'")
-        click.echo(f"Environment: {environment}")
-        click.echo(f"Scale: {scale} replicas")
+        click.echo(f"Updating deployment for {environment} environment...")
 
-        if bundle_path:
-            click.echo(f"Bundle: {bundle_path}")
+        if not force and not click.confirm("Are you sure you want to update the deployment?"):
+            click.echo("Update cancelled.")
+            return
 
-        # Validate character exists
-        character_dir = Path(f"configs/characters/{character}")
-        if not character_dir.exists():
-            click.echo(f"❌ Character '{character}' not found in configs/characters/", err=True)
-            raise click.Abort()
-
-        # Check if bundle exists
-        if bundle_path and not Path(bundle_path).exists():
-            click.echo(f"❌ Bundle not found: {bundle_path}", err=True)
-            raise click.Abort()
-
-        # Deploy character
-        click.echo("📦 Preparing character deployment...")
-
-        # Create deployment configuration
-        deployment_config = {
-            "character": character,
-            "franchise": franchise,
-            "environment": environment,
-            "scale": int(scale),
-            "deployment_time": "2025-01-01T00:00:00Z"
-        }
-
-        # Save deployment config
-        deploy_dir = Path.cwd() / "deployments"
-        if not deploy_dir.exists():
-            deploy_dir.mkdir(parents=True, exist_ok=True)
-
-        config_file = deploy_dir / f"{character}_{franchise}_{environment}.json"
-        with open(config_file, "w") as f:
-            json.dump(deployment_config, f, indent=2)
-
-        click.echo(f"✅ Character deployment configuration created: {config_file}")
-        click.echo(f"🎭 Character: {character}")
-        click.echo(f"🏢 Franchise: {franchise}")
-        click.echo(f"🌍 Environment: {environment}")
-        click.echo(f"📈 Scale: {scale} replicas")
-
-        if bundle_path:
-            click.echo(f"📦 Bundle: {bundle_path}")
-
-        click.echo("\n🚀 Character deployment ready!")
-        click.echo("💡 Use your container orchestration system (Docker, Kubernetes, etc.) to deploy the character")
+        # This would perform the actual update
+        click.echo("Update functionality not yet implemented")
+        click.echo("Use standard deployment procedures for now")
 
     except Exception as e:
-        click.echo(f"Error deploying character: {e}", err=True)
+        click.echo(f"Error updating deployment: {e}", err=True)
         raise click.Abort()
