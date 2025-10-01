@@ -1,0 +1,48 @@
+{
+  "properties": {
+    "subject": {
+      "title": "Subject",
+      "type": "string"
+    },
+    "method": {
+      "title": "Method",
+      "type": "string"
+    },
+    "timestamp": {
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "scope": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scope",
+      "type": "array"
+    },
+    "provenance": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provenance"
+    },
+    "retention_days": {
+      "default": 365,
+      "title": "Retention Days",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "subject",
+    "method",
+    "timestamp",
+    "scope"
+  ],
+  "title": "ConsentMetadata",
+  "type": "object"
+}

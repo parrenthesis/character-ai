@@ -1,0 +1,72 @@
+language_code: "fr"
+cultural_region: "eu"
+display_name: "French Language Pack"
+native_name: "Pack de Langue Française"
+
+safety_patterns:
+  violence:
+    patterns:
+      - "\\b(tuer|blesser|nuire|violence|se battre|attaquer|détruire)\\b"
+      - "\\b(arme|pistolet|couteau|bombe|exploser)\\b"
+      - "\\b(mourir|mort|mort|assassiner)\\b"
+    severity: "high"
+    weight: 3.0
+  
+  harassment:
+    patterns:
+      - "\\b(stupide|idiot|bête|haine|laid|gros)\\b"
+      - "\\b(tais-toi|tais toi|ferme)\\b"
+    severity: "medium"
+    weight: 2.0
+  
+  inappropriate:
+    patterns:
+      - "\\b(sexe|sexuel|nu|nue|parties privées)\\b"
+      - "\\b(drogues|alcool|fumer|ivre)\\b"
+    severity: "high"
+    weight: 3.0
+
+cultural_adaptations:
+  greeting_style: "formal"
+  conversation_style: "polite"
+  age_appropriate: true
+  cultural_taboos:
+    - "personal questions about income"
+    - "direct confrontation"
+  preferred_topics:
+    - "art"
+    - "literature"
+    - "food"
+    - "culture"
+  formality_level: "high"
+  emotional_expression: "moderate"
+
+voice_characteristics:
+  preferred_pitch: "medium"
+  speaking_rate: "moderate"
+  emotional_range: "sophisticated"
+  formality_level: "formal"
+  accent_preference: "parisian"
+  intonation_patterns:
+    - "elegant phrasing"
+    - "sophisticated expressions"
+
+text_direction: "ltr"
+character_encoding: "utf-8"
+date_format: "%d/%m/%Y"
+time_format: "%H:%M:%S"
+
+age_appropriate_content: true
+cultural_sensitivity:
+  avoid_topics:
+    - "personal finances"
+    - "age"
+    - "weight"
+  preferred_approaches:
+    - "elegant and refined"
+    - "culturally aware"
+    - "respectful"
+  cultural_norms:
+    - "respect for education"
+    - "cultural appreciation"
+    - "sophisticated conversation"

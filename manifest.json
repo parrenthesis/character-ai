@@ -1,0 +1,14 @@
+{
+  "files": [
+    {
+      "path": "models/llm/phi-3-mini.gguf",
+      "size": 2393231072,
+      "sha256": "8a83c7fb9049a9b2e92266fa7ad04933bb53aa1e85136b7b30f1b8000ff2edef"
+    },
+    {
+      "path": "models/llm/tinyllama-1.1b-q4_k_m.gguf",
+      "size": 668788096,
+      "sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0"
+    }
+  ]
+}

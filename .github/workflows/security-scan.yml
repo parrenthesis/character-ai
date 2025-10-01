@@ -1,0 +1,121 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.7.1'
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run Bandit security scan
+        run: |
+          poetry run bandit -r src/ \
+            -f json \
+            -o bandit-report.json \
+            --severity-level medium
+
+      - name: Run Safety dependency scan
+        run: |
+          poetry run safety check \
+            --json \
+            --output safety-report.json \
+            --short-report
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+            trivy-results.sarif
+
+      - name: Comment PR with security results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read security reports
+            let banditResults = {};
+            let safetyResults = {};
+            
+            try {
+              banditResults = JSON.parse(fs.readFileSync('bandit-report.json', 'utf8'));
+            } catch (e) {
+              console.log('No Bandit results found');
+            }
+            
+            try {
+              safetyResults = JSON.parse(fs.readFileSync('safety-report.json', 'utf8'));
+            } catch (e) {
+              console.log('No Safety results found');
+            }
+            
+            // Generate comment
+            let comment = '## 🔒 Security Scan Results\n\n';
+            
+            if (banditResults.results && banditResults.results.length > 0) {
+              comment += '### ⚠️ Bandit Security Issues\n';
+              banditResults.results.forEach(issue => {
+                comment += `- **${issue.severity.toUpperCase()}**: ${issue.issue_text} (${issue.filename}:${issue.line_number})\n`;
+              });
+            } else {
+              comment += '### ✅ No Bandit security issues found\n';
+            }
+            
+            if (safetyResults.vulnerabilities && safetyResults.vulnerabilities.length > 0) {
+              comment += '\n### ⚠️ Dependency Vulnerabilities\n';
+              safetyResults.vulnerabilities.forEach(vuln => {
+                comment += `- **${vuln.package_name}**: ${vuln.advisory}\n`;
+              });
+            } else {
+              comment += '\n### ✅ No dependency vulnerabilities found\n';
+            }
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

@@ -1,0 +1,102 @@
+######################################################################
+# Character AI - Runtime Configuration (YAML)
+#
+# How this is used:
+# - Loaded via Config.from_file() and applied by runtime components.
+# - Impacts: RealTimeInteractionEngine, WhisperProcessor, LLM processors
+#   (Transformers and llama.cpp), XTTSProcessor, VoiceManager, PowerManager,
+#   ToyHardwareManager, and web/toy_api endpoints.
+# - Environment overrides (recommended for CI/dev): map keys to env vars by
+#   uppercasing sections/keys and joining with double underscores, e.g.:
+#   CAI_RUNTIME__TARGET_LATENCY_S=0.4
+#
+# Files/behaviors affected:
+# - target_latency_s → engine latency threshold and performance warnings.
+# - idle_timeout_s → PowerManager sleep behavior.
+# - interaction.* → STT/LLM token budgets and generation behavior.
+# - tts.* → XTTS language and default voice style.
+# - safety.* → ChildSafetyFilter response sanitization limits.
+# - paths.* → model discovery; VoiceManager storage directory.
+######################################################################
+
+runtime:
+  target_latency_s: 0.5  # Engine latency target (seconds)
+  streaming_enabled: true
+  predictive_loading: true
+  idle_timeout_s: 300  # PowerManager sleep threshold (seconds)
+
+interaction:
+  stt_language: en      # Whisper transcription language
+  min_audio_s: 0.2      # Minimum accepted audio length (seconds)
+  max_audio_s: 30.0     # Maximum accepted audio length (seconds)
+  max_new_tokens: 64    # LLM max new tokens for responses
+  temperature: 0.6      # LLM sampling temperature
+  sample_rate: 16000    # Audio sample rate used across the system
+  channels: 1           # Audio channels (1 = mono)
+
+tts:
+  language: en                 # XTTS language for synthesis
+  default_voice_style: neutral # Fallback style if no injected voice
+
+safety:
+  banned_terms: [kill, hurt, die, blood]  # Redacted terms for child-safety
+  max_output_tokens: 64                    # Output token cap
+
+paths:
+  models_dir: models              # Root for offline models
+  voices_dir: configs/characters    # Storage for injected voices
+
+models:
+  llama_backend: llama_cpp         # Default backend (CPU-only friendly)
+  llama_gguf_path: models/llm/tinyllama-1.1b-q4_k_m.gguf  # GGUF path
+
+# Multi-language support configuration
+language_support:
+  default_language: en             # Default language for the platform
+  auto_detection_enabled: true     # Enable automatic language detection
+  supported_languages: [en, es, fr, de, zh, ja, ko, ar]  # Supported languages
+  fallback_language: en            # Fallback language if detection fails
+  cultural_adaptation: true        # Enable cultural adaptation
+  language_pack_dir: configs/language_packs  # Directory for language packs
+
+# Multi-language audio configuration
+multilingual_audio:
+  tts_languages: [en, es, fr, de, zh, ja, ko, ar]  # TTS supported languages
+  stt_languages: [en, es, fr, de, zh, ja, ko, ar]  # STT supported languages
+  voice_adaptation: true           # Enable voice adaptation per language
+  cultural_voice_characteristics: true  # Enable cultural voice characteristics
+  auto_language_detection: true    # Enable automatic language detection in audio
+  language_confidence_threshold: 0.7  # Minimum confidence for language detection
+
+# Personalization configuration
+personalization:
+  enabled: true                    # Enable personalization features
+  learning_rate: 0.1              # Learning rate for preference adaptation
+  max_preferences: 50             # Maximum number of stored preferences
+  privacy_mode: strict            # Privacy mode: strict, moderate, open
+  data_retention_days: 30         # Days to retain personalization data
+  adaptive_conversation: true      # Enable adaptive conversation styles
+  character_recommendations: true  # Enable character recommendations
+  preference_learning_enabled: true  # Enable preference learning
+  style_adaptation: true          # Enable style adaptation
+
+# Parental controls configuration
+parental_controls:
+  enabled: true                    # Enable parental controls
+  default_safety_level: moderate  # Default safety level: strict, moderate, lenient
+  alert_threshold: 0.7            # Threshold for safety alerts
+  time_limit_default: 60          # Default time limit in minutes
+  content_filtering: true         # Enable content filtering
+  usage_monitoring: true          # Enable usage monitoring
+  parental_dashboard: true        # Enable parental dashboard
+  safety_alerts_enabled: true     # Enable safety alerts
+  data_retention_days: 30         # Days to retain monitoring data
+
+# Streaming and performance configuration
+streaming:
+  token_generation_delay: 0.05     # Delay between token generation (seconds)
+  placeholder_delay: 0.1          # Delay for placeholder responses (seconds)
+  connection_timeout_ms: 30000    # Connection timeout (milliseconds)
+  max_response_time_ms: 30000     # Maximum response time (milliseconds)
+  simulation_delays: false        # Enable simulation delays in performance API
+

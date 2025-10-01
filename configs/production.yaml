@@ -1,0 +1,83 @@
+# Production configuration for Character AI (edge-first)
+
+## Production configuration (edge device defaults) - used for deployed toys
+runtime:
+  target_latency_s: 0.5        # Engine latency target (seconds)
+  streaming_enabled: true      # Streaming hints (future use)
+  predictive_loading: true     # Preload likely-needed models
+  idle_timeout_s: 300          # Inactivity before sleep (seconds)
+
+interaction:
+  stt_language: en             # Whisper language
+  min_audio_s: 0.2             # Min accepted audio length (s)
+  max_audio_s: 30.0            # Max accepted audio length (s)
+  max_new_tokens: 64           # LLM response cap
+  temperature: 0.6             # LLM sampling temp
+  sample_rate: 16000           # System sample rate
+  channels: 1                  # Channel count (1=mono)
+
+tts:
+  language: en                 # XTTS synthesis language
+  default_voice_style: neutral # Fallback voice style
+
+safety:
+  banned_terms: [kill, hurt, die, blood]  # Redacted terms for child-safety
+  max_output_tokens: 64                    # Output token cap
+
+paths:
+  models_dir: /app/models           # Root for offline models
+  voices_dir: /app/configs/characters # Storage for injected voices
+
+models:
+  llama_backend: llama_cpp          # Backend select
+  llama_gguf_path: /app/models/llm/tinyllama-1.1b-q4_k_m.gguf  # GGUF path
+
+# Multi-language support configuration
+language_support:
+  default_language: en             # Default language for the platform
+  auto_detection_enabled: true     # Enable automatic language detection
+  supported_languages: [en, es, fr, de, zh, ja, ko, ar]  # Supported languages
+  fallback_language: en            # Fallback language if detection fails
+  cultural_adaptation: true        # Enable cultural adaptation
+  language_pack_dir: /app/configs/language_packs  # Directory for language packs
+
+# Multi-language audio configuration
+multilingual_audio:
+  tts_languages: [en, es, fr, de, zh, ja, ko, ar]  # TTS supported languages
+  stt_languages: [en, es, fr, de, zh, ja, ko, ar]  # STT supported languages
+  voice_adaptation: true           # Enable voice adaptation per language
+  cultural_voice_characteristics: true  # Enable cultural voice characteristics
+  auto_language_detection: true    # Enable automatic language detection in audio
+  language_confidence_threshold: 0.7  # Minimum confidence for language detection
+
+# Personalization configuration
+personalization:
+  enabled: true                    # Enable personalization features
+  learning_rate: 0.1              # Learning rate for preference adaptation
+  max_preferences: 50             # Maximum number of stored preferences
+  privacy_mode: strict            # Privacy mode: strict, moderate, open
+  data_retention_days: 30         # Days to retain personalization data
+  adaptive_conversation: true      # Enable adaptive conversation styles
+  character_recommendations: true  # Enable character recommendations
+  preference_learning_enabled: true  # Enable preference learning
+  style_adaptation: true          # Enable style adaptation
+
+# Parental controls configuration
+parental_controls:
+  enabled: true                    # Enable parental controls
+  default_safety_level: moderate  # Default safety level: strict, moderate, lenient
+  alert_threshold: 0.7            # Threshold for safety alerts
+  time_limit_default: 60          # Default time limit in minutes
+  content_filtering: true         # Enable content filtering
+  usage_monitoring: true          # Enable usage monitoring
+  parental_dashboard: true        # Enable parental dashboard
+  safety_alerts_enabled: true     # Enable safety alerts
+  data_retention_days: 30         # Days to retain monitoring data
+
+# Streaming and performance configuration
+streaming:
+  token_generation_delay: 0.05     # Delay between token generation (seconds)
+  placeholder_delay: 0.1          # Delay for placeholder responses (seconds)
+  connection_timeout_ms: 30000    # Connection timeout (milliseconds)
+  max_response_time_ms: 30000     # Maximum response time (milliseconds)
+  simulation_delays: false        # Enable simulation delays in performance API

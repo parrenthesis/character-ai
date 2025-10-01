@@ -1,0 +1,72 @@
+language_code: "es"
+cultural_region: "la"
+display_name: "Spanish Language Pack"
+native_name: "Paquete de Idioma Español"
+
+safety_patterns:
+  violence:
+    patterns:
+      - "\\b(matar|herir|dañar|violencia|pelear|atacar|destruir)\\b"
+      - "\\b(arma|pistola|cuchillo|bomba|explotar)\\b"
+      - "\\b(morir|muerte|muerto|asesinar)\\b"
+    severity: "high"
+    weight: 3.0
+  
+  harassment:
+    patterns:
+      - "\\b(estúpido|idiota|tonto|odio|feo|gordo)\\b"
+      - "\\b(cállate|callate|callate)\\b"
+    severity: "medium"
+    weight: 2.0
+  
+  inappropriate:
+    patterns:
+      - "\\b(sexo|sexual|desnudo|desnuda|partes privadas)\\b"
+      - "\\b(drogas|alcohol|fumar|borracho)\\b"
+    severity: "high"
+    weight: 3.0
+
+cultural_adaptations:
+  greeting_style: "warm"
+  conversation_style: "friendly"
+  age_appropriate: true
+  cultural_taboos:
+    - "personal questions about family"
+    - "direct criticism"
+  preferred_topics:
+    - "family"
+    - "food"
+    - "music"
+    - "sports"
+  formality_level: "medium"
+  emotional_expression: "high"
+
+voice_characteristics:
+  preferred_pitch: "medium"
+  speaking_rate: "normal"
+  emotional_range: "expressive"
+  formality_level: "friendly"
+  accent_preference: "neutral"
+  intonation_patterns:
+    - "rising at questions"
+    - "expressive emotions"
+
+text_direction: "ltr"
+character_encoding: "utf-8"
+date_format: "%d/%m/%Y"
+time_format: "%H:%M:%S"
+
+age_appropriate_content: true
+cultural_sensitivity:
+  avoid_topics:
+    - "politics"
+    - "religion"
+    - "personal finances"
+  preferred_approaches:
+    - "warm and welcoming"
+    - "family-oriented"
+    - "respectful"
+  cultural_norms:
+    - "respect for elders"
+    - "family values"
+    - "community spirit"

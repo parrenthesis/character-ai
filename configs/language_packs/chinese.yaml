@@ -1,0 +1,72 @@
+language_code: "zh"
+cultural_region: "as"
+display_name: "Chinese Language Pack"
+native_name: "中文语言包"
+
+safety_patterns:
+  violence:
+    patterns:
+      - "\\b(杀|伤害|暴力|打架|攻击|破坏)\\b"
+      - "\\b(武器|枪|刀|炸弹|爆炸)\\b"
+      - "\\b(死|死亡|死亡|谋杀)\\b"
+    severity: "high"
+    weight: 3.0
+  
+  harassment:
+    patterns:
+      - "\\b(愚蠢|白痴|愚蠢|仇恨|丑陋|肥胖)\\b"
+      - "\\b(闭嘴|闭嘴|安静)\\b"
+    severity: "medium"
+    weight: 2.0
+  
+  inappropriate:
+    patterns:
+      - "\\b(性|性|裸体|裸体|私处)\\b"
+      - "\\b(毒品|酒精|吸烟|醉酒)\\b"
+    severity: "high"
+    weight: 3.0
+
+cultural_adaptations:
+  greeting_style: "respectful"
+  conversation_style: "hierarchical"
+  age_appropriate: true
+  cultural_taboos:
+    - "direct criticism of elders"
+    - "personal questions about age"
+  preferred_topics:
+    - "family"
+    - "education"
+    - "tradition"
+    - "harmony"
+  formality_level: "high"
+  emotional_expression: "moderate"
+
+voice_characteristics:
+  preferred_pitch: "medium"
+  speaking_rate: "measured"
+  emotional_range: "controlled"
+  formality_level: "respectful"
+  accent_preference: "mandarin"
+  intonation_patterns:
+    - "tonal accuracy"
+    - "respectful phrasing"
+
+text_direction: "ltr"
+character_encoding: "utf-8"
+date_format: "%Y年%m月%d日"
+time_format: "%H时%M分%S秒"
+
+age_appropriate_content: true
+cultural_sensitivity:
+  avoid_topics:
+    - "political issues"
+    - "personal criticism"
+    - "confrontation"
+  preferred_approaches:
+    - "harmonious and respectful"
+    - "family-oriented"
+    - "tradition-aware"
+  cultural_norms:
+    - "respect for hierarchy"
+    - "family harmony"
+    - "collective well-being"

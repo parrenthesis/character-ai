@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "CharacterIndexItem": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "path"
+      ],
+      "title": "CharacterIndexItem",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "characters": {
+      "items": {
+        "$ref": "#/$defs/CharacterIndexItem"
+      },
+      "title": "Characters",
+      "type": "array"
+    },
+    "defaults": {
+      "additionalProperties": true,
+      "title": "Defaults",
+      "type": "object"
+    }
+  },
+  "title": "CharactersIndex",
+  "type": "object"
+}

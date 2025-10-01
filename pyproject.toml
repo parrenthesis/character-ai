@@ -1,0 +1,219 @@
+[tool.poetry]
+name = "character-ai"
+version = "1.0.0"
+description = "Edge-first AI character platform for toys (offline, low-latency)"
+authors = ["parrenthesis"]
+readme = "README.md"
+license = "Apache-2.0"
+packages = [{include = "character_ai", from = "src"}]
+
+[tool.poetry.scripts]
+cai = "character_ai.cli.main:cli"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+# Core dependencies aligned with Coqui TTS constraints
+pydantic = "^2.0.0"
+pydantic-core = "^2.0.0"
+# numpy = "1.24.3"  # Installed via pip due to TTS conflicts
+# pandas = ">=1.4,<2.0"  # Replaced with version below
+psutil = "^5.9.0"
+structlog = "^23.0.0"
+tenacity = "^8.2.0"
+diskcache = "^5.6.0"
+
+# ML/AI frameworks (keep moderate versions for compatibility)
+torch = "2.3.1"  # Fixed version due to openai-whisper triton conflict
+transformers = "^4.52.0"  # Updated for security, should be compatible with TTS 0.21.0
+accelerate = "^0.20.0"
+datasets = "^2.15.0"
+sentencepiece = "^0.1.99"
+
+# Audio processing
+librosa = "^0.10.0"
+soundfile = "^0.12.1"
+torchaudio = "2.3.1"  # Fixed version to match torch
+# scipy = "^1.10.0"  # Installed via Makefile due to complex conflicts
+llvmlite = "^0.42.0"  # Required for numba/librosa
+numba = ">=0.59.0,<0.60.0"  # Compatible with numpy 1.24.3
+scipy = "^1.11.0"  # Moved from Makefile
+soxr = "^1.0.0"  # Moved from Makefile
+# pandas = "^1.4.0"  # Moved back to Makefile due to compiled extensions
+pandas = "^1.4.0"  # Moved from Makefile
+matplotlib = "^3.8.0"  # Moved from Makefile
+regex = "^2023.0.0"  # Moved from Makefile
+
+# Speech + TTS
+openai-whisper = "==20231117"
+TTS = "0.21.0"  # Stable version, works with numpy 1.24.3
+pyttsx3 = "^2.90"  # optional fallback
+# llama-cpp-python installed via pip in Makefile due to build requirements
+
+# Web framework and API
+fastapi = "^0.103.0"
+uvicorn = {extras = ["standard"], version = "^0.23.0"}
+websockets = "^11.0.0"
+httpx = "^0.24.0"
+aiofiles = "^23.0.0"
+python-multipart = "^0.0.18"
+
+# Security and authentication (installed via pip due to TTS conflicts)
+# PyJWT = "^2.8.0"
+# cryptography = "^41.0.0"
+
+
+# CLI and UI
+typer = "^0.9.0"
+rich = "^13.0.0"
+
+# Monitoring
+prometheus-client = "^0.17.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.11.0"
+pytest-benchmark = "^4.0.0"
+black = "^24.3.0"
+isort = "^5.12.0"
+mypy = "^1.5.0"
+ruff = "^0.0.284"
+bandit = "^1.7.5"
+detect-secrets = "^1.4.0"
+pre-commit = "^3.4.0"
+types-PyYAML = "^6.0.0"
+types-psutil = "^5.9.0"
+types-requests = "^2.31.0"
+toml = "^0.10.2"
+
+
+# Note: TTS requires numpy==1.22.0 but works fine with 1.24.3
+# Poetry can't resolve this conflict, so we use pip to override after poetry install
+safety = "2.3.4"
+types-aiofiles = "^24.1.0.20250822"
+
+[tool.poetry.extras]
+# TTS backends
+tts-light = ["pyttsx3"]
+tts-full = ["TTS", "pyttsx3"]
+tts-xtts = ["TTS"]
+# Audio processing
+audio = ["librosa", "soundfile", "torchaudio", "scipy"]
+# ML models
+ml = ["torch", "transformers", "accelerate", "datasets"]
+# Security and authentication
+security = ["PyJWT", "cryptography"]
+# All optional dependencies
+all = ["TTS", "pyttsx3", "librosa", "soundfile", "torchaudio", "scipy", "torch", "transformers", "accelerate", "datasets"]
+llama_cpp = ["llama-cpp-python"]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src/character.ai",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=95",
+]
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+    "algorithms: marks tests that require algorithm dependencies",
+    "production: marks tests that require production dependencies",
+    "audio: marks tests that require audio processing",
+    "conversational_ai: marks tests for conversational AI components",
+    "benchmark: marks tests as benchmarks",
+    "performance: marks tests as performance tests",
+    "ml: marks tests that require ML dependencies",
+    "speech: marks tests that require speech processing",
+    "tts: marks tests that require TTS",
+    "llm: marks tests that require language models",
+    "web: marks tests that require web framework",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src/character.ai"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__init__.py",
+    "*/conftest.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311']
+include = '\\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["character.ai"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*",
+    "transformers.*",
+    "librosa.*",
+    "soundfile.*",
+    "TTS.*",
+    "whisper.*",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+select = ["E", "F", "W"]  # Only basic errors, warnings, and pyflakes
+ignore = ["E501"]  # Line too long - handled by black

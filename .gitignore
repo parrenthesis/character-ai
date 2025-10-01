@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+logs/
+cache/
+models/
+data/
+test_output.json
+extracted/
+
+# Allow character Data directory
+!configs/characters/data/
+
+# Build artifacts
+htmlcov/
+coverage.xml
+
+# Development artifacts
+ci_performance_report.json
+env_validation_report.json
+production_validation_report.json
+coverage.json
+coverage.xml
+
+# Bundle files (large model files)
+bundles/
+*.tar.gz
+*.zip
+
+# development test suite
+tests_dev/
+
+# Device identity and cryptographic keys (auto-generated)
+configs/device_*.json
+configs/device_*.pem

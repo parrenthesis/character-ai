@@ -1,0 +1,32 @@
+# Build models bundle in a separate image layer
+FROM python:3.10-slim AS builder
+
+ENV PIP_NO_CACHE_DIR=1
+WORKDIR /app
+
+# System deps for model tooling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git-lfs curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install project with extras needed to process models
+COPY pyproject.toml poetry.lock ./
+RUN pip install --upgrade pip && pip install -e .[llama_cpp,tts-xtts,audio,ml]
+
+# Bring in scripts and any pre-downloaded models directory if present
+COPY scripts/ scripts/
+COPY configs/ configs/
+COPY models/ models/
+
+# Build artifact: models_bundle.tar.gz + manifest.json
+RUN python scripts/build_model_bundle.py
+
+FROM alpine:latest AS models
+COPY --from=builder /app/models_bundle.tar.gz /models_bundle.tar.gz
+COPY --from=builder /app/manifest.json /manifest.json
+
+# Verify model bundle integrity
+RUN apk add --no-cache tar gzip && \
+    tar -tzf /models_bundle.tar.gz > /dev/null && \
+    echo "Model bundle verified successfully"
+
