@@ -1,6 +1,6 @@
-# 🧠 Character AI
+# Character AI Platform
 
-[![Tests](https://img.shields.io/badge/tests-117%2F117%20passing-brightgreen)](https://github.com/your-org/character-ai)
+[![Tests](https://img.shields.io/badge/tests-117%20passing-green)](https://github.com/parrenthesis/character-ai/actions)
 [![Coverage](https://img.shields.io/badge/coverage-targeting%2095%25-blue)](https://github.com/your-org/character-ai)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
@@ -13,35 +13,16 @@ Character AI is a production-ready system for creating, managing, and deploying 
 
 ## ✨ Features
 
-### 🎭 **Character Management**
-- **Multi-dimensional characters** with species, archetypes, personality traits, abilities, and topics
-- **AI-powered character generation** using advanced LLMs
+### Core Platform
 - **Character templates** with 20+ pre-defined character types
-- **Character search and filtering** with advanced query capabilities
-- **Character relationships** and franchise management
-
-### 🎤 **Voice Processing**
-- **Real-time speech-to-text** with Whisper integration
-- **Text-to-speech synthesis** with XTTS voice cloning
 - **Multi-language support** (8 languages)
-- **Voice activity detection** and noise reduction
-- **Character voice injection** and customization
+- **Voice synthesis** with emotion and personality
+- **Conversational AI** with context awareness
+- **Real-time interaction** with low latency
+- **Child-safe content filtering** with parental controls
 
-### 🤖 **LLM Integration**
-- **Multiple LLM providers** (OpenAI, Anthropic, Local models)
-- **Open model management** with Ollama integration
-- **Model optimization** for edge deployment
-- **Cost monitoring** and usage tracking
-- **Fallback mechanisms** for reliability
-
-### 🔒 **Enterprise Security**
-- **JWT authentication** with device identity management
-- **Role-based access control** (RBAC)
-- **Rate limiting** and security middleware
-- **Cryptographic key management**
-- **Parental controls** with content filtering
-
-### 📊 **Production Ready**
+### Production Ready
+- **Enterprise security** with JWT authentication and RBAC
 - **Comprehensive monitoring** with Prometheus/Grafana
 - **Structured logging** with ELK stack integration
 - **Performance optimization** with latency budgets
@@ -53,125 +34,87 @@ Character AI is a production-ready system for creating, managing, and deploying 
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- Python 3.10+
+- Poetry (for dependency management)
+- Docker (for containerized deployment)
+
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/character.ai.git
-cd character.ai
+git clone https://github.com/parrenthesis/character-ai.git
+cd character-ai
 
-# Set up environment (handles Python, dependencies, conflicts)
-make setup
-
-# Set up development environment (includes dev dependencies)
+# Set up development environment
 make setup-dev
 
-# Set up environment variables (optional - only needed for custom configuration)
-cp .env.example .env
-# Edit .env with your configuration (uses CAI_* prefix)
-# Only CAI_JWT_SECRET is required; everything else has sensible defaults
+# Run tests to verify installation
+make test
+```
 
+### Development Workflow
+
+```bash
 # Run tests
 make test
 
-# Start the platform
-poetry run cai --help
+# Run linting and formatting
+make lint
+make format
+
+# Run security checks
+make security
+
+# Build and test Docker images locally
+make docker-build
+make docker-test
 ```
-
-### Basic Usage
-
-```bash
-# Create a character (interactive mode)
-cai character create --name "FriendlyBot" --interactive
-
-# Create from template
-cai character create --template "friendly_robot" --name "MyRobot"
-
-# Create with AI generation
-cai character create --ai-generate "A wise dragon who loves to help children learn"
-
-# List characters
-cai character list
-
-# List available LLM models
-cai llm list-models
-
-# Test character interaction
-cai character test FriendlyBot --interactive
-```
-
-### Character Directory Structure
-
-Characters are now stored in the new schema format:
-
-```
-configs/characters/
-├── friendly_bot/
-│   ├── profile.yaml      # Character profile and configuration
-│   ├── prompts.yaml      # System prompts and conversation templates
-│   └── voice_samples/    # Voice sample files for cloning
-└── wise_dragon/
-    ├── profile.yaml
-    ├── prompts.yaml
-    └── voice_samples/
-```
-
-## 📖 Documentation
-
-- **[Production Deployment Guide](docs/production_deployment.md)** - Complete deployment guide
-- **[API Documentation](docs/api/production_api.md)** - REST API reference
-- **[Toy Deployment Guide](docs/toy_deployment.md)** - Edge device deployment
-- **[Character Examples](docs/api/character_examples.md)** - Character creation examples
-- **[Security Guide](docs/current_security_vulnerabilities.md)** - Security best practices
 
 ## 🏗️ Architecture
 
-### Core Components
-
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web API       │    │   CLI Tools     │    │   Production    │
-│   (FastAPI)     │    │   (Click)       │    │   Engine        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-┌─────────────────────────────────────────────────────────────────┐
-│                    Core Platform                                │
-├─────────────────┬─────────────────┬─────────────────┬───────────┤
-│  Character      │  Voice          │  LLM            │  Security │
-│  Management     │  Processing     │  Integration    │  & Auth   │
+┌─────────────────┬─────────────────┬─────────────────┬───────────┐
+│   Web Layer    │   Core Layer   │  Hardware Layer │ Monitoring│
 ├─────────────────┼─────────────────┼─────────────────┼───────────┤
-│  • Enhanced     │  • Whisper      │  • OpenAI       │  • JWT    │
-│  • Templates    │  • XTTS         │  • Anthropic    │  • RBAC   │
-│  • AI Gen       │  • Multi-lang   │  • Local        │  • Rate   │
-│  • Search       │  • VAD          │  • Ollama       │  • Keys   │
-└─────────────────┴─────────────────┴─────────────────┴───────────┘
-                                 │
-┌─────────────────────────────────────────────────────────────────┐
-│                    Additional Modules                          │
-├─────────────────┬─────────────────┬─────────────────┬───────────┤
-│  Hardware       │  Monitoring     │  Algorithms    │  Safety   │
-│  Management     │  & Metrics      │  & AI          │  & Parental│
+│ • FastAPI      │ • Character     │ • Toy Hardware │ • Prometheus│
+│ • WebSocket    │   Management    │ • Sensors       │ • Grafana  │
+│ • REST API     │ • Voice Engine  │ • Power Mgmt   │ • ELK Stack│
+│ • Authentication│ • LLM Integration│ • Audio I/O    │ • Alerts   │
 ├─────────────────┼─────────────────┼─────────────────┼───────────┤
-│  • Power Mgmt   │  • Prometheus    │  • Conversational│  • Content│
-│  • Sensors      │  • Grafana      │  • Safety      │  • Filters │
-│  • Toy Hardware │  • ELK Stack    │  • Classifiers │  • Controls│
+│ • Click CLI    │ • Safety        │ • Monitoring   │ • Logging  │
+│ • Web UI       │ • Algorithms    │ • Performance  │ • Metrics  │
 └─────────────────┴─────────────────┴─────────────────┴───────────┘
 ```
 
 ### Deployment Options
 
-#### 🐳 **Docker Deployment**
+#### 🐳 **Docker Development**
+```bash
+# Build and run locally for development
+make docker-build
+make docker-run
+
+# Or use docker-compose for full stack
+make docker-compose-up
+
+# Run tests in Docker
+make docker-test
+
+# Clean up Docker resources
+make docker-clean
+```
+
+#### 🏭 **Production Deployment**
 ```bash
 # Build models bundle
 make bundle
 
-# Build Docker images
+# Build production Docker images
 make models-image
 make runtime-image
 
-# Run with Docker Compose (includes monitoring)
+# Deploy with Docker Compose (includes monitoring)
 docker-compose up -d
 
 # Check status
@@ -187,16 +130,20 @@ docker-compose logs -f character-ai
 
 #### ☸️ **Kubernetes Deployment**
 ```bash
-# Deploy to Kubernetes
+# Apply Kubernetes manifests
 kubectl apply -f k8s/
 
-# Check deployment
-kubectl get pods -n cai-production
+# Check deployment status
+kubectl get pods -l app=character-ai
+
+# Access services
+kubectl port-forward svc/character-ai 8000:8000
 ```
 
-#### 🖥️ **Traditional Server**
+#### 🖥️ **Bare Metal Deployment**
 ```bash
 # Install system dependencies
+sudo apt update
 sudo apt install python3.10 nginx redis-server
 
 # Deploy application
@@ -210,16 +157,19 @@ The platform includes comprehensive testing:
 
 ```bash
 # Run all tests
-poetry run pytest
+make test
 
 # Run with coverage
-poetry run pytest --cov=src/character_ai --cov-report=html
+make test-coverage
 
-# Run integration tests
-CAI_RUN_INTEGRATION=1 poetry run pytest -m integration
+# Run development tests
+make test-dev
 
-# Run performance tests
-poetry run pytest --benchmark-only
+# Run tests in Docker
+make docker-test
+
+# Run security checks
+make security
 ```
 
 **Test Coverage:**
@@ -249,145 +199,158 @@ export OPENAI_API_KEY="your-key-here"
 export ANTHROPIC_API_KEY="your-key-here"
 ```
 
-### Configuration Files
+### Character Configuration
+
+Characters are configured via YAML files in `configs/characters/`:
 
 ```yaml
-# config.yaml
-environment: production
-models:
-  whisper_model: "tiny"
-  llama_model: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-  xtts_model: "tts_models/multilingual/multi-dataset/xtts_v2"
-security:
-  require_https: true
-  rate_limit_requests_per_minute: 1000
+# configs/characters/data/profile.yaml
+name: "Data"
+personality: "Logical, curious, helpful"
+voice: "calm, measured"
+language: "en"
+safety_level: "child_safe"
 ```
 
-## 📊 Monitoring & CI/CD
+## 📊 Monitoring & Observability
 
-### Health Checks
+### Metrics (Prometheus)
+- Request latency and throughput
+- Character interaction metrics
+- System resource usage
+- Error rates and success rates
 
-```bash
-# Basic health check
-curl http://localhost:8000/health
+### Logging (ELK Stack)
+- Structured JSON logs
+- Request tracing
+- Error aggregation
+- Performance profiling
 
-# Detailed health check
-curl http://localhost:8000/health/detailed
+### Dashboards (Grafana)
+- Real-time system health
+- Character performance metrics
+- User interaction analytics
+- Infrastructure monitoring
 
-# Metrics endpoint
-curl http://localhost:8000/metrics
-```
+## 🔒 Security
 
-### CI/CD Pipeline
+### Authentication & Authorization
+- JWT-based authentication
+- Role-based access control (RBAC)
+- Device identity management
+- Secure key generation
 
-The platform includes a comprehensive CI/CD pipeline:
+### Content Safety
+- Child-safe content filtering
+- Parental control integration
+- Content moderation
+- Safety level enforcement
 
+### Security Scanning
+- Automated vulnerability scanning
+- Dependency security checks
+- Code security analysis
+- Container security scanning
+
+## 🚀 CI/CD Pipeline
+
+### Automated Testing
 - **Automated Testing**: 117 tests run on every commit
 - **Code Quality**: Linting, type checking, and formatting
 - **Security Scanning**: Bandit, Safety, and Trivy scans
-- **Docker Builds**: Multi-platform image building
+- **Docker Builds**: Production images built on releases only
 - **Dependency Updates**: Automated via Dependabot
 - **Release Management**: Automated versioning and changelog generation
 
 ### GitHub Actions Workflows
 
 - **`ci.yml`**: Main CI pipeline with testing and linting
-- **`docker-publish.yml`**: Multi-platform Docker image publishing
+- **`docker-publish.yml`**: Production Docker image publishing (releases only)
 - **`security-scan.yml`**: Weekly security vulnerability scans
 - **`dependabot.yml`**: Automated dependency updates
 
-### Monitoring Stack
+### Development Workflow
 
-- **Prometheus** for metrics collection (http://localhost:9090)
-- **Grafana** for visualization (http://localhost:3000)
-- **ELK Stack** for log aggregation
-- **AlertManager** for notifications
-- **Health checks** at `/health` and `/metrics` endpoints
-- **Real-time dashboards** for system performance
+```bash
+# Local development
+make setup-dev
+make test
+make lint
+make docker-build
 
-## 🔒 Security
+# CI/CD focuses on code quality
+# Docker builds only happen on releases
+```
 
-### Security Features
+## 📚 Documentation
 
-- **JWT Authentication** with device identity
-- **Role-based Access Control** (RBAC)
-- **Rate Limiting** and DDoS protection
-- **Input Validation** and sanitization
-- **Parental Controls** with content filtering
-- **Audit Logging** and monitoring
+Comprehensive documentation is available in the `docs/` directory:
 
-### Security Deployment Checklist
-
-- [ ] SSL/TLS certificates installed
-- [ ] HTTPS enforced  
-- [ ] Firewall rules configured
-- [ ] Environment variables secured
+- **API Documentation**: Complete API reference with examples
+- **Character Examples**: Sample character configurations
+- **Production Deployment**: Step-by-step deployment guides
+- **Toy Deployment**: Hardware-specific deployment instructions
+- **Security Guide**: Authentication and security best practices
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ### Development Setup
 
 ```bash
-# Set up development environment (handles all dependencies and conflicts)
+# Set up development environment
 make setup-dev
-
-# Install pre-commit hooks
-pre-commit install
 
 # Run tests
 make test
 
-# Run linting and auto-fix
+# Run linting
 make lint
 
-# Run security checks
-make security
-
-# Run all checks
-make check-all
+# Build Docker images locally
+make docker-build
 ```
+
+### Code Quality
+
+- **Linting**: Black, isort, ruff, mypy
+- **Testing**: pytest with coverage
+- **Security**: Bandit, Safety, detect-secrets
+- **Documentation**: Sphinx with autodoc
 
 ## 📄 License
 
-This project is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🎯 Roadmap
 
-- **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/your-org/character.ai/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/character.ai/discussions)
-
-## 🗺️ Roadmap
-
-### ✅ **Completed**
+### Completed ✅
 - Core platform with 117 tests passing
 - Multi-language support (8 languages)
-- Character management system
-- Voice processing pipeline
-- LLM integration and management
-- Security and authentication
-- Production deployment guides
-- **Docker optimization** with multi-stage builds
-- **Monitoring stack** with Prometheus/Grafana
-- **CI/CD pipeline** with GitHub Actions
-- **Security scanning** with automated tools
-- **Dependency management** with Dependabot
+- 20+ pre-defined character templates
+- Production-ready CI/CD pipeline
+- Docker optimization and local development workflow
+- Comprehensive security scanning
+- Monitoring and observability stack
 
-### 🚧 **In Progress**
-- Enhanced character testing and voice integration
-- Performance optimization and test coverage (targeting 95%+)
-- Documentation updates and API generation
+### In Progress 🚧
+- Performance optimization
+- Advanced character customization
+- Enhanced monitoring dashboards
 
-### 📋 **Planned**
-- Advanced character relationships
-- Multi-language support expansion
-- Mobile SDK development
+### Planned 📋
+- Mobile app integration
 - Advanced analytics
 - Multi-tenant support
-- Enterprise integrations
+- Cloud deployment automation
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/parrenthesis/character-ai/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/parrenthesis/character-ai/discussions)
+- **Security**: [GitHub Security Advisories](https://github.com/parrenthesis/character-ai/security/advisories)
 
 ---
 
-**Built with ❤️ for the future of interactive AI**
+**Character AI** - Bringing digital personalities to life through AI-powered interactive experiences.

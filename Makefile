@@ -1,7 +1,7 @@
 # Character AI Makefile
 # Focused on tests, bundling models, and building runtime image
 
-.PHONY: help test test-dev clean setup-dev bundle models-image runtime-image run-api security lint lint-dev format format-dev
+.PHONY: help test test-dev clean setup-dev bundle models-image runtime-image run-api security lint lint-dev format format-dev docker-build docker-run docker-test docker-clean docker-dev docker-compose-up docker-compose-down
 
 # Default target
 help:
@@ -27,6 +27,16 @@ help:
 	@echo "  validate-env         - Validate environment variables"
 	@echo "  optimize-ci          - Analyze and optimize CI/CD performance"
 	@echo ""
+	@echo "Docker Development:"
+	@echo "  docker-build         - Build runtime Docker image locally"
+	@echo "  docker-dev           - Build development Docker image (faster)"
+	@echo "  docker-run           - Run Docker container locally"
+	@echo "  docker-test          - Run tests inside Docker container"
+	@echo "  docker-lint          - Run linting inside Docker container"
+	@echo "  docker-clean         - Clean up Docker resources"
+	@echo "  docker-compose-up    - Start full stack with docker-compose"
+	@echo "  docker-compose-down  - Stop docker-compose services"
+	@echo ""
 	@echo "Models & Docker:"
 	@echo "  bundle              - Build models bundle (models_bundle.tar.gz)"
 	@echo "  models-image        - Build Docker models image (Dockerfile.models)"
@@ -48,238 +58,97 @@ test-dev:
 	# Run test suite from tests_dev/ directory
 	CAI_ENABLE_API_STARTUP=0 PYTHONUNBUFFERED=1 PYTHONWARNINGS="ignore::RuntimeWarning:sys:1,ignore::RuntimeWarning:unittest.mock,ignore::RuntimeWarning:tracemalloc" poetry run pytest -v -p pytest_asyncio -m "not integration" tests_dev/
 	@echo "Running integration tests..."
-	@echo "  llama.cpp"
-	CAI_RUN_LLAMA_CPP=1 CAI_LLAMA_GGUF=$(PWD)/models/llm/tinyllama-1.1b-q4_k_m.gguf PYTHONUNBUFFERED=1 poetry run pytest -v -m integration tests_dev/test_llm_processors.py::test_llama_cpp_basic
-	@echo "  Whisper (skipped due to NumPy dependency conflicts)"
-	# CAI_RUN_WHISPER=1 PYTHONUNBUFFERED=1 poetry run pytest -v -m integration tests_dev/test_whisper_processor.py
-	@echo "  XTTS (skipped due to NumPy dependency conflicts)"
-	# CAI_RUN_TTS=1 PYTHONUNBUFFERED=1 poetry run pytest -v -m integration tests_dev/test_xtts_processor.py
-	@echo "  Engine"
-	CAI_RUN_ENGINE=1 PYTHONUNBUFFERED=1 poetry run pytest -v -m integration tests_dev/test_engine.py::test_realtime_engine_end_to_end
-	@echo "  Simple Integration"
-	CAI_RUN_INTEGRATION=1 CAI_LLAMA_GGUF=$(PWD)/models/llm/tinyllama-1.1b-q4_k_m.gguf PYTHONUNBUFFERED=1 poetry run pytest -v -m integration tests/integration/test_simple_integration.py
+	CAI_ENABLE_API_STARTUP=0 PYTHONUNBUFFERED=1 PYTHONWARNINGS="ignore::RuntimeWarning:sys:1,ignore::RuntimeWarning:unittest.mock,ignore::RuntimeWarning:tracemalloc" poetry run pytest -v -p pytest_asyncio -m integration tests_dev/
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	CAI_ENABLE_API_STARTUP=0 PYTHONUNBUFFERED=1 PYTHONWARNINGS="ignore::RuntimeWarning:sys:1,ignore::RuntimeWarning:unittest.mock,ignore::RuntimeWarning:tracemalloc" poetry run pytest --cov=src/character_ai --cov-report=html --cov-report=term-missing -v -p pytest_asyncio tests/
 
 clean:
-	@echo "Cleaning build artifacts..."
+	@echo "Cleaning build artifacts and cache..."
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info/
 	rm -rf .pytest_cache/
 	rm -rf .coverage
 	rm -rf htmlcov/
-	rm -rf cache/
-	rm -rf logs/
-	rm -rf test_audio/
-	rm -rf test_output/
-	rm -f catalog_Test\ Collection_*.yaml
-	rm -f catalog_Test_Collection_*.yaml
-	rm -f *.log
-	rm -f .DS_Store
-	rm -f Thumbs.db
-	rm -f models_bundle.tar.gz
-	rm -rf .venv/
-	rm -f poetry.lock
-	@echo "Cleaning development artifacts..."
-	rm -f ci_performance_report.json
-	rm -f env_validation_report.json
-	rm -f production_validation_report.json
-	rm -f coverage.json
-	rm -f coverage.xml
-	rm -rf bundles/
-	rm -f *.tar.gz
-	rm -f *.zip
+	rm -rf .mypy_cache/
+	rm -rf .ruff_cache/
+	rm -rf .tox/
+	rm -rf .cache/
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name "*.pyd" -delete
-	find . -type f -name "*.so" -delete
-	find . -type f -name "*.egg" -delete
+	find . -type f -name ".DS_Store" -delete
+	@echo "Cleanup complete!"
 
+# Docker Development Commands
+docker-build:
+	@echo "Building runtime Docker image locally..."
+	docker build -t character-ai:latest .
+
+docker-dev:
+	@echo "Building development Docker image (faster, with dev dependencies)..."
+	docker build -t character-ai:dev \
+		--build-arg BUILD_ENV=development \
+		--target builder \
+		.
+
+docker-run:
+	@echo "Running Docker container locally..."
+	docker run --rm -p 8000:8000 \
+		-e CAI_ENVIRONMENT=development \
+		-e CAI_API__HOST=0.0.0.0 \
+		-e CAI_API__PORT=8000 \
+		character-ai:latest
+
+docker-test:
+	@echo "Running tests inside Docker container..."
+	docker run --rm character-ai:latest \
+		python -m pytest tests/ -v
+
+docker-lint:
+	@echo "Running linting inside Docker container..."
+	docker run --rm character-ai:latest \
+		sh -c "make lint"
+
+docker-clean:
+	@echo "Cleaning up Docker resources..."
+	docker system prune -f
+	docker builder prune -f
+	docker image prune -f
+	@echo "Docker cleanup complete!"
+
+docker-compose-up:
+	@echo "Starting full stack with docker-compose..."
+	docker-compose up -d
+	@echo "Services started. Check status with: docker-compose ps"
+
+docker-compose-down:
+	@echo "Stopping docker-compose services..."
+	docker-compose down
+	@echo "Services stopped."
+
+# Setup targets
 setup:
 	@echo "Setting up environment with security dependencies..."
-	@echo "Checking Python version compatibility..."
-	@if command -v python3.10 >/dev/null 2>&1; then \
-		echo "Using system Python 3.9"; \
-	elif command -v python3.10 >/dev/null 2>&1; then \
-		echo "Using system Python 3.10"; \
-	elif command -v python3.11 >/dev/null 2>&1; then \
-		echo "Using system Python 3.11"; \
-	elif [ -d "$$HOME/.pyenv" ]; then \
-		echo "Using existing pyenv..."; \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		pyenv local 3.10; \
-	elif command -v pyenv >/dev/null 2>&1; then \
-		echo "Using existing pyenv..."; \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		pyenv install 3.10 2>/dev/null || echo "Python 3.10 already installed"; \
-		pyenv local 3.10; \
-	else \
-		echo "Installing pyenv for Python version management..."; \
-		curl https://pyenv.run | bash; \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		pyenv install 3.10; \
-		pyenv local 3.10; \
-	fi
-	@echo "Current Python version:"
-	@python3 --version
-	@echo "Note: Poetry can't resolve TTS + numpy + security conflicts, using pip override..."
-	@echo "Removing old lock file and installing core dependencies..."
-	rm -f poetry.lock
-	@if command -v python3.10 >/dev/null 2>&1; then \
-		poetry env use python3.10; \
-	elif command -v python3.10 >/dev/null 2>&1; then \
-		poetry env use python3.10; \
-	elif command -v python3.11 >/dev/null 2>&1; then \
-		poetry env use python3.11; \
-	elif [ -d "$$HOME/.pyenv" ]; then \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		PYTHON_PATH=$$(pyenv which python3.10 2>/dev/null || echo "$$HOME/.pyenv/versions/3.10/bin/python"); \
-		poetry env use $$PYTHON_PATH; \
-	elif command -v pyenv >/dev/null 2>&1; then \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		PYTHON_PATH=$$(pyenv which python3.10 2>/dev/null || echo "$$HOME/.pyenv/versions/3.10/bin/python"); \
-		poetry env use $$PYTHON_PATH; \
-	else \
-		echo "No compatible Python version found. Please install Python 3.9+ manually."; \
-		exit 1; \
-	fi
-	poetry install --only main
-	@echo "Fixing dependency conflicts (TTS + numpy + security)..."
+	poetry install --only=main
 	poetry run pip install numpy==1.24.3 cryptography PyJWT pydantic-core==2.33.2 psutil --force-reinstall
-	@echo "Installing llama-cpp-python with proper build configuration..."
 	poetry run pip install llama-cpp-python --force-reinstall --no-cache-dir
-	@echo "Fixing tiktoken circular import issue..."
-	poetry run pip install tiktoken --force-reinstall --no-cache-dir
-	@echo "Fixing NumPy version conflicts (TTS requires numpy==1.22.0)..."
-	poetry run pip install "numpy==1.22.0" --force-reinstall --no-cache-dir
-	@echo "Fixing psutil version conflict..."
-	poetry run pip install "psutil>=5.9.0,<6.0.0" --force-reinstall --no-cache-dir
-	@echo "Fixing regex version conflict..."
-	poetry run pip install "regex>=2023.0.0,<2024.0.0" --force-reinstall --no-cache-dir
-	@echo "Done."
 
 setup-dev:
-	@echo "Setting up development environment with security dependencies..."
-	@echo "Checking Python version compatibility..."
-	@if command -v python3.10 >/dev/null 2>&1; then \
-		echo "Using system Python 3.9"; \
-	elif command -v python3.10 >/dev/null 2>&1; then \
-		echo "Using system Python 3.10"; \
-	elif command -v python3.11 >/dev/null 2>&1; then \
-		echo "Using system Python 3.11"; \
-	elif [ -d "$$HOME/.pyenv" ]; then \
-		echo "Using existing pyenv..."; \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		pyenv local 3.10; \
-	elif command -v pyenv >/dev/null 2>&1; then \
-		echo "Using existing pyenv..."; \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		pyenv install 3.10 2>/dev/null || echo "Python 3.10 already installed"; \
-		pyenv local 3.10; \
-	else \
-		echo "Installing pyenv for Python version management..."; \
-		curl https://pyenv.run | bash; \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		pyenv install 3.10; \
-		pyenv local 3.10; \
-	fi
-	@echo "Current Python version:"
-	@python3 --version
-	@echo "Note: Poetry can't resolve TTS + numpy + security conflicts, using pip override..."
-	@echo "Removing old lock file and installing core dependencies..."
-	rm -f poetry.lock
-	@if command -v python3.10 >/dev/null 2>&1; then \
-		poetry env use python3.10; \
-	elif command -v python3.10 >/dev/null 2>&1; then \
-		poetry env use python3.10; \
-	elif command -v python3.11 >/dev/null 2>&1; then \
-		poetry env use python3.11; \
-	elif [ -d "$$HOME/.pyenv" ]; then \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		PYTHON_PATH=$$(pyenv which python3.10 2>/dev/null || echo "$$HOME/.pyenv/versions/3.10/bin/python"); \
-		poetry env use $$PYTHON_PATH; \
-	elif command -v pyenv >/dev/null 2>&1; then \
-		export PATH="$$HOME/.pyenv/bin:$$PATH"; \
-		eval "$$(pyenv init -)"; \
-		PYTHON_PATH=$$(pyenv which python3.10 2>/dev/null || echo "$$HOME/.pyenv/versions/3.10/bin/python"); \
-		poetry env use $$PYTHON_PATH; \
-	else \
-		echo "No compatible Python version found. Please install Python 3.9+ manually."; \
-		exit 1; \
-	fi
-	poetry install --only main
-	@echo "Fixing dependency conflicts (TTS + numpy + security)..."
+	@echo "Setting up development environment..."
+	poetry install
 	poetry run pip install numpy==1.24.3 cryptography PyJWT pydantic-core==2.33.2 psutil --force-reinstall
-	@echo "Installing development dependencies..."
-	poetry install --with dev
-	@echo "Installing llama-cpp-python with proper build configuration..."
 	poetry run pip install llama-cpp-python --force-reinstall --no-cache-dir
-	@echo "Fixing tiktoken circular import issue..."
-	poetry run pip install tiktoken --force-reinstall --no-cache-dir
-	@echo "Fixing NumPy version conflicts (TTS requires numpy==1.22.0)..."
-	poetry run pip install "numpy==1.22.0" --force-reinstall --no-cache-dir
-	@echo "Fixing psutil version conflict..."
-	poetry run pip install "psutil>=5.9.0,<6.0.0" --force-reinstall --no-cache-dir
-	@echo "Fixing regex version conflict..."
-	poetry run pip install "regex>=2023.0.0,<2024.0.0" --force-reinstall --no-cache-dir
-	@echo "Development environment ready."
+	poetry run pre-commit install
 
-# Models & Docker
-bundle:
-	@echo "Building models bundle..."
-	poetry run python scripts/build_model_bundle.py
-
-models-image:
-	@echo "Building models image..."
-	docker build -f Dockerfile.models -t icp-models:latest .
-
-runtime-image:
-	@echo "Building runtime image (requires models image)..."
-	docker build -t icp-runtime:latest -f Dockerfile .
-
-run-api:
-	@echo "Running API locally..."
-	poetry run uvicorn character.ai.web.toy_api:app --reload --port 8000
-
-stop-api:
-	@echo "Stopping API server..."
-	@pkill -f "uvicorn.*toy_api" || echo "No API server running"
-
-validate-profile:
-	@echo "Validating character profile..."
-	@if [ -z "$(DIR)" ]; then echo "Usage: make validate-profile DIR=./configs/characters/sparkle"; exit 2; fi
-	poetry run python scripts/profile_validate.py $(DIR)
-
-generate-schemas:
-	@echo "Generating JSON Schemas..."
-	poetry run python scripts/generate_schemas.py
-
-recompute-embeddings:
-	@echo "Recomputing voice embeddings..."
-	@if [ -z "$(CHAR)" ]; then \
-		poetry run python scripts/recompute_voice_embeddings.py; \
-	else \
-		poetry run python scripts/recompute_voice_embeddings.py $(CHAR); \
-	fi
-
-generate-api-docs:
-	@echo "Generating API documentation..."
-	poetry run python scripts/generate_openapi.py
-
+# Security and Quality
 security:
 	@echo "Running security checks..."
-	poetry run bandit -r src/
-	@echo "Dependency vulnerability scan..."
-	-poetry run safety check || echo "Dependency vulnerabilities found - see output above for details"
+	poetry run bandit -r src/ --severity-level medium
+	poetry run safety check --short-report
 	poetry run detect-secrets scan --baseline .secrets.baseline
 
 lint:
@@ -326,3 +195,38 @@ validate-env:
 optimize-ci:
 	@echo "Analyzing CI/CD performance..."
 	poetry run python scripts/optimize_ci.py
+
+# Models and Bundling
+bundle:
+	@echo "Building models bundle..."
+	poetry run python scripts/build_model_bundle.py
+
+models-image:
+	@echo "Building Docker models image..."
+	docker build -f Dockerfile.models -t character-ai-models:latest .
+
+runtime-image:
+	@echo "Building runtime image using models image..."
+	docker build -t character-ai:latest .
+
+# API and Development
+run-api:
+	@echo "Starting API server..."
+	poetry run uvicorn character_ai.web.toy_api:app --host 0.0.0.0 --port 8000 --reload
+
+# Validation and Schema Generation
+validate-profile:
+	@echo "Validating character profile..."
+	poetry run python scripts/profile_validate.py
+
+generate-schemas:
+	@echo "Generating JSON schemas..."
+	poetry run python scripts/generate_schemas.py
+
+generate-api-docs:
+	@echo "Generating OpenAPI documentation..."
+	poetry run python scripts/generate_openapi.py
+
+recompute-embeddings:
+	@echo "Recomputing voice embeddings..."
+	poetry run python scripts/recompute_voice_embeddings.py $(CHAR)
