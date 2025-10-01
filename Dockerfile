@@ -53,9 +53,9 @@ RUN chown -R cai:cai /app
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy model bundle from a prebuilt models image
-COPY --from=ghcr.io/parrenthesis/cai-models:latest /models_bundle.tar.gz /app/
-COPY --from=ghcr.io/parrenthesis/cai-models:latest /manifest.json /app/
+# Copy model bundle from a prebuilt models image (optional for now)
+# COPY --from=ghcr.io/parrenthesis/cai-models:latest /models_bundle.tar.gz /app/
+# COPY --from=ghcr.io/parrenthesis/cai-models:latest /manifest.json /app/
 
 # Copy application code
 COPY --chown=cai:cai . /app
