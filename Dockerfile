@@ -3,11 +3,12 @@
 FROM python:3.10-slim as base
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && apt-get clean \
+    && apt-get autoremove -y
 
 # Create non-root user
 RUN groupadd -r cai && useradd -r -g cai cai
@@ -21,11 +22,13 @@ ENV PIP_NO_CACHE_DIR=1 \
     PIP_DEFAULT_TIMEOUT=100
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     make \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean \
+    && apt-get autoremove -y
 
 # Copy dependency files
 COPY pyproject.toml poetry.lock ./
@@ -64,8 +67,9 @@ WORKDIR /app
 # Install application
 RUN pip install -e .[llama_cpp,tts-xtts,audio,ml] --no-deps
 
-# Fix dependency conflicts
-RUN pip install numpy==1.24.3 cryptography PyJWT --force-reinstall
+# Fix dependency conflicts and clean up
+RUN pip install numpy==1.24.3 cryptography PyJWT --force-reinstall \
+    && pip cache purge
 
 # Install model bundle into /app/models and verify checksums (optional)
 RUN python scripts/install_model_bundle.py || echo "No model bundle found, skipping installation"
