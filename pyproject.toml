@@ -44,7 +44,7 @@ matplotlib = "^3.8.0"  # Moved from Makefile
 regex = "^2023.0.0"  # Moved from Makefile
 
 # Speech + TTS
-openai-whisper = "==20231117"
+openai-whisper = "==20250625"
 TTS = "0.21.0"  # Stable version, works with numpy 1.24.3
 pyttsx3 = "^2.90"  # optional fallback
 # llama-cpp-python installed via pip in Makefile due to build requirements
