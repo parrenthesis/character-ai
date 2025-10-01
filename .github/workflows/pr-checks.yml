@@ -40,11 +40,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
-
-      - name: Install project
-        run: poetry install --no-interaction
+      - name: Setup development environment
+        run: make setup-dev
 
       - name: Run quick linting
         run: make lint
@@ -77,8 +74,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Install dependencies
-        run: poetry install --no-interaction
+      - name: Setup development environment
+        run: make setup-dev
 
       - name: Run quick security checks
         run: make security
@@ -120,8 +117,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Install dependencies
-        run: poetry install --no-interaction
+      - name: Setup development environment
+        run: make setup-dev
 
       - name: Run quick tests
         run: make test

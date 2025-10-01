@@ -27,8 +27,8 @@ jobs:
         with:
           version: '1.7.1'
 
-      - name: Install dependencies
-        run: poetry install --no-interaction
+      - name: Setup development environment
+        run: make setup-dev
 
       - name: Run Bandit security scan
         run: |
