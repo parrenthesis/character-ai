@@ -65,8 +65,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=runtime
           cache-to: type=gha,mode=max,scope=runtime
-          build-args: |
-            MODELS_IMAGE=${{ env.REGISTRY }}/cai-models:latest
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0

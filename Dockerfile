@@ -54,9 +54,8 @@ COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy model bundle from a prebuilt models image
-ARG MODELS_IMAGE=ghcr.io/parrenthesis/cai-models:latest
-COPY --from=${MODELS_IMAGE} /models_bundle.tar.gz /app/
-COPY --from=${MODELS_IMAGE} /manifest.json /app/
+COPY --from=ghcr.io/parrenthesis/cai-models:latest /models_bundle.tar.gz /app/
+COPY --from=ghcr.io/parrenthesis/cai-models:latest /manifest.json /app/
 
 # Copy application code
 COPY --chown=cai:cai . /app
