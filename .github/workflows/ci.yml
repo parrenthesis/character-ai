@@ -5,6 +5,11 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+  pull-requests: read
+
 env:
   PYTHON_VERSION: '3.10'
   POETRY_VERSION: '1.8.3'
