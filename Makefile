@@ -158,6 +158,7 @@ setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
 	poetry install --extras security --extras audio --extras ml
 	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark black isort ruff mypy bandit detect-secrets pre-commit
+	poetry run pip install PyJWT cryptography --force-reinstall
 	poetry run pip install numpy==1.22.2 --force-reinstall --no-cache-dir
 	poetry run pre-commit install
 
