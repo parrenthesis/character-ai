@@ -61,9 +61,10 @@ def list_models(installed: bool, use_case: Optional[str]) -> None:
                 click.echo(
                     f"  {installed_marker} {model.name} ({model.size}) - {model.description}"  # type: ignore
                 )
-                click.echo(
-                    f"    Recommended for: {', '.join(model.recommended_for or [])}"
-                )  # type: ignore
+                if hasattr(model, "recommended_for") and model.recommended_for:
+                    click.echo(
+                        f"    Recommended for: {', '.join(model.recommended_for)}"
+                    )
     except Exception as e:
         click.echo(f"Error listing models: {e}", err=True)
         raise click.Abort()
