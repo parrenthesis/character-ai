@@ -170,7 +170,7 @@ setup-ci:
 	find /home/runner -name "*.log" -size +1M -delete || true
 	find /home/runner -name "*.tmp" -delete || true
 	# Install essential dev tools for CI
-	poetry run pip install pytest pytest-asyncio pytest-cov black isort ruff mypy bandit --no-cache-dir
+	poetry run pip install pytest pytest-asyncio pytest-cov black isort ruff mypy bandit safety --no-cache-dir
 	# Install missing dependencies for tests and linting
 	poetry run pip install PyJWT cryptography types-PyYAML types-requests types-psutil --no-cache-dir
 	# Fix numpy vulnerability - upgrade to 1.22.2
