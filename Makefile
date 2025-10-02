@@ -168,6 +168,8 @@ setup-ci:
 	find /home/runner -name "*.tmp" -delete || true
 	# Install only essential dev tools for CI
 	poetry run pip install pytest pytest-asyncio black isort ruff mypy bandit --no-cache-dir
+	# Fix numpy vulnerability - upgrade to 1.22.2
+	poetry run pip install numpy==1.22.2 --force-reinstall --no-cache-dir
 	# Clean up after installation
 	pip cache purge || true
 	# Skip pre-commit install in CI to avoid git issues
