@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 try:
     import psutil
 except ImportError:
-    psutil = None  # type: ignore
+    psutil = None  # type: ignore[assignment]
 
 from .power_manager import PowerManager
 
