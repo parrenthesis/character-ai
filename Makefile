@@ -156,10 +156,10 @@ setup-dev:
 # CI-optimized setup that skips heavy PyTorch reinstalls
 setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
-	poetry install --extras security --extras audio --extras ml
-	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark black isort ruff mypy bandit detect-secrets pre-commit
-	poetry run pip install PyJWT cryptography --force-reinstall
-	poetry run pip install numpy==1.22.2 --force-reinstall --no-cache-dir
+	poetry install --no-dev --extras security
+	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark black isort ruff mypy bandit detect-secrets pre-commit --no-cache-dir
+	poetry run pip install PyJWT cryptography --no-cache-dir
+	poetry run pip install numpy==1.22.2 --no-cache-dir
 	poetry run pre-commit install
 
 # Security and Quality

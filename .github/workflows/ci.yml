@@ -49,6 +49,13 @@ jobs:
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
 
+      - name: Clean up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          poetry cache clear pypi --all
+          pip cache purge || true
+
       - name: Run linting checks
         run: make lint
 
@@ -84,6 +91,13 @@ jobs:
 
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Clean up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          poetry cache clear pypi --all
+          pip cache purge || true
 
       - name: Run security checks
         run: make security
@@ -123,6 +137,13 @@ jobs:
 
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Clean up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          poetry cache clear pypi --all
+          pip cache purge || true
 
       - name: Run unit tests
         run: make test
@@ -164,6 +185,13 @@ jobs:
 
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Clean up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          poetry cache clear pypi --all
+          pip cache purge || true
 
       - name: Run integration tests
         run: make test
