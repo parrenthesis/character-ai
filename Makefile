@@ -168,10 +168,13 @@ setup-ci:
 	# Clean up after first batch
 	pip cache purge || true
 	poetry run pip install black isort ruff mypy bandit detect-secrets pre-commit safety --no-cache-dir
+	# Fix dependency conflicts by reinstalling with correct versions
+	poetry run pip install psutil==5.9.8 typer==0.9.4 --no-cache-dir --force-reinstall
 	# Clean up after second batch
 	pip cache purge || true
 	poetry run pip install types-PyYAML types-requests types-psutil --no-cache-dir
-	poetry run pre-commit install
+	# Skip pre-commit install in CI to avoid git issues
+	@echo "Skipping pre-commit install in CI environment"
 
 # Security and Quality
 security:
