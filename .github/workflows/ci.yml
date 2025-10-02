@@ -230,6 +230,8 @@ jobs:
           poetry install --only main
           # Install only security tools
           poetry run pip install bandit safety --no-cache-dir
+          # Fix numpy vulnerability - upgrade to 1.22.2
+          poetry run pip install numpy==1.22.2 --force-reinstall --no-cache-dir
           # Check disk space
           echo "=== Disk space after security setup ==="
           df -h
