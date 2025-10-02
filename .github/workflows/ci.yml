@@ -39,9 +39,7 @@ jobs:
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/poetry
-            .venv
+          path: ~/.cache/poetry
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
@@ -55,6 +53,9 @@ jobs:
           sudo rm -rf /var/lib/apt/lists/*
           poetry cache clear pypi --all
           pip cache purge || true
+          df -h
+          du -sh ~/.cache/poetry || true
+          du -sh ~/.cache/pip || true
 
       - name: Run linting checks
         run: make lint
@@ -82,9 +83,7 @@ jobs:
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/poetry
-            .venv
+          path: ~/.cache/poetry
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
@@ -98,6 +97,9 @@ jobs:
           sudo rm -rf /var/lib/apt/lists/*
           poetry cache clear pypi --all
           pip cache purge || true
+          df -h
+          du -sh ~/.cache/poetry || true
+          du -sh ~/.cache/pip || true
 
       - name: Run security checks
         run: make security
@@ -128,9 +130,7 @@ jobs:
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/poetry
-            .venv
+          path: ~/.cache/poetry
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
@@ -144,6 +144,9 @@ jobs:
           sudo rm -rf /var/lib/apt/lists/*
           poetry cache clear pypi --all
           pip cache purge || true
+          df -h
+          du -sh ~/.cache/poetry || true
+          du -sh ~/.cache/pip || true
 
       - name: Run unit tests
         run: make test
@@ -176,9 +179,7 @@ jobs:
       - name: Cache Poetry dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/poetry
-            .venv
+          path: ~/.cache/poetry
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
@@ -192,6 +193,9 @@ jobs:
           sudo rm -rf /var/lib/apt/lists/*
           poetry cache clear pypi --all
           pip cache purge || true
+          df -h
+          du -sh ~/.cache/poetry || true
+          du -sh ~/.cache/pip || true
 
       - name: Run integration tests
         run: make test
