@@ -156,10 +156,21 @@ setup-dev:
 # CI-optimized setup that skips heavy PyTorch reinstalls
 setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
-	poetry install --no-dev --extras security
-	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark black isort ruff mypy bandit detect-secrets pre-commit safety types-PyYAML types-requests types-psutil --no-cache-dir
-	poetry run pip install PyJWT cryptography --no-cache-dir
-	poetry run pip install numpy==1.22.2 --no-cache-dir
+	# Install core dependencies with security extras
+	poetry install --only main --extras security
+	# Clean up disk space before installing dev tools
+	@echo "Cleaning disk space before dev tools installation..."
+	pip cache purge || true
+	find ~/.cache -type f -name "*.pyc" -delete || true
+	find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+	# Install all dev tools needed for CI (staged to manage disk space)
+	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark --no-cache-dir
+	# Clean up after first batch
+	pip cache purge || true
+	poetry run pip install black isort ruff mypy bandit detect-secrets pre-commit safety --no-cache-dir
+	# Clean up after second batch
+	pip cache purge || true
+	poetry run pip install types-PyYAML types-requests types-psutil --no-cache-dir
 	poetry run pre-commit install
 
 # Security and Quality

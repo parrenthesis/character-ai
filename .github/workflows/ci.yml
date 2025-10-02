@@ -50,30 +50,51 @@ jobs:
           echo "=== Pre-setup disk space ==="
           df -h
 
-          # Clean system caches
+          # Aggressive system cleanup
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
           sudo rm -rf /var/cache/apt/archives/*
           sudo rm -rf /tmp/*
+          sudo rm -rf /var/tmp/*
 
-          # Clean Python caches
+          # Clean Python caches aggressively
           pip cache purge || true
           find ~/.cache -type f -name "*.pyc" -delete || true
           find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
           # Clean GitHub Actions runner caches
           rm -rf ~/.local/share/pip/cache || true
           rm -rf ~/.cache/pip || true
+          rm -rf ~/.cache/poetry || true
 
           # Clean up any large files
-          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.log" -size +1M -delete || true
           find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
 
           echo "=== Post cleanup disk space ==="
           df -h
 
+      - name: Check disk space before setup
+        run: |
+          echo "=== Disk space before setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Check disk space after setup
+        run: |
+          echo "=== Disk space after setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
       - name: Clean up disk space
         run: |
@@ -144,30 +165,51 @@ jobs:
           echo "=== Pre-setup disk space ==="
           df -h
 
-          # Clean system caches
+          # Aggressive system cleanup
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
           sudo rm -rf /var/cache/apt/archives/*
           sudo rm -rf /tmp/*
+          sudo rm -rf /var/tmp/*
 
-          # Clean Python caches
+          # Clean Python caches aggressively
           pip cache purge || true
           find ~/.cache -type f -name "*.pyc" -delete || true
           find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
           # Clean GitHub Actions runner caches
           rm -rf ~/.local/share/pip/cache || true
           rm -rf ~/.cache/pip || true
+          rm -rf ~/.cache/poetry || true
 
           # Clean up any large files
-          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.log" -size +1M -delete || true
           find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
 
           echo "=== Post cleanup disk space ==="
           df -h
 
+      - name: Check disk space before setup
+        run: |
+          echo "=== Disk space before setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Check disk space after setup
+        run: |
+          echo "=== Disk space after setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
       - name: Clean up disk space
         run: |
@@ -241,30 +283,51 @@ jobs:
           echo "=== Pre-setup disk space ==="
           df -h
 
-          # Clean system caches
+          # Aggressive system cleanup
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
           sudo rm -rf /var/cache/apt/archives/*
           sudo rm -rf /tmp/*
+          sudo rm -rf /var/tmp/*
 
-          # Clean Python caches
+          # Clean Python caches aggressively
           pip cache purge || true
           find ~/.cache -type f -name "*.pyc" -delete || true
           find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
           # Clean GitHub Actions runner caches
           rm -rf ~/.local/share/pip/cache || true
           rm -rf ~/.cache/pip || true
+          rm -rf ~/.cache/poetry || true
 
           # Clean up any large files
-          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.log" -size +1M -delete || true
           find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
 
           echo "=== Post cleanup disk space ==="
           df -h
 
+      - name: Check disk space before setup
+        run: |
+          echo "=== Disk space before setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Check disk space after setup
+        run: |
+          echo "=== Disk space after setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
       - name: Clean up disk space
         run: |
@@ -340,30 +403,51 @@ jobs:
           echo "=== Pre-setup disk space ==="
           df -h
 
-          # Clean system caches
+          # Aggressive system cleanup
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
           sudo rm -rf /var/cache/apt/archives/*
           sudo rm -rf /tmp/*
+          sudo rm -rf /var/tmp/*
 
-          # Clean Python caches
+          # Clean Python caches aggressively
           pip cache purge || true
           find ~/.cache -type f -name "*.pyc" -delete || true
           find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
           # Clean GitHub Actions runner caches
           rm -rf ~/.local/share/pip/cache || true
           rm -rf ~/.cache/pip || true
+          rm -rf ~/.cache/poetry || true
 
           # Clean up any large files
-          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.log" -size +1M -delete || true
           find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
 
           echo "=== Post cleanup disk space ==="
           df -h
 
+      - name: Check disk space before setup
+        run: |
+          echo "=== Disk space before setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
+
+      - name: Check disk space after setup
+        run: |
+          echo "=== Disk space after setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
       - name: Clean up disk space
         run: |
