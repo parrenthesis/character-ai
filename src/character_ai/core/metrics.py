@@ -11,6 +11,7 @@ try:
     import psutil
 except ImportError:
     psutil = None  # type: ignore[assignment]
+
 from prometheus_client import REGISTRY, Counter, Gauge, Histogram, Info, generate_latest
 
 from .logging import get_logger
