@@ -41,8 +41,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment (secure architecture)
-        run: make setup-dev
+      - name: Setup CI environment (optimized for GitHub Actions)
+        run: make setup-ci
 
       - name: Run linting checks
         run: make lint
@@ -77,8 +77,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment (secure architecture)
-        run: make setup-dev
+      - name: Setup CI environment (optimized for GitHub Actions)
+        run: make setup-ci
 
       - name: Run security checks
         run: make security
@@ -116,8 +116,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment (secure architecture)
-        run: make setup-dev
+      - name: Setup CI environment (optimized for GitHub Actions)
+        run: make setup-ci
 
       - name: Run unit tests
         run: make test
@@ -157,8 +157,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment (secure architecture)
-        run: make setup-dev
+      - name: Setup CI environment (optimized for GitHub Actions)
+        run: make setup-ci
 
       - name: Run integration tests
         run: make test

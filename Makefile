@@ -1,7 +1,7 @@
 # Character AI Makefile
 # Focused on tests, bundling models, and building runtime image
 
-.PHONY: help test test-dev clean setup-dev bundle models-image runtime-image run-api security lint lint-dev format format-dev docker-build docker-run docker-test docker-clean docker-dev docker-compose-up docker-compose-down
+.PHONY: help test test-dev clean setup setup-dev setup-ci bundle models-image runtime-image run-api security lint lint-dev format format-dev docker-build docker-run docker-test docker-clean docker-dev docker-compose-up docker-compose-down
 
 # Default target
 help:
@@ -10,6 +10,7 @@ help:
 	@echo "Setup:"
 	@echo "  setup               - Set up environment with security dependencies"
 	@echo "  setup-dev           - Set up development environment (includes setup)"
+	@echo "  setup-ci            - Set up CI environment (optimized for GitHub Actions)"
 	@echo ""
 	@echo "Development:"
 	@echo "  test                - Run tests"
@@ -150,6 +151,12 @@ setup-dev:
 	poetry run pip install llama-cpp-python --force-reinstall --no-cache-dir
 	poetry run pip install numpy==1.22.0 fsspec==2024.6.1 networkx==2.8.8 --force-reinstall
 	poetry run pip install numpy==1.22.2 --force-reinstall --no-deps
+	poetry run pre-commit install
+
+# CI-optimized setup that skips heavy PyTorch reinstalls
+setup-ci:
+	@echo "Setting up CI environment (optimized for GitHub Actions)..."
+	poetry install --no-dev
 	poetry run pre-commit install
 
 # Security and Quality
