@@ -44,15 +44,65 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
+      - name: Pre-setup disk cleanup
+        run: |
+          # Clean up disk space before setup to prevent out of space errors
+          echo "=== Pre-setup disk space ==="
+          df -h
+
+          # Clean system caches
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
+          pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          echo "=== Post cleanup disk space ==="
+          df -h
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
 
       - name: Clean up disk space
         run: |
+          # Check initial disk space
+          echo "=== Initial disk space ==="
+          df -h
+
+          # Clean system caches
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
           poetry cache clear pypi --all
           pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          # Check final disk space
+          echo "=== Final disk space ==="
           df -h
           du -sh ~/.cache/poetry || true
           du -sh ~/.cache/pip || true
@@ -88,15 +138,65 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
+      - name: Pre-setup disk cleanup
+        run: |
+          # Clean up disk space before setup to prevent out of space errors
+          echo "=== Pre-setup disk space ==="
+          df -h
+
+          # Clean system caches
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
+          pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          echo "=== Post cleanup disk space ==="
+          df -h
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
 
       - name: Clean up disk space
         run: |
+          # Check initial disk space
+          echo "=== Initial disk space ==="
+          df -h
+
+          # Clean system caches
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
           poetry cache clear pypi --all
           pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          # Check final disk space
+          echo "=== Final disk space ==="
           df -h
           du -sh ~/.cache/poetry || true
           du -sh ~/.cache/pip || true
@@ -135,15 +235,65 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
+      - name: Pre-setup disk cleanup
+        run: |
+          # Clean up disk space before setup to prevent out of space errors
+          echo "=== Pre-setup disk space ==="
+          df -h
+
+          # Clean system caches
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
+          pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          echo "=== Post cleanup disk space ==="
+          df -h
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
 
       - name: Clean up disk space
         run: |
+          # Check initial disk space
+          echo "=== Initial disk space ==="
+          df -h
+
+          # Clean system caches
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
           poetry cache clear pypi --all
           pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          # Check final disk space
+          echo "=== Final disk space ==="
           df -h
           du -sh ~/.cache/poetry || true
           du -sh ~/.cache/pip || true
@@ -184,15 +334,65 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
+      - name: Pre-setup disk cleanup
+        run: |
+          # Clean up disk space before setup to prevent out of space errors
+          echo "=== Pre-setup disk space ==="
+          df -h
+
+          # Clean system caches
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
+          pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          echo "=== Post cleanup disk space ==="
+          df -h
+
       - name: Setup CI environment (optimized for GitHub Actions)
         run: make setup-ci
 
       - name: Clean up disk space
         run: |
+          # Check initial disk space
+          echo "=== Initial disk space ==="
+          df -h
+
+          # Clean system caches
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /var/cache/apt/archives/*
+          sudo rm -rf /tmp/*
+
+          # Clean Python caches
           poetry cache clear pypi --all
           pip cache purge || true
+          find ~/.cache -type f -name "*.pyc" -delete || true
+          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
+
+          # Clean GitHub Actions runner caches
+          rm -rf ~/.local/share/pip/cache || true
+          rm -rf ~/.cache/pip || true
+
+          # Clean up any large files
+          find /home/runner -name "*.log" -size +10M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+
+          # Check final disk space
+          echo "=== Final disk space ==="
           df -h
           du -sh ~/.cache/poetry || true
           du -sh ~/.cache/pip || true

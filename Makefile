@@ -157,9 +157,9 @@ setup-dev:
 setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
 	poetry install --no-dev --extras security
-	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark black isort ruff mypy bandit detect-secrets pre-commit safety types-PyYAML types-requests types-psutil --no-cache-dir
-	poetry run pip install PyJWT cryptography --no-cache-dir
-	poetry run pip install numpy==1.22.2 --no-cache-dir
+	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark black isort ruff mypy bandit detect-secrets pre-commit safety types-PyYAML types-requests types-psutil --no-cache-dir --no-deps
+	poetry run pip install PyJWT cryptography --no-cache-dir --no-deps
+	poetry run pip install numpy==1.22.2 --no-cache-dir --no-deps
 	poetry run pre-commit install
 
 # Security and Quality
