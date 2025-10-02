@@ -166,8 +166,10 @@ setup-ci:
 	# Clean up any large files that might be consuming space
 	find /home/runner -name "*.log" -size +1M -delete || true
 	find /home/runner -name "*.tmp" -delete || true
-	# Install only essential dev tools for CI
+	# Install essential dev tools for CI
 	poetry run pip install pytest pytest-asyncio black isort ruff mypy bandit --no-cache-dir
+	# Install missing dependencies for tests and linting
+	poetry run pip install PyJWT cryptography types-PyYAML types-requests types-psutil --no-cache-dir
 	# Fix numpy vulnerability - upgrade to 1.22.2
 	poetry run pip install numpy==1.22.2 --force-reinstall --no-cache-dir
 	# Clean up after installation
