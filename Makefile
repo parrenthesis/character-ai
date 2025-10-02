@@ -156,7 +156,7 @@ setup-dev:
 # CI-optimized setup that skips heavy PyTorch reinstalls
 setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
-	poetry install --no-dev --extras security
+	poetry install --extras security,audio,ml
 	poetry run pre-commit install
 
 # Security and Quality
