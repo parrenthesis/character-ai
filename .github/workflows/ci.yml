@@ -96,6 +96,27 @@ jobs:
           df -h
           echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
+      - name: Aggressive disk cleanup after setup
+        run: |
+          echo "=== Aggressive cleanup after setup ==="
+          # Clean up any remaining large files
+          find /home/runner -name "*.log" -size +1M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
+          # Clean up Python caches more aggressively
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          # Clean up any remaining caches
+          pip cache purge || true
+          poetry cache clear pypi --all || true
+          # Check final disk space
+          echo "=== Final disk space ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
       - name: Clean up disk space
         run: |
           # Check initial disk space
@@ -208,6 +229,27 @@ jobs:
       - name: Check disk space after setup
         run: |
           echo "=== Disk space after setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
+      - name: Aggressive disk cleanup after setup
+        run: |
+          echo "=== Aggressive cleanup after setup ==="
+          # Clean up any remaining large files
+          find /home/runner -name "*.log" -size +1M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
+          # Clean up Python caches more aggressively
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          # Clean up any remaining caches
+          pip cache purge || true
+          poetry cache clear pypi --all || true
+          # Check final disk space
+          echo "=== Final disk space ==="
           df -h
           echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
@@ -329,6 +371,27 @@ jobs:
           df -h
           echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
+      - name: Aggressive disk cleanup after setup
+        run: |
+          echo "=== Aggressive cleanup after setup ==="
+          # Clean up any remaining large files
+          find /home/runner -name "*.log" -size +1M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
+          # Clean up Python caches more aggressively
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          # Clean up any remaining caches
+          pip cache purge || true
+          poetry cache clear pypi --all || true
+          # Check final disk space
+          echo "=== Final disk space ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
       - name: Clean up disk space
         run: |
           # Check initial disk space
@@ -446,6 +509,27 @@ jobs:
       - name: Check disk space after setup
         run: |
           echo "=== Disk space after setup ==="
+          df -h
+          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
+
+      - name: Aggressive disk cleanup after setup
+        run: |
+          echo "=== Aggressive cleanup after setup ==="
+          # Clean up any remaining large files
+          find /home/runner -name "*.log" -size +1M -delete || true
+          find /home/runner -name "*.tmp" -delete || true
+          find /home/runner -name "*.cache" -delete || true
+          # Clean up any large directories
+          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
+          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
+          # Clean up Python caches more aggressively
+          find /usr -name "*.pyc" -delete 2>/dev/null || true
+          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          # Clean up any remaining caches
+          pip cache purge || true
+          poetry cache clear pypi --all || true
+          # Check final disk space
+          echo "=== Final disk space ==="
           df -h
           echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 

@@ -156,23 +156,20 @@ setup-dev:
 # CI-optimized setup that skips heavy PyTorch reinstalls
 setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
-	# Install core dependencies with security extras
-	poetry install --only main --extras security
-	# Clean up disk space before installing dev tools
+	# Install only essential dependencies to save disk space
+	poetry install --only main
+	# Clean up disk space aggressively before installing dev tools
 	@echo "Cleaning disk space before dev tools installation..."
 	pip cache purge || true
 	find ~/.cache -type f -name "*.pyc" -delete || true
 	find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
-	# Install all dev tools needed for CI (staged to manage disk space)
-	poetry run pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-benchmark --no-cache-dir
-	# Clean up after first batch
+	# Clean up any large files that might be consuming space
+	find /home/runner -name "*.log" -size +1M -delete || true
+	find /home/runner -name "*.tmp" -delete || true
+	# Install only essential dev tools for CI
+	poetry run pip install pytest pytest-asyncio black isort ruff mypy bandit --no-cache-dir
+	# Clean up after installation
 	pip cache purge || true
-	poetry run pip install black isort ruff mypy bandit detect-secrets pre-commit safety --no-cache-dir
-	# Fix dependency conflicts by reinstalling with correct versions
-	poetry run pip install psutil==5.9.8 typer==0.9.4 --no-cache-dir --force-reinstall
-	# Clean up after second batch
-	pip cache purge || true
-	poetry run pip install types-PyYAML types-requests types-psutil --no-cache-dir
 	# Skip pre-commit install in CI to avoid git issues
 	@echo "Skipping pre-commit install in CI environment"
 
