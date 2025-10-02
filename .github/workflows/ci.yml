@@ -223,70 +223,22 @@ jobs:
           df -h
           echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
 
-      - name: Setup CI environment (optimized for GitHub Actions)
-        run: make setup-ci
-
-      - name: Check disk space after setup
+      - name: Minimal security setup
         run: |
-          echo "=== Disk space after setup ==="
+          echo "=== Installing only security tools ==="
+          # Install only essential dependencies
+          poetry install --only main
+          # Install only security tools
+          poetry run pip install bandit safety --no-cache-dir
+          # Check disk space
+          echo "=== Disk space after security setup ==="
           df -h
-          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
-
-      - name: Aggressive disk cleanup after setup
-        run: |
-          echo "=== Aggressive cleanup after setup ==="
-          # Clean up any remaining large files
-          find /home/runner -name "*.log" -size +1M -delete || true
-          find /home/runner -name "*.tmp" -delete || true
-          find /home/runner -name "*.cache" -delete || true
-          # Clean up any large directories
-          find /home/runner -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
-          find /home/runner -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
-          # Clean up Python caches more aggressively
-          find /usr -name "*.pyc" -delete 2>/dev/null || true
-          find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-          # Clean up any remaining caches
-          pip cache purge || true
-          poetry cache clear pypi --all || true
-          # Check final disk space
-          echo "=== Final disk space ==="
-          df -h
-          echo "Available space: $(df -h / | tail -1 | awk '{print $4}')"
-
-      - name: Clean up disk space
-        run: |
-          # Check initial disk space
-          echo "=== Initial disk space ==="
-          df -h
-
-          # Clean system caches
-          sudo apt-get clean
-          sudo rm -rf /var/lib/apt/lists/*
-          sudo rm -rf /var/cache/apt/archives/*
-          sudo rm -rf /tmp/*
-
-          # Clean Python caches
-          poetry cache clear pypi --all
-          pip cache purge || true
-          find ~/.cache -type f -name "*.pyc" -delete || true
-          find ~/.cache -type d -name "__pycache__" -exec rm -rf {} + || true
-
-          # Clean GitHub Actions runner caches
-          rm -rf ~/.local/share/pip/cache || true
-          rm -rf ~/.cache/pip || true
-
-          # Clean up any large files
-          find /home/runner -name "*.log" -size +10M -delete || true
-          find /home/runner -name "*.tmp" -delete || true
-
-          # Check final disk space
-          echo "=== Final disk space ==="
-          df -h
-          du -sh ~/.cache/poetry || true
-          du -sh ~/.cache/pip || true
 
       - name: Run security checks
-        run: make security
+        run: |
+          echo "=== Running security checks ==="
+          poetry run bandit -r src/ --severity-level medium
+          poetry run safety check --short-report
 
   # Unit Tests
   test:
