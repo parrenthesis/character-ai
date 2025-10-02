@@ -20,7 +20,7 @@ from src.character_ai.characters.validation import CharacterValidator
 class TestBasicCoverage:
     """Basic tests for coverage improvement."""
 
-    def test_ai_generator_initialization(self):
+    def test_ai_generator_initialization(self) -> None:
         """Test AI generator can be initialized."""
         with (
             patch(
@@ -30,7 +30,6 @@ class TestBasicCoverage:
                 "src.character_ai.characters.ai_generator.CharacterValidator"
             ) as mock_validator,
         ):
-
             mock_llm = Mock()
             mock_factory.return_value.get_character_creation_llm.return_value = mock_llm
 
@@ -42,12 +41,12 @@ class TestBasicCoverage:
             assert generator.llm == mock_llm
             assert generator.validator == mock_validator_instance
 
-    def test_character_validator_initialization(self):
+    def test_character_validator_initialization(self) -> None:
         """Test character validator can be initialized."""
         validator = CharacterValidator()
         assert validator is not None
 
-    def test_enhanced_character_creation(self):
+    def test_enhanced_character_creation(self) -> None:
         """Test enhanced character can be created."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,
@@ -68,7 +67,7 @@ class TestBasicCoverage:
         assert character.dimensions.species == Species.ROBOT
         assert character.dimensions.archetype == Archetype.COMPANION
 
-    def test_character_relationships(self):
+    def test_character_relationships(self) -> None:
         """Test character relationship functionality."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,
@@ -91,7 +90,7 @@ class TestBasicCoverage:
         assert character.relationships[0].character == "Sidekick"
         assert character.relationships[0].relationship == "friend"
 
-    def test_character_localization(self):
+    def test_character_localization(self) -> None:
         """Test character localization functionality."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,
@@ -116,7 +115,7 @@ class TestBasicCoverage:
         assert character.localizations[0].language == "es"
         assert character.localizations[0].name == "RobotTest"
 
-    def test_character_licensing(self):
+    def test_character_licensing(self) -> None:
         """Test character licensing functionality."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,
@@ -149,7 +148,7 @@ class TestBasicCoverage:
         assert character.has_right("media") is True
         assert character.is_restricted_by("no-violence") is True
 
-    def test_character_voice_characteristics(self):
+    def test_character_voice_characteristics(self) -> None:
         """Test character voice characteristics."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,
@@ -173,7 +172,7 @@ class TestBasicCoverage:
         assert voice_chars["species"] == "robot"
         assert "friendly" in voice_chars["personality"]
 
-    def test_character_relationship_methods(self):
+    def test_character_relationship_methods(self) -> None:
         """Test character relationship methods."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,
@@ -204,7 +203,7 @@ class TestBasicCoverage:
         assert len(teachers) == 1
         assert teachers[0].character == "Mentor"
 
-    def test_character_localization_methods(self):
+    def test_character_localization_methods(self) -> None:
         """Test character localization methods."""
         dimensions = CharacterDimensions(
             species=Species.ROBOT,

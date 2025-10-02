@@ -51,10 +51,10 @@ sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/cai/ssl/private.key \
 server {
     listen 443 ssl;
     server_name your-domain.com;
-    
+
     ssl_certificate /etc/cai/ssl/certificate.crt;
     ssl_certificate_key /etc/cai/ssl/private.key;
-    
+
     location / {
         proxy_pass http://localhost:8000;
         proxy_set_header Host $host;
@@ -466,7 +466,7 @@ upstream cai_backend {
 server {
     listen 80;
     server_name your-domain.com;
-    
+
     location / {
         proxy_pass http://cai_backend;
         proxy_set_header Host $host;
@@ -573,7 +573,7 @@ journalctl -u cai -f
 
 ## Production Readiness Checklist
 
-- [ ] All tests passing (752/752)
+- [ ] All tests passing (117/117)
 - [ ] Security hardening complete
 - [ ] Performance optimization applied
 - [ ] Monitoring and alerting configured

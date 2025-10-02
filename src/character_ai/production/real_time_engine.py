@@ -37,7 +37,9 @@ class RealTimeInteractionEngine:
                 result = await self._inner.filter_response(text)
                 return str(result)
 
-        self.safety_filter: Optional[_SafetyFilterFacade] = _SafetyFilterFacade(ChildSafetyFilter())
+        self.safety_filter: Optional[_SafetyFilterFacade] = _SafetyFilterFacade(
+            ChildSafetyFilter()
+        )
 
         class _VoiceManagerFacade:
             def __init__(self, inner: Any) -> None:
@@ -52,7 +54,11 @@ class RealTimeInteractionEngine:
         self.voice_manager: Optional[_VoiceManagerFacade] = _VoiceManagerFacade(
             VoiceManager()
         )  # Voice injection system
-        self.edge_optimizer: Optional[EdgeModelOptimizer] = EdgeModelOptimizer(hardware_manager.constraints)
+        self.edge_optimizer: Optional[EdgeModelOptimizer] = (
+            EdgeModelOptimizer(hardware_manager.constraints)
+            if hardware_manager
+            else None
+        )
 
         # Session memory management
         self.session_memory = SessionMemory()
@@ -106,7 +112,6 @@ class RealTimeInteractionEngine:
                 "Real-time audio processing started",
                 audio_duration=(
                     audio_stream.duration if hasattr(audio_stream, "duration") else None
-
                 ),
                 sample_rate=(
                     audio_stream.sample_rate
@@ -148,7 +153,9 @@ class RealTimeInteractionEngine:
                     logger, "safety_filtering", "safety_filter"
                 ) as safety_timer:
                     if self.safety_filter is not None:
-                        result.text = await self.safety_filter.filter_response(result.text)
+                        result.text = await self.safety_filter.filter_response(
+                            result.text
+                        )
 
                 # Log safety filter results
                 if safety_timer.duration_ms:
@@ -196,7 +203,7 @@ class RealTimeInteractionEngine:
     ) -> AudioResult:
         """Process audio with character personality."""
         try:
-            # Step 1: Speech-to-Text using Whisper
+            # Step 1: Speech-to-Text using Wav2Vec2
             transcribed_text = await self._transcribe_audio(audio)
 
             # Step 2: Generate response using LLM with character personality and context
@@ -210,7 +217,7 @@ class RealTimeInteractionEngine:
             if self.safety_filter is not None:
                 safe_response = await self.safety_filter.filter_response(response_text)
 
-            # Step 4: Generate audio response using XTTS with character voice
+            # Step 4: Generate audio response using Coqui TTS with character voice
             response_audio = await self._synthesize_character_voice(
                 safe_response, character
             )
@@ -242,24 +249,25 @@ class RealTimeInteractionEngine:
             )
 
     async def _transcribe_audio(self, audio: AudioData) -> str:
-        """Transcribe audio using Whisper."""
+        """Transcribe audio using Wav2Vec2."""
         try:
-            # Import Whisper processor
-            from ..algorithms.conversational_ai.whisper_processor import (
-                WhisperProcessor,
+            # Import Wav2Vec2 processor
+            from ..algorithms.conversational_ai.wav2vec2_processor import (
+                Wav2Vec2Processor,
             )
 
-            # Initialize Whisper with edge optimizations
+            # Initialize Wav2Vec2 with edge optimizations
             if self.edge_optimizer is not None:
-                whisper_config = await self.edge_optimizer.optimize_whisper_for_toy()
+                stt_config = await self.edge_optimizer.optimize_wav2vec2_for_toy()
             else:
                 # Fallback configuration
                 from ..core.config import Config
-                whisper_config = Config()
-            whisper = WhisperProcessor(whisper_config)
+
+                stt_config = Config()
+            wav2vec2 = Wav2Vec2Processor(stt_config)
 
             # Transcribe audio
-            result = await whisper.process_audio(audio)
+            result = await wav2vec2.process_audio(audio)
             return (
                 result.text
                 if result.text
@@ -267,10 +275,12 @@ class RealTimeInteractionEngine:
             )
 
         except Exception as e:
-            logger.error(f"Whisper transcription failed: {e}")
+            logger.error(f"Wav2Vec2 transcription failed: {e}")
             return "I'm having trouble hearing you right now."
 
-    async def _generate_character_response(self, text: str, character: Character) -> str:
+    async def _generate_character_response(
+        self, text: str, character: Character
+    ) -> str:
         """Generate response using LLM with character personality."""
         try:
             # Import LLM processor selected by backend
@@ -287,9 +297,10 @@ class RealTimeInteractionEngine:
             else:
                 # Fallback configuration
                 from ..core.config import Config
+
                 llm_config = Config()
             if llm_config.models.llama_backend == "llama_cpp":
-                llm: Any = LlamaCppProcessor(llm_config)  # type: ignore
+                llm: Any = LlamaCppProcessor(llm_config)
             else:
                 llm = LlamaProcessor(llm_config)
 
@@ -310,20 +321,23 @@ class RealTimeInteractionEngine:
             logger.error(f"LLM response generation failed: {e}")
             return f"Hello! I'm {character.name}, a {character.dimensions.species.value}. I love talking about {', '.join([trait.value for trait in character.dimensions.personality_traits[:2]])}!"
 
-    async def _synthesize_character_voice(self, text: str, character: Character) -> bytes:
+    async def _synthesize_character_voice(
+        self, text: str, character: Character
+    ) -> bytes:
         """Synthesize character voice using injected character voice."""
         try:
-            # Import XTTS processor
-            from ..algorithms.conversational_ai.xtts_processor import XTTSProcessor
+            # Import Coqui TTS processor
+            from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
 
-            # Initialize XTTS with edge optimizations
+            # Initialize Coqui TTS with edge optimizations
             if self.edge_optimizer is not None:
-                xtts_config = await self.edge_optimizer.optimize_xtts_for_toy()
+                tts_config = await self.edge_optimizer.optimize_coqui_for_toy()
             else:
                 # Fallback configuration
                 from ..core.config import Config
-                xtts_config = Config()
-            xtts = XTTSProcessor(xtts_config)
+
+                tts_config = Config()
+            tts = CoquiProcessor(tts_config)
 
             # Check if character has injected voice
             character_name = character.name.lower()
@@ -336,16 +350,16 @@ class RealTimeInteractionEngine:
             if voice_path:
                 # Use injected character voice
                 logger.info(f"Using injected voice for {character_name}")
-                result = await xtts.inject_character_voice(
-                    character_name, voice_path, text
+                result = await tts.synthesize_speech(
+                    text=text, voice_path=voice_path, language="en"
                 )
                 return result.audio_data.data if result.audio_data else b""
             else:
                 # Fallback to default voice synthesis
                 logger.info(f"No injected voice for {character_name}, using default")
-                voice_characteristics = character.get_voice_characteristics()
-                result = await xtts.synthesize(
-                    text, voice_characteristics.get("voice_style")
+                character.get_voice_characteristics()
+                result = await tts.synthesize_speech(
+                    text=text, voice_path=None, language="en"
                 )
                 return result.audio_data.data if result.audio_data else b""
 
@@ -355,7 +369,7 @@ class RealTimeInteractionEngine:
 
     def _create_character_prompt(self, user_input: str, character: Character) -> str:
         """Create a character-specific prompt for the LLM using profile traits and optio
-nal prompt.md."""
+        nal prompt.md."""
         character_name = character.name
         character_type = character.dimensions.species.value
         voice_style = character.voice_style
@@ -417,7 +431,9 @@ Response:"""
 
         return prompt
 
-    def _create_character_prompt_with_context(self, user_input: str, character: Character) -> str:
+    def _create_character_prompt_with_context(
+        self, user_input: str, character: Character
+    ) -> str:
         """Create a character-specific prompt with conversation context."""
         # Get conversation context
         context = self.session_memory.format_context_for_llm(
@@ -463,7 +479,9 @@ Response:"""
         try:
             success = False
             if self.character_manager is not None:
-                success = await self.character_manager.set_active_character(character_name)
+                success = await self.character_manager.set_active_character(
+                    character_name
+                )
             if success:
                 logger.info(f"Active character set to: {character_name}")
             return success
@@ -486,22 +504,23 @@ Response:"""
     ) -> bool:
         """Inject a voice for a character (used during toy manufacturing/setup)."""
         try:
-            from ..algorithms.conversational_ai.xtts_processor import XTTSProcessor
+            from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
 
-            # Initialize XTTS processor
+            # Initialize Coqui TTS processor
             if self.edge_optimizer is not None:
-                xtts_config = await self.edge_optimizer.optimize_xtts_for_toy()
+                tts_config = await self.edge_optimizer.optimize_coqui_for_toy()
             else:
                 from ..core.config import Config
-                xtts_config = Config()
-            xtts = XTTSProcessor(xtts_config)
-            await xtts.initialize()
+
+                tts_config = Config()
+            tts = CoquiProcessor(tts_config)
+            await tts.initialize()
 
             # Inject the voice
             success = False
             if self.voice_manager is not None:
                 success = await self.voice_manager.inject_character_voice(
-                    character_name, voice_file_path, xtts
+                    character_name, voice_file_path, tts
                 )
             success = bool(success)
 
@@ -580,8 +599,12 @@ Response:"""
                 },
                 "performance": metrics,
                 "hardware_constraints": {
-                    "max_memory_gb": self.hardware_manager.constraints.max_memory_gb if self.hardware_manager is not None else 0,
-                    "target_latency_ms": self.hardware_manager.constraints.target_latency_ms if self.hardware_manager is not None else 0,
+                    "max_memory_gb": self.hardware_manager.constraints.max_memory_gb
+                    if self.hardware_manager is not None
+                    else 0,
+                    "target_latency_ms": self.hardware_manager.constraints.target_latency_ms
+                    if self.hardware_manager is not None
+                    else 0,
                 },
             }
         except Exception as e:
@@ -594,11 +617,15 @@ Response:"""
             logger.info("Shutting down RealTimeInteractionEngine...")
 
             # Shutdown hardware manager
-            if self.hardware_manager is not None and hasattr(self.hardware_manager, "shutdown"):
+            if self.hardware_manager is not None and hasattr(
+                self.hardware_manager, "shutdown"
+            ):
                 await self.hardware_manager.shutdown()
 
             # Shutdown character manager
-            if self.character_manager is not None and hasattr(self.character_manager, "shutdown"):
+            if self.character_manager is not None and hasattr(
+                self.character_manager, "shutdown"
+            ):
                 await self.character_manager.shutdown()
 
             # Clear references to help with garbage collection

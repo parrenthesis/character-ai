@@ -225,7 +225,6 @@ async def set_language(
         raise HTTPException(status_code=500, detail=f"Failed to set language: {str(e)}")
 
 
-
 @router.get("/packs", response_model=List[LanguagePackInfo])
 async def get_language_packs(
     security: Any = Depends(get_security_middleware),
@@ -375,7 +374,6 @@ async def analyze_safety_multilingual(
         raise HTTPException(status_code=500, detail=f"Safety analysis failed: {str(e)}")
 
 
-
 @router.get("/packs/{language_code}/safety-patterns")
 async def get_safety_patterns(
     language_code: str, security: Any = Depends(get_security_middleware)
@@ -473,5 +471,4 @@ async def create_language_pack_template(
         logger.error(f"Failed to create language pack template: {e}")
         raise HTTPException(
             status_code=500, detail=f"Failed to create language pack template: {str(e)}"
-
         )

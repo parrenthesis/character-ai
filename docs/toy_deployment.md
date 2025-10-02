@@ -90,18 +90,19 @@ hardware:
 ```python
 # config/models.yaml
 models:
-  xtts:
+  coqui:
     quantization: "int8"
     precision: "fp16"
     streaming: true
     chunk_size: 1.0
-  
-  whisper:
-    model_size: "tiny"
+    voice_cloning: true
+
+  wav2vec2:
+    model_size: "base"
     quantization: "int8"
     language: "en"
     task: "transcribe"
-  
+
   llm:
     model_size: "7b"
     quantization: "int8"

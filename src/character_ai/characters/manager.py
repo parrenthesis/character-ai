@@ -188,7 +188,6 @@ class CharacterManager:
                     "archetype": character.dimensions.archetype.value,
                     "personality_traits": [
                         trait.value for trait in character.dimensions.personality_traits
-
                     ],
                     "abilities": [
                         ability.value for ability in character.dimensions.abilities
@@ -209,7 +208,6 @@ class CharacterManager:
             # Save to file
             char_file = (
                 self.characters_dir / f"{character.name.lower().replace(' ', '_')}.yaml"
-
             )
             with open(char_file, "w") as f:
                 yaml.dump(char_data, f, default_flow_style=False)
@@ -382,7 +380,9 @@ class CharacterManager:
         # This would need proper active character tracking
         return next(iter(self.characters.values())) if self.characters else None
 
-    def get_character_info(self, character_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_character_info(
+        self, character_name: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get character information."""
         if character_name:
             character = self.get_character(character_name)
@@ -395,9 +395,10 @@ class CharacterManager:
                         "species": character.dimensions.species.value,
                         "archetype": character.dimensions.archetype.value,
                         "personality_traits": [
-                            trait.value for trait in character.dimensions.personality_traits
+                            trait.value
+                            for trait in character.dimensions.personality_traits
                         ],
-                    }
+                    },
                 }
             return {}
         else:

@@ -443,7 +443,9 @@ def create_prometheus_exporter() -> PrometheusExporter:
     return PrometheusExporter()
 
 
-def export_prometheus_config(output_dir: Path = Path.cwd() / "monitoring/prometheus") -> bool:
+def export_prometheus_config(
+    output_dir: Path = Path.cwd() / "monitoring/prometheus",
+) -> bool:
     """Export Prometheus configuration files."""
     output_dir.mkdir(parents=True, exist_ok=True)
 

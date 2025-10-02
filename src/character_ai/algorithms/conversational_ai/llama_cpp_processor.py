@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 
 from ...core.config import Config
 from ...core.exceptions import AudioProcessingError, ModelError
-from ...core.protocols import BaseTextProcessor, ModelInfo, TextResult
+from ...core.protocols import BaseTextProcessor, EmbeddingResult, ModelInfo, TextResult
 
 logger = logging.getLogger(__name__)
 
@@ -104,3 +104,34 @@ class LlamaCppProcessor(BaseTextProcessor):
             error=error_message,
             metadata={"component": "LlamaCppProcessor", "error": True},
         )
+
+    async def generate_text(self, prompt: str, **kwargs: Any) -> TextResult:
+        """Generate text from prompt."""
+        return await self.process_text(prompt, {"generate": True, **kwargs})
+
+    async def get_embeddings(self, text: str) -> EmbeddingResult:
+        """Extract embeddings from text."""
+        if self.model is None:
+            return EmbeddingResult(
+                embeddings=[],
+                error="Model not initialized",
+                metadata={"component": "LlamaCppProcessor", "error": True},
+            )
+
+        try:
+            # Use the model's embedding functionality
+            # Llama.cpp models can generate embeddings using the model's internal representations
+            embeddings = self.model.create_embedding(text)
+            return EmbeddingResult(
+                embeddings=embeddings,
+                metadata={
+                    "component": "LlamaCppProcessor",
+                    "method": "llama_cpp_embedding",
+                },
+            )
+        except Exception as e:
+            return EmbeddingResult(
+                embeddings=[],
+                error=f"Failed to generate embeddings: {str(e)}",
+                metadata={"component": "LlamaCppProcessor", "error": True},
+            )

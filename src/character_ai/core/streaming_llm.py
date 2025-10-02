@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 class StreamingMode(Enum):
     """Streaming mode enumeration."""
 
-    TOKEN_BY_TOKEN = (
-        "token_by_token"  # nosec B105 - Not a password, legitimate enum value
-    )
+    TOKEN_BY_TOKEN = "token_by_token"  # nosec B105 - Not a password, legitimate enum value
     WORD_BY_WORD = "word_by_word"
     SENTENCE_BY_SENTENCE = "sentence_by_sentence"
     CHUNK_BY_CHUNK = "chunk_by_chunk"
@@ -134,7 +132,7 @@ class StreamingLLM:
         try:
             # Initialize model
             try:
-                from ..algorithms.large_language_model import (  # type: ignore
+                from ..algorithms.large_language_model import (
                     LargeLanguageModelProcessor,
                 )
 
@@ -341,10 +339,10 @@ class StreamingLLM:
         self, prompt: str, params: Dict[str, Any]
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        Generate tokens using the underlying LLM model.
+                Generate tokens using the underlying LLM model.
 
-        Integrates with the platform's LLM processors (LlamaCppProcessor or LlamaProcess
-or).
+                Integrates with the platform's LLM processors (LlamaCppProcessor or LlamaProcess
+        or).
         """
         try:
             # Import the platform's LLM processors
@@ -354,7 +352,7 @@ or).
             from ..algorithms.conversational_ai.llama_processor import LlamaProcessor
 
             # Determine which processor to use based on configuration
-            if getattr(self.config, 'models', {}).get('llama_backend') == "llama_cpp":
+            if getattr(self.config, "models", {}).get("llama_backend") == "llama_cpp":
                 processor: Any = LlamaCppProcessor(self.config)  # type: ignore
             else:
                 processor: Any = LlamaProcessor(self.config)  # type: ignore
@@ -397,8 +395,7 @@ or).
             logger.error(f"Failed to import LLM processors: {e}")
             # Fallback to simple response
             yield {
-                "text": "I'm here to help, but I need to be properly configured first. "
-,
+                "text": "I'm here to help, but I need to be properly configured first. ",
                 "id": 0,
                 "logprob": -0.5,
                 "is_final": True,
@@ -538,7 +535,9 @@ class StreamingLLMWebSocketHandler:
 
         logger.info("StreamingLLMWebSocketHandler initialized")
 
-    async def handle_connection(self, websocket: WebSocketServerProtocol, path: str) -> None:
+    async def handle_connection(
+        self, websocket: WebSocketServerProtocol, path: str
+    ) -> None:
         """Handle a new WebSocket connection."""
 
         session_id = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
@@ -652,7 +651,9 @@ class StreamingLLMWebSocketHandler:
             logger.error(f"Error handling cancel request: {e}")
             await self._send_error(websocket, str(e))
 
-    async def _send_token(self, websocket: WebSocketServerProtocol, token: Token) -> None:
+    async def _send_token(
+        self, websocket: WebSocketServerProtocol, token: Token
+    ) -> None:
         """Send token to client."""
 
         message = {
@@ -670,8 +671,9 @@ class StreamingLLMWebSocketHandler:
         except Exception as e:
             logger.error(f"Error sending token: {e}")
 
-    async def _send_chunk(self, websocket: WebSocketServerProtocol, chunk: List[Token]) -> None:
-
+    async def _send_chunk(
+        self, websocket: WebSocketServerProtocol, chunk: List[Token]
+    ) -> None:
         """Send token chunk to client."""
 
         message = {

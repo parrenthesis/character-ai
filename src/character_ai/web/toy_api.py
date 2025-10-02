@@ -183,7 +183,9 @@ async def get_available_characters() -> Dict[str, Any]:
     try:
         engine = get_engine()
         if not engine.character_manager:
-            raise HTTPException(status_code=500, detail="Character manager not available")
+            raise HTTPException(
+                status_code=500, detail="Character manager not available"
+            )
 
         characters = engine.character_manager.get_available_characters()
         active_char = engine.character_manager.get_active_character()
@@ -329,7 +331,9 @@ async def get_character_info(character_name: Optional[str] = None) -> Dict[str, 
         engine = get_engine()
         if character_name:
             if not engine.character_manager:
-                raise HTTPException(status_code=500, detail="Character manager not available")
+                raise HTTPException(
+                    status_code=500, detail="Character manager not available"
+                )
             info = engine.character_manager.get_character_info(character_name)
         else:
             info = await engine.get_character_info()
@@ -388,7 +392,9 @@ async def interact_with_character(request: InteractionRequest) -> InteractionRes
                 else ""
             ),
             response_text=result.text or "",
-            character_name=result.metadata.get("character", "Unknown") if result.metadata else "Unknown",
+            character_name=result.metadata.get("character", "Unknown")
+            if result.metadata
+            else "Unknown",
             latency_ms=latency_ms,
         )
     except HTTPException:
@@ -433,7 +439,9 @@ async def interact_with_audio_file(
                 else ""
             ),
             response_text=result.text or "",
-            character_name=result.metadata.get("character", "Unknown") if result.metadata else "Unknown",
+            character_name=result.metadata.get("character", "Unknown")
+            if result.metadata
+            else "Unknown",
             latency_ms=latency_ms,
         )
     except HTTPException:
@@ -449,7 +457,9 @@ async def list_profiles() -> Dict[str, Any]:
     try:
         engine = get_engine()
         if not engine.character_manager:
-            raise HTTPException(status_code=500, detail="Character manager not available")
+            raise HTTPException(
+                status_code=500, detail="Character manager not available"
+            )
 
         names = engine.character_manager.get_available_characters()
         info = []
@@ -467,7 +477,9 @@ async def reload_profiles() -> Dict[str, Any]:
     try:
         engine = get_engine()
         if not engine.character_manager:
-            raise HTTPException(status_code=500, detail="Character manager not available")
+            raise HTTPException(
+                status_code=500, detail="Character manager not available"
+            )
         ok = await engine.character_manager.reload_profiles()
         return {"success": bool(ok)}
     except Exception as e:
@@ -478,9 +490,9 @@ async def reload_profiles() -> Dict[str, Any]:
 @toy_router.post("/profiles/upload")
 async def upload_profile_archive(archive: UploadFile = File(...)) -> Dict[str, Any]:
     """Upload a zip archive containing a character profile folder (profile.yaml, consent
-.yaml, voice artifact).
+    .yaml, voice artifact).
 
-    The archive is extracted under configs/characters/ and profiles are reloaded.
+        The archive is extracted under configs/characters/ and profiles are reloaded.
     """
     try:
         import tempfile
@@ -516,7 +528,9 @@ async def upload_profile_archive(archive: UploadFile = File(...)) -> Dict[str, A
 
         engine = get_engine()
         if not engine.character_manager:
-            raise HTTPException(status_code=500, detail="Character manager not available")
+            raise HTTPException(
+                status_code=500, detail="Character manager not available"
+            )
         ok = await engine.character_manager.reload_profiles()
         return {"success": bool(ok)}
     except Exception as e:
@@ -531,8 +545,8 @@ async def recompute_voice_embeddings(
 ) -> Dict[str, Any]:
     """Recompute stored voice embeddings for one or all characters.
 
-    Requires admin token provided via `x-admin-token` header and configured in env `CAI_
-ADMIN_TOKEN`.
+        Requires admin token provided via `x-admin-token` header and configured in env `CAI_
+    ADMIN_TOKEN`.
     """
     try:
         expected = os.environ.get("CAI_ADMIN_TOKEN")
@@ -557,9 +571,11 @@ ADMIN_TOKEN`.
                 path = str(candidate) if candidate.exists() else None
             if not path:
                 return False
-            return bool(await vm.recompute_embedding_from_artifact(
-                name, path, force=payload.force
-            ))
+            return bool(
+                await vm.recompute_embedding_from_artifact(
+                    name, path, force=payload.force
+                )
+            )
 
         results: Dict[str, bool] = {}
         if payload.character:
@@ -684,7 +700,6 @@ async def analyze_safety(text: str) -> Dict[str, Any]:
 
         # Log safety events if detected
         if safety_analysis.get("overall_level") != "SAFE":
-
             logger.log_safety_event(
                 "safety_concern_detected",
                 safety_analysis.get("overall_confidence", 0.0),
@@ -846,7 +861,7 @@ async def get_hardware_status() -> Dict[str, Any]:
                 "target_latency_ms": get_hardware_manager().constraints.target_latency_ms,
             },
             "power_status": (
-                await get_hardware_manager().power_manager.get_power_status()  # type: ignore
+                await get_hardware_manager().power_manager.get_power_status()
                 if hasattr(get_hardware_manager(), "power_manager")
                 else {}
             ),
@@ -911,7 +926,9 @@ async def root_active_character() -> Dict[str, Any]:
     try:
         engine = get_engine()
         if not engine.character_manager:
-            raise HTTPException(status_code=500, detail="Character manager not available")
+            raise HTTPException(
+                status_code=500, detail="Character manager not available"
+            )
         active = engine.character_manager.get_active_character()
         return {"active_character": active.name if active else None}
     except Exception as e:
@@ -955,11 +972,10 @@ async def root_hardware_sensors() -> Dict[str, Any]:
 @app.get("/hardware/power")
 async def root_hardware_power() -> Dict[str, Any]:
     try:
-        if (
-            hasattr(get_hardware_manager(), "power_manager")
-            and hasattr(get_hardware_manager().power_manager, "get_power_status")  # type: ignore
+        if hasattr(get_hardware_manager(), "power_manager") and hasattr(
+            get_hardware_manager().power_manager, "get_power_status"
         ):
-            power = await get_hardware_manager().power_manager.get_power_status()  # type: ignore
+            power = await get_hardware_manager().power_manager.get_power_status()
         else:
             power = {}
         return {"power_status": power}
@@ -988,7 +1004,9 @@ async def root_interact(payload: Dict[str, Any]) -> Dict[str, Any]:
         try:
             audio_bytes = base64.b64decode(audio_b64)
         except Exception:
-            raise HTTPException(status_code=400, detail="Invalid audio_data: not base64")
+            raise HTTPException(
+                status_code=400, detail="Invalid audio_data: not base64"
+            )
 
         # set character
         await engine.set_active_character(character_name)
@@ -1021,7 +1039,7 @@ async def root_metrics() -> Dict[str, Any]:
 
 @app.get("/models/info")
 async def root_models_info() -> Dict[str, Any]:
-    return {"models": ["whisper", "llama", "xtts"]}
+    return {"models": ["wav2vec2", "llama", "coqui"]}
 
 
 @app.get("/models/status")
@@ -1046,13 +1064,17 @@ async def root_voices_inject(data: Dict[str, Any]) -> Dict[str, str]:
         try:
             voice_bytes = base64.b64decode(voice_b64)
         except Exception:
-            raise HTTPException(status_code=400, detail="Invalid voice_data: not base64")
+            raise HTTPException(
+                status_code=400, detail="Invalid voice_data: not base64"
+            )
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp.write(voice_bytes)
             tmp_path = tmp.name
         ok = await engine.inject_character_voice(character, tmp_path)
         if isinstance(ok, dict) and ok.get("success") is False:
-            raise HTTPException(status_code=500, detail=ok.get("error", "Unknown error"))
+            raise HTTPException(
+                status_code=500, detail=ok.get("error", "Unknown error")
+            )
         return {"success": bool(ok), "character_name": character}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1066,7 +1088,6 @@ async def root_voices() -> Dict[str, Any]:
 
 @app.options("/health")
 async def root_options_health() -> Response:
-
     response = Response()
     response.headers["access-control-allow-origin"] = "*"
     response.headers["access-control-allow-methods"] = "GET, POST, OPTIONS"

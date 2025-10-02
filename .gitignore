@@ -80,6 +80,15 @@ env_validation_report.json
 production_validation_report.json
 coverage.json
 coverage.xml
+bandit-report.json
+
+# MyPy cache
+.mypy_cache/
+*.mypy_cache/
+
+# Temporary files
+=*
+output.wav
 
 # Bundle files (large model files)
 bundles/

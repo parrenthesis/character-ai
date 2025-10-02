@@ -66,7 +66,9 @@ async def get_grafana_dashboard() -> Dict[str, Any]:
 
 
 @monitoring_router.post("/grafana/export")
-async def export_grafana_configuration(output_dir: str = "monitoring/grafana") -> Dict[str, str]:
+async def export_grafana_configuration(
+    output_dir: str = "monitoring/grafana",
+) -> Dict[str, str]:
     """Export Grafana configuration files."""
     try:
         output_path = Path.cwd() / output_dir
@@ -107,14 +109,16 @@ async def get_elk_status() -> Dict[str, Any]:
 
 
 @monitoring_router.post("/elk/export")
-async def export_elk_configuration(output_dir: str = "monitoring/elk") -> Dict[str, str]:
+async def export_elk_configuration(
+    output_dir: str = "monitoring/elk",
+) -> Dict[str, str]:
     """Export ELK stack configuration files."""
     try:
         output_path = Path.cwd() / output_dir
         elk = ELKIntegration(
             elasticsearch=ElasticsearchConfig(),
             logstash=LogstashConfig(),
-            kibana=KibanaConfig()
+            kibana=KibanaConfig(),
         )
 
         success = await elk.setup_elk_integration(output_path)
@@ -152,7 +156,9 @@ async def get_prometheus_config() -> Dict[str, Any]:
 
 
 @monitoring_router.post("/prometheus/export")
-async def export_prometheus_configuration(output_dir: str = "monitoring/prometheus") -> Dict[str, str]:
+async def export_prometheus_configuration(
+    output_dir: str = "monitoring/prometheus",
+) -> Dict[str, str]:
     """Export Prometheus configuration files."""
     try:
         output_path = Path.cwd() / output_dir
@@ -226,7 +232,7 @@ async def get_correlation_trace(trace_id: str) -> Dict[str, Any]:
 
 @monitoring_router.get("/logs/errors/summary")
 async def get_error_summary(
-    hours: int = Query(24, ge=1, le=168, description="Hours to look back")
+    hours: int = Query(24, ge=1, le=168, description="Hours to look back"),
 ) -> Dict[str, Any]:
     """Get error summary for the specified time period."""
     try:
@@ -360,7 +366,9 @@ async def get_detailed_health() -> Dict[str, Any]:
 
 
 @monitoring_router.post("/export/all")
-async def export_all_monitoring_configs(output_dir: str = "monitoring/complete") -> Dict[str, Any]:
+async def export_all_monitoring_configs(
+    output_dir: str = "monitoring/complete",
+) -> Dict[str, Any]:
     """Export all monitoring configurations (Grafana, ELK, Prometheus)."""
     try:
         output_path = Path.cwd() / output_dir

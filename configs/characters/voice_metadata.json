@@ -2,21 +2,17 @@
   "characters": {
     "data": {
       "character_name": "data",
+      "voice_file_path": "configs/characters/data/voice_samples/data_voice.wav",
+      "processed_voice_path": "configs/characters/data/processed_samples/data_voice.wav",
       "voice_samples_dir": "configs/characters/data/voice_samples",
       "processed_samples_dir": "configs/characters/data/processed_samples",
-      "processed_files": [
-        "configs/characters/data/processed_samples/data_voice.wav"
-      ],
-      "quality": "high",
-      "language": "en",
       "quality_score": 0.8,
-      "cloned_at": "2025-09-30T04:08:20.512372+00:00",
+      "cloned_at": "2025-10-02T00:42:27.374575+00:00",
       "available": true,
       "voice_processed": true,
-      "voice_embeddings_created": true,
-      "tts_integration_ready": true
+      "coqui_integration_ready": true
     }
   },
   "voice_quality_scores": {},
-  "last_updated": "2025-09-30T04:08:20.512385+00:00"
+  "last_updated": "2025-10-02T00:42:27.374598+00:00"
 }

@@ -44,8 +44,8 @@ async def get_audio_processor() -> StreamingAudioProcessor:
         config = AudioConfig(
             sample_rate=16000,
             chunk_size_ms=100,
-            stt_model="whisper-base",
-            tts_model="xtts",
+            stt_model="wav2vec2-base",
+            tts_model="coqui",
         )
         audio_processor = StreamingAudioProcessor(config)
         await audio_processor.initialize()
@@ -76,7 +76,6 @@ async def audio_websocket_endpoint() -> Dict[str, Any]:
     return {
         "websocket_url": "ws://localhost:8000/api/v1/streaming/audio/ws",
         "supported_formats": ["pcm_16k_16bit", "pcm_22k_16bit", "pcm_44k_16bit", "wav"],
-
         "features": [
             "real_time_stt",
             "voice_activity_detection",
@@ -128,7 +127,6 @@ async def audio_websocket(websocket: WebSocket) -> None:
             await websocket.close(code=1011, reason="Internal server error")
         except Exception as close_error:
             logger.warning(f"Failed to close audio WebSocket gracefully: {close_error}")
-
 
 
 @streaming_router.websocket("/llm/ws")

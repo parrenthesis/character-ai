@@ -170,7 +170,6 @@ class LLMCostMonitor:
             # Calculate cost
             cost_usd = self.calculate_cost(provider, model, input_tokens, output_tokens)
 
-
             # Create cost entry
             cost_entry = CostEntry(
                 provider=provider.value,
@@ -333,9 +332,7 @@ class LLMCostMonitor:
         if month:
             # Filter by month
             provider_entries = [
-                entry
-                for entry in provider_entries
-                if entry.timestamp.startswith(month)
+                entry for entry in provider_entries if entry.timestamp.startswith(month)
             ]
 
         total_cost = sum(entry.cost_usd for entry in provider_entries)

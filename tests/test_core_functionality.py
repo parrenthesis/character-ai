@@ -9,14 +9,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from character_ai.core.config import Config, Environment
-from character_ai.core.exceptions import ConfigurationError, ModelError, VoiceAIError
+from character_ai.core.exceptions import (
+    CharacterAIError,
+    ConfigurationError,
+    ModelError,
+)
 from character_ai.core.protocols import AudioData, AudioResult, ModelInfo, TextResult
 
 
 class TestCoreFunctionality:
     """Test core functionality with high coverage."""
 
-    def test_config_creation_and_access(self):
+    def test_config_creation_and_access(self) -> None:
         """Test Config creation and attribute access."""
         config = Config()
         assert config is not None
@@ -34,17 +38,17 @@ class TestCoreFunctionality:
         assert hasattr(config, "cache_dir")
         assert hasattr(config, "data_dir")
 
-    def test_config_environment_override(self):
+    def test_config_environment_override(self) -> None:
         """Test Config with different environment."""
         config = Config(environment=Environment.PRODUCTION)
         assert config.environment == Environment.PRODUCTION
 
-    def test_config_debug_mode(self):
+    def test_config_debug_mode(self) -> None:
         """Test Config debug mode."""
         config = Config(debug=True)
         assert config.debug is True
 
-    def test_config_from_env_basic(self):
+    def test_config_from_env_basic(self) -> None:
         """Test Config from environment variables."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch.dict(
@@ -71,21 +75,21 @@ class TestCoreFunctionality:
                 assert str(config.paths.models_dir) == f"{temp_dir}/models"
                 assert config.models.llama_backend == "transformers"
 
-    def test_config_from_env_empty(self):
+    def test_config_from_env_empty(self) -> None:
         """Test Config from empty environment."""
         with patch.dict("os.environ", {}, clear=True):
             config = Config.from_env()
             assert config is not None
             assert config.environment == Environment.DEVELOPMENT
 
-    def test_config_from_env_invalid_values(self):
+    def test_config_from_env_invalid_values(self) -> None:
         """Test Config from environment with invalid values."""
         with patch.dict("os.environ", {"CAI_DEBUG": "invalid_bool"}):
             # Should handle invalid values gracefully
             config = Config.from_env()
             assert config is not None
 
-    def test_audio_data_creation(self):
+    def test_audio_data_creation(self) -> None:
         """Test AudioData creation and access."""
         audio = AudioData(
             data=b"test_audio_data",
@@ -101,14 +105,14 @@ class TestCoreFunctionality:
         assert audio.duration == 2.5
         assert audio.format == "wav"
 
-    def test_audio_data_default_duration(self):
+    def test_audio_data_default_duration(self) -> None:
         """Test AudioData with default duration."""
         audio = AudioData(
             data=b"test_audio_data", sample_rate=22050, channels=1, format="wav"
         )
         assert audio.duration == 0.0
 
-    def test_audio_result_creation(self):
+    def test_audio_result_creation(self) -> None:
         """Test AudioResult creation."""
         audio_data = AudioData(
             data=b"test_audio_data",
@@ -122,7 +126,7 @@ class TestCoreFunctionality:
             audio_data=audio_data,
             text="transcribed text",
             embeddings=[0.1, 0.2, 0.3],
-            metadata={"model": "whisper"},
+            metadata={"model": "wav2vec2"},
             processing_time=0.5,
             error=None,
         )
@@ -130,11 +134,11 @@ class TestCoreFunctionality:
         assert result.audio_data == audio_data
         assert result.text == "transcribed text"
         assert result.embeddings == [0.1, 0.2, 0.3]
-        assert result.metadata == {"model": "whisper"}
+        assert result.metadata == {"model": "wav2vec2"}
         assert result.processing_time == 0.5
         assert result.error is None
 
-    def test_text_result_creation(self):
+    def test_text_result_creation(self) -> None:
         """Test TextResult creation."""
         result = TextResult(
             text="generated text",
@@ -150,7 +154,7 @@ class TestCoreFunctionality:
         assert result.processing_time == 0.3
         assert result.error is None
 
-    def test_model_info_creation(self):
+    def test_model_info_creation(self) -> None:
         """Test ModelInfo creation."""
         info = ModelInfo(
             name="test_model",
@@ -171,35 +175,35 @@ class TestCoreFunctionality:
         assert info.loaded_at == 1234567890.0
         assert info.status == "loaded"
 
-    def test_voice_ai_error_basic(self):
-        """Test VoiceAIError basic functionality."""
-        error = VoiceAIError("Test error message")
-        assert str(error) == "[VoiceAI] Test error message"
+    def test_voice_ai_error_basic(self) -> None:
+        """Test CharacterAIError basic functionality."""
+        error = CharacterAIError("Test error message")
+        assert str(error) == "[CharacterAI] Test error message"
         assert error.message == "Test error message"
         assert error.component is None
         assert error.error_code is None
 
-    def test_voice_ai_error_with_component(self):
-        """Test VoiceAIError with component."""
-        error = VoiceAIError("Test error", component="TestComponent")
+    def test_voice_ai_error_with_component(self) -> None:
+        """Test CharacterAIError with component."""
+        error = CharacterAIError("Test error", component="TestComponent")
         assert str(error) == "[TestComponent] Test error"
         assert error.component == "TestComponent"
 
-    def test_voice_ai_error_with_error_code(self):
-        """Test VoiceAIError with error code."""
-        error = VoiceAIError("Test error", error_code="ERR001")
-        assert str(error) == "[ERR001] [VoiceAI] Test error"
+    def test_voice_ai_error_with_error_code(self) -> None:
+        """Test CharacterAIError with error code."""
+        error = CharacterAIError("Test error", error_code="ERR001")
+        assert str(error) == "[ERR001] [CharacterAI] Test error"
         assert error.error_code == "ERR001"
 
-    def test_voice_ai_error_with_details(self):
-        """Test VoiceAIError with details."""
+    def test_voice_ai_error_with_details(self) -> None:
+        """Test CharacterAIError with details."""
         details = {"file": "test.py", "line": 42}
-        error = VoiceAIError("Test error", details=details)
+        error = CharacterAIError("Test error", details=details)
         assert error.details == details
 
-    def test_voice_ai_error_to_dict(self):
-        """Test VoiceAIError to_dict method."""
-        error = VoiceAIError(
+    def test_voice_ai_error_to_dict(self) -> None:
+        """Test CharacterAIError to_dict method."""
+        error = CharacterAIError(
             "Test error",
             error_code="ERR001",
             component="TestComponent",
@@ -207,33 +211,33 @@ class TestCoreFunctionality:
         )
         error_dict = error.to_dict()
 
-        assert error_dict["error_type"] == "VoiceAIError"
+        assert error_dict["error_type"] == "CharacterAIError"
         assert error_dict["message"] == "Test error"
         assert error_dict["error_code"] == "ERR001"
         assert error_dict["component"] == "TestComponent"
         assert error_dict["details"] == {"key": "value"}
 
-    def test_configuration_error(self):
+    def test_configuration_error(self) -> None:
         """Test ConfigurationError."""
         error = ConfigurationError("Config invalid")
-        assert str(error) == "[VoiceAI] Config invalid"
-        assert isinstance(error, VoiceAIError)
+        assert str(error) == "[CharacterAI] Config invalid"
+        assert isinstance(error, CharacterAIError)
 
-    def test_model_error(self):
+    def test_model_error(self) -> None:
         """Test ModelError."""
         error = ModelError("Model failed", component="TestModel")
         assert str(error) == "[TestModel] Model failed"
-        assert isinstance(error, VoiceAIError)
+        assert isinstance(error, CharacterAIError)
 
-    def test_audio_processing_error(self):
+    def test_audio_processing_error(self) -> None:
         """Test AudioProcessingError."""
         from character_ai.core.exceptions import AudioProcessingError
 
         error = AudioProcessingError("Audio processing failed", component="TestAudio")
         assert str(error) == "[TestAudio] Audio processing failed"
-        assert isinstance(error, VoiceAIError)
+        assert isinstance(error, CharacterAIError)
 
-    def test_validation_error(self):
+    def test_validation_error(self) -> None:
         """Test ValidationError."""
         from character_ai.core.exceptions import ValidationError
 
@@ -242,9 +246,9 @@ class TestCoreFunctionality:
         assert error.details["value"] == "test_value"
         assert error.details["reason"] == "invalid_format"
         assert error.details["field"] == "test_field"
-        assert isinstance(error, VoiceAIError)
+        assert isinstance(error, CharacterAIError)
 
-    def test_edge_optimizer_basic(self):
+    def test_edge_optimizer_basic(self) -> None:
         """Test EdgeModelOptimizer basic functionality."""
         constraints = MagicMock()
         constraints.max_memory_gb = 2.0
@@ -261,8 +265,8 @@ class TestCoreFunctionality:
         assert optimizer.base_config is not None
 
     @pytest.mark.asyncio
-    async def test_edge_optimizer_whisper_optimization(self):
-        """Test Whisper optimization."""
+    async def test_edge_optimizer_stt_optimization(self) -> None:
+        """Test STT optimization."""
         constraints = MagicMock()
         constraints.max_memory_gb = 2.0
         constraints.max_cpu_cores = 4
@@ -271,13 +275,13 @@ class TestCoreFunctionality:
 
         optimizer = EdgeModelOptimizer(constraints)
 
-        config = await optimizer.optimize_whisper_for_toy()
+        config = await optimizer.optimize_wav2vec2_for_toy()
         assert config is not None
         assert hasattr(config, "models")
 
     @pytest.mark.asyncio
-    async def test_edge_optimizer_xtts_optimization(self):
-        """Test XTTS optimization."""
+    async def test_edge_optimizer_coqui_optimization(self) -> None:
+        """Test Coqui TTS optimization."""
         constraints = MagicMock()
         constraints.max_memory_gb = 2.0
         constraints.max_cpu_cores = 4
@@ -286,12 +290,12 @@ class TestCoreFunctionality:
 
         optimizer = EdgeModelOptimizer(constraints)
 
-        config = await optimizer.optimize_xtts_for_toy()
+        config = await optimizer.optimize_coqui_for_toy()
         assert config is not None
         assert hasattr(config, "models")
 
     @pytest.mark.asyncio
-    async def test_edge_optimizer_llm_optimization(self):
+    async def test_edge_optimizer_llm_optimization(self) -> None:
         """Test LLM optimization."""
         constraints = MagicMock()
         constraints.max_memory_gb = 2.0
@@ -305,7 +309,7 @@ class TestCoreFunctionality:
         assert config is not None
         assert hasattr(config, "models")
 
-    def test_toy_hardware_manager_basic(self):
+    def test_toy_hardware_manager_basic(self) -> None:
         """Test ToyHardwareManager basic functionality."""
         from character_ai.hardware.toy_hardware_manager import (
             HardwareConstraints,
@@ -318,7 +322,7 @@ class TestCoreFunctionality:
         assert manager is not None
         assert manager.constraints == constraints
 
-    def test_mock_hardware_manager_basic(self):
+    def test_mock_hardware_manager_basic(self) -> None:
         """Test MockHardwareManager basic functionality."""
         from tests.testing_utilities.mock_hardware import MockHardwareManager
 
@@ -329,7 +333,7 @@ class TestCoreFunctionality:
         assert hasattr(manager, "mock_led_states")
         assert hasattr(manager, "mock_battery_level")
 
-    def test_audio_tester_basic(self):
+    def test_audio_tester_basic(self) -> None:
         """Test AudioTester basic functionality."""
         from tests.testing_utilities.audio_tester import AudioTester
 
@@ -338,7 +342,7 @@ class TestCoreFunctionality:
             assert tester is not None
             assert tester.test_audio_dir == Path(temp_dir)
 
-    def test_toy_setup_basic(self):
+    def test_toy_setup_basic(self) -> None:
         """Test ToySetup basic functionality."""
         from character_ai.production.toy_setup import ToySetup
 
@@ -346,19 +350,21 @@ class TestCoreFunctionality:
         assert setup is not None
         assert hasattr(setup, "constraints")
         assert hasattr(setup, "hardware_manager")
+        # Engine is a property that may return None if not initialized
         assert hasattr(setup, "engine")
+        # Test that we can access the engine property (even if it returns None)
+        # Engine can be None if not initialized, which is fine for this test
 
-    def test_voice_manager_basic(self):
+    def test_voice_manager_basic(self) -> None:
         """Test VoiceManager basic functionality."""
         from character_ai.characters.voice_manager import VoiceManager
-
 
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = VoiceManager(voice_storage_dir=temp_dir)
             assert manager is not None
             assert manager.voice_storage_dir == Path(temp_dir)
 
-    def test_protocols_interface_compliance(self):
+    def test_protocols_interface_compliance(self) -> None:
         """Test that protocol interfaces are properly defined."""
         from character_ai.core.protocols import (
             AudioProcessor,
@@ -385,7 +391,7 @@ class TestCoreFunctionality:
         assert callable(StreamingAudioProcessor)
         assert callable(StreamingTextProcessor)
 
-    def test_config_sections_have_required_attributes(self):
+    def test_config_sections_have_required_attributes(self) -> None:
         """Test that config sections have required attributes."""
         config = Config()
 
@@ -415,10 +421,10 @@ class TestCoreFunctionality:
         # Test models section
         assert hasattr(config.models, "llama_backend")
         assert hasattr(config.models, "llama_model")
-        assert hasattr(config.models, "whisper_model")
-        assert hasattr(config.models, "xtts_model")
+        assert hasattr(config.models, "wav2vec2_model")
+        assert hasattr(config.models, "coqui_model")
 
-    def test_config_gpu_section(self):
+    def test_config_gpu_section(self) -> None:
         """Test GPU configuration section."""
         config = Config()
 
@@ -426,7 +432,7 @@ class TestCoreFunctionality:
         assert hasattr(config.gpu, "memory_limit")
         assert hasattr(config.gpu, "precision")
 
-    def test_config_api_section(self):
+    def test_config_api_section(self) -> None:
         """Test API configuration section."""
         config = Config()
 
@@ -435,35 +441,34 @@ class TestCoreFunctionality:
         assert hasattr(config.api, "cors_origins")
         assert hasattr(config.api, "max_request_size")
 
-    def test_config_environment_enum(self):
+    def test_config_environment_enum(self) -> None:
         """Test Environment enum values."""
         assert Environment.DEVELOPMENT.value == "development"
         assert Environment.PRODUCTION.value == "production"
         assert Environment.TESTING.value == "testing"
 
-    def test_exception_inheritance_hierarchy(self):
+    def test_exception_inheritance_hierarchy(self) -> None:
         """Test exception inheritance hierarchy."""
         from character_ai.core.exceptions import (
             AudioProcessingError,
+            CharacterAIError,
             ConfigurationError,
             ModelError,
             ValidationError,
-            VoiceAIError,
         )
 
         # Test inheritance
-        assert issubclass(ConfigurationError, VoiceAIError)
-        assert issubclass(ModelError, VoiceAIError)
-        assert issubclass(AudioProcessingError, VoiceAIError)
-        assert issubclass(ValidationError, VoiceAIError)
+        assert issubclass(ConfigurationError, CharacterAIError)
+        assert issubclass(ModelError, CharacterAIError)
+        assert issubclass(AudioProcessingError, CharacterAIError)
+        assert issubclass(ValidationError, CharacterAIError)
 
-    def test_protocols_dataclass_serialization(self):
+    def test_protocols_dataclass_serialization(self) -> None:
         """Test that protocol dataclasses can be serialized."""
         from dataclasses import asdict
 
         audio = AudioData(
             data=b"test_data", sample_rate=22050, channels=1, duration=1.0, format="wav"
-
         )
 
         audio_dict = asdict(audio)
@@ -474,7 +479,7 @@ class TestCoreFunctionality:
         assert audio_dict["duration"] == 1.0
         assert audio_dict["format"] == "wav"
 
-    def test_config_immutable_sections(self):
+    def test_config_immutable_sections(self) -> None:
         """Test that config sections are properly structured."""
         config = Config()
 

@@ -14,7 +14,7 @@ from character_ai.characters.voice_manager import VoiceManager
 class TestVoiceManager:
     """Test VoiceManager functionality."""
 
-    def test_voice_manager_init(self):
+    def test_voice_manager_init(self) -> None:
         """Test VoiceManager initialization."""
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = VoiceManager(voice_storage_dir=temp_dir)
@@ -22,18 +22,18 @@ class TestVoiceManager:
         assert manager.voice_storage_dir is not None
         assert manager.character_voices == {}
 
-    def test_voice_manager_init_with_custom_dir(self):
+    def test_voice_manager_init_with_custom_dir(self) -> None:
         """Test VoiceManager initialization with custom directory."""
         import tempfile
 
         with tempfile.TemporaryDirectory() as temp_dir:
             custom_dir = Path(temp_dir) / "voices"
-            manager = VoiceManager(voice_storage_dir=custom_dir)
+            manager = VoiceManager(voice_storage_dir=str(custom_dir))
 
             assert manager.voice_storage_dir == custom_dir
 
     @pytest.mark.asyncio
-    async def test_voice_manager_inject_character_voice(self):
+    async def test_voice_manager_inject_character_voice(self) -> None:
         """Test VoiceManager character voice injection."""
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = VoiceManager(voice_storage_dir=temp_dir)
@@ -46,10 +46,10 @@ class TestVoiceManager:
         try:
             from unittest.mock import AsyncMock
 
-            mock_xtts = MagicMock()
-            mock_xtts.inject_character_voice = AsyncMock(return_value=MagicMock())
+            mock_tts = MagicMock()
+            mock_tts.inject_character_voice = AsyncMock(return_value=MagicMock())
             result = await manager.inject_character_voice(
-                "test_character", voice_file, mock_xtts
+                "test_character", voice_file, mock_tts
             )
 
             assert result is True
@@ -58,13 +58,18 @@ class TestVoiceManager:
             Path(voice_file).unlink(missing_ok=True)
 
     @pytest.mark.asyncio
-    async def test_voice_manager_get_character_voice_path(self):
+    async def test_voice_manager_get_character_voice_path(self) -> None:
         """Test VoiceManager get character voice path."""
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = VoiceManager(voice_storage_dir=temp_dir)
 
         # Create a mock processed voice file
-        processed_voice_path = manager.voice_storage_dir / "test_character" / "processed_voices" / "voice.wav"
+        processed_voice_path = (
+            manager.voice_storage_dir
+            / "test_character"
+            / "processed_voices"
+            / "voice.wav"
+        )
         processed_voice_path.parent.mkdir(parents=True, exist_ok=True)
         processed_voice_path.touch()
 
@@ -77,7 +82,7 @@ class TestVoiceManager:
         path = await manager.get_character_voice_path("nonexistent")
         assert path is None
 
-    def test_voice_manager_list_character_voices(self):
+    def test_voice_manager_list_character_voices(self) -> None:
         """Test VoiceManager list character voices."""
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = VoiceManager(voice_storage_dir=temp_dir)

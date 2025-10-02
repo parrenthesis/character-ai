@@ -1,5 +1,5 @@
 """
-Exception hierarchy for VoiceAI Research Toolkit.
+Exception hierarchy for Character AI Platform.
 
 Provides structured error handling with specific error types for different
 components and failure modes.
@@ -7,11 +7,11 @@ components and failure modes.
 
 from typing import Any, Callable, Dict, Optional, TypeVar
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
-class VoiceAIError(Exception):
-    """Base exception for all VoiceAI-related errors."""
+class CharacterAIError(Exception):
+    """Base exception for all Character AI Platform errors."""
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class VoiceAIError(Exception):
 
     def __str__(self) -> str:
         """String representation of the error."""
-        base_msg = f"[{self.component or 'VoiceAI'}] {self.message}"
+        base_msg = f"[{self.component or 'CharacterAI'}] {self.message}"
         if self.error_code:
             base_msg = f"[{self.error_code}] {base_msg}"
         return base_msg
@@ -44,49 +44,49 @@ class VoiceAIError(Exception):
         }
 
 
-class ConfigurationError(VoiceAIError):
+class ConfigurationError(CharacterAIError):
     """Exception raised when configuration is invalid or missing."""
 
     pass
 
 
-class GPUError(VoiceAIError):
+class GPUError(CharacterAIError):
     """Exception raised when GPU operations fail."""
 
     pass
 
 
-class AlgorithmError(VoiceAIError):
+class AlgorithmError(CharacterAIError):
     """Exception raised when algorithm operations fail."""
 
     pass
 
 
-class AudioProcessingError(VoiceAIError):
+class AudioProcessingError(CharacterAIError):
     """Exception raised when audio processing fails."""
 
     pass
 
 
-class ModelError(VoiceAIError):
+class ModelError(CharacterAIError):
     """Exception raised when model operations fail."""
 
     pass
 
 
-class InferenceError(VoiceAIError):
+class InferenceError(CharacterAIError):
     """Exception raised when inference operations fail."""
 
     pass
 
 
-class APIError(VoiceAIError):
+class APIError(CharacterAIError):
     """Exception raised when API operations fail."""
 
     pass
 
 
-class ResourceError(VoiceAIError):
+class ResourceError(CharacterAIError):
     """Exception raised when resource allocation fails."""
 
     pass
@@ -122,7 +122,9 @@ class ModelLoadError(ModelError):
 class GPUOutOfMemoryError(GPUError):
     """Exception raised when GPU runs out of memory."""
 
-    def __init__(self, requested_memory: str, available_memory: str, **kwargs: Any) -> None:
+    def __init__(
+        self, requested_memory: str, available_memory: str, **kwargs: Any
+    ) -> None:
         super().__init__(
             f"GPU out of memory: requested {requested_memory}, available {available_memory}",
             error_code="GPU_OUT_OF_MEMORY",
@@ -137,10 +139,11 @@ class GPUOutOfMemoryError(GPUError):
 class AudioFormatError(AudioProcessingError):
     """Exception raised when audio format is unsupported."""
 
-    def __init__(self, audio_format: str, supported_formats: list, **kwargs: Any) -> None:
+    def __init__(
+        self, audio_format: str, supported_formats: list, **kwargs: Any
+    ) -> None:
         super().__init__(
             f"Unsupported audio format: {audio_format}. Supported: {supported_formats}",
-
             error_code="AUDIO_FORMAT_ERROR",
             details={
                 "audio_format": audio_format,
@@ -195,7 +198,7 @@ class RateLimitError(APIError):
         )
 
 
-class ValidationError(VoiceAIError):
+class ValidationError(CharacterAIError):
     """Exception raised when input validation fails."""
 
     def __init__(self, field: str, value: Any, reason: str, **kwargs: Any) -> None:

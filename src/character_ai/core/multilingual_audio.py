@@ -11,8 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ..algorithms.conversational_ai.whisper_processor import WhisperProcessor
-from ..algorithms.conversational_ai.xtts_processor import XTTSProcessor
+from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
 from ..core.exceptions import AudioProcessingError
 from ..core.protocols import AudioData, AudioResult
 from .config import Config
@@ -61,7 +60,7 @@ class MultiLanguageTTSManager:
     def __init__(self, config: Config):
         self.config = config
         self.localization_manager: Any = get_localization_manager()
-        self.xtts_processor: Optional[XTTSProcessor] = None
+        self.tts_processor: Optional[CoquiProcessor] = None
         self.language_configs: Dict[LanguageCode, LanguageAudioConfig] = {}
         self._initialized = False
 
@@ -73,8 +72,8 @@ class MultiLanguageTTSManager:
         # English configuration
         self.language_configs[LanguageCode.ENGLISH] = LanguageAudioConfig(
             language_code=LanguageCode.ENGLISH,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "normal",
@@ -90,8 +89,8 @@ class MultiLanguageTTSManager:
         # Spanish configuration
         self.language_configs[LanguageCode.SPANISH] = LanguageAudioConfig(
             language_code=LanguageCode.SPANISH,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "normal",
@@ -107,8 +106,8 @@ class MultiLanguageTTSManager:
         # French configuration
         self.language_configs[LanguageCode.FRENCH] = LanguageAudioConfig(
             language_code=LanguageCode.FRENCH,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "moderate",
@@ -124,8 +123,8 @@ class MultiLanguageTTSManager:
         # Chinese configuration
         self.language_configs[LanguageCode.CHINESE] = LanguageAudioConfig(
             language_code=LanguageCode.CHINESE,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "measured",
@@ -141,8 +140,8 @@ class MultiLanguageTTSManager:
         # Japanese configuration
         self.language_configs[LanguageCode.JAPANESE] = LanguageAudioConfig(
             language_code=LanguageCode.JAPANESE,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "measured",
@@ -158,8 +157,8 @@ class MultiLanguageTTSManager:
         # Korean configuration
         self.language_configs[LanguageCode.KOREAN] = LanguageAudioConfig(
             language_code=LanguageCode.KOREAN,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "measured",
@@ -175,8 +174,8 @@ class MultiLanguageTTSManager:
         # Arabic configuration
         self.language_configs[LanguageCode.ARABIC] = LanguageAudioConfig(
             language_code=LanguageCode.ARABIC,
-            tts_model="xtts_v2",
-            stt_model="whisper-base",
+            tts_model="coqui",
+            stt_model="wav2vec2-base",
             voice_characteristics={
                 "preferred_pitch": "medium",
                 "speaking_rate": "measured",
@@ -194,9 +193,9 @@ class MultiLanguageTTSManager:
         try:
             logger.info("Initializing multi-language TTS manager")
 
-            # Initialize XTTS processor
-            self.xtts_processor = XTTSProcessor(self.config)
-            await self.xtts_processor.initialize()
+            # Initialize Coqui processor
+            self.tts_processor = CoquiProcessor(self.config)
+            await self.tts_processor.initialize()
 
             self._initialized = True
             logger.info("Multi-language TTS manager initialized successfully")
@@ -208,9 +207,9 @@ class MultiLanguageTTSManager:
     async def shutdown(self) -> None:
         """Shutdown the multi-language TTS manager."""
         try:
-            if self.xtts_processor:
-                await self.xtts_processor.shutdown()
-                self.xtts_processor = None
+            if self.tts_processor:
+                await self.tts_processor.shutdown()
+                self.tts_processor = None
 
             self._initialized = False
             logger.info("Multi-language TTS manager shutdown complete")
@@ -254,7 +253,6 @@ class MultiLanguageTTSManager:
 
             # Get voice characteristics
             voice_characteristics = self.localization_manager.get_voice_characteristics(
-
                 language_code
             )
 
@@ -263,13 +261,12 @@ class MultiLanguageTTSManager:
                 text, cultural_adaptations, language_code
             )
 
-            # Synthesize with XTTS
-            if self.xtts_processor is None:
-                raise AudioProcessingError("XTTS processor not initialized")
-            audio_result = await self.xtts_processor.synthesize(
+            # Synthesize with Coqui
+            if self.tts_processor is None:
+                raise AudioProcessingError("Coqui processor not initialized")
+            audio_result = await self.tts_processor.synthesize_speech(
                 text=adapted_text,
-                voice_style=voice_style
-                or voice_characteristics.get("preferred_pitch", "medium"),
+                voice_path=None,  # No voice cloning for now
                 language=language_code.value,
             )
 
@@ -334,7 +331,7 @@ class MultiLanguageSTTManager:
     def __init__(self, config: Config):
         self.config = config
         self.localization_manager: Any = get_localization_manager()
-        self.whisper_processor: Optional[WhisperProcessor] = None
+        self.wav2vec2_processor: Optional[Any] = None
         self._initialized = False
 
     async def initialize(self) -> None:
@@ -342,9 +339,13 @@ class MultiLanguageSTTManager:
         try:
             logger.info("Initializing multi-language STT manager")
 
-            # Initialize Whisper processor
-            self.whisper_processor = WhisperProcessor(self.config)
-            await self.whisper_processor.initialize()
+            # Initialize Wav2Vec2 processor
+            from ..algorithms.conversational_ai.wav2vec2_processor import (
+                Wav2Vec2Processor,
+            )
+
+            self.wav2vec2_processor = Wav2Vec2Processor(self.config)
+            await self.wav2vec2_processor.initialize()
 
             self._initialized = True
             logger.info("Multi-language STT manager initialized successfully")
@@ -356,9 +357,9 @@ class MultiLanguageSTTManager:
     async def shutdown(self) -> None:
         """Shutdown the multi-language STT manager."""
         try:
-            if self.whisper_processor:
-                await self.whisper_processor.shutdown()
-                self.whisper_processor = None
+            if self.wav2vec2_processor:
+                await self.wav2vec2_processor.shutdown()
+                self.wav2vec2_processor = None
 
             self._initialized = False
             logger.info("Multi-language STT manager shutdown complete")
@@ -379,10 +380,10 @@ class MultiLanguageSTTManager:
         start_time = time.time()
 
         try:
-            # Process audio with Whisper
-            if self.whisper_processor is None:
-                raise AudioProcessingError("Whisper processor not initialized")
-            audio_result = await self.whisper_processor.process_audio(
+            # Process audio with Wav2Vec2
+            if self.wav2vec2_processor is None:
+                raise AudioProcessingError("Wav2Vec2 processor not initialized")
+            audio_result = await self.wav2vec2_processor.process_audio(
                 audio, language=language_code.value if language_code else None
             )
 
@@ -402,7 +403,6 @@ class MultiLanguageSTTManager:
                 detected_language
             )
             voice_characteristics = self.localization_manager.get_voice_characteristics(
-
                 detected_language
             )
 
@@ -423,15 +423,15 @@ class MultiLanguageSTTManager:
 
     async def get_supported_languages(self) -> List[LanguageCode]:
         """Get list of supported languages."""
-        if not self.whisper_processor:
+        if not self.wav2vec2_processor:
             return []
 
-        # Get supported languages from Whisper
-        whisper_languages = await self.whisper_processor.get_available_languages()
+        # Get supported languages from Wav2Vec2
+        wav2vec2_languages = await self.wav2vec2_processor.get_supported_languages()
 
         # Map to our LanguageCode enum
         supported_languages = []
-        for lang in whisper_languages:
+        for lang in wav2vec2_languages:
             try:
                 # Map common language codes
                 lang_mapping = {

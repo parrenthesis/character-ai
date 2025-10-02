@@ -61,7 +61,7 @@ class CatalogVoiceManager:
         character_name: str,
         voice_file_path: str,
         franchise: str = "original",
-        xtts_processor: Optional[Any] = None,
+        tts_processor: Optional[Any] = None,
         quality_score: Optional[float] = None,
     ) -> bool:
         """Clone voice for a character and integrate with catalog."""
@@ -73,13 +73,12 @@ class CatalogVoiceManager:
             if not character:
                 logger.error(
                     f"Character '{character_name}' not found in franchise '{franchise}'"
-
                 )
                 return False
 
             # Clone voice using existing voice manager
             success = await self.voice_manager.inject_character_voice(
-                character_name, voice_file_path, xtts_processor
+                character_name, voice_file_path, tts_processor
             )
 
             if not success:
@@ -176,14 +175,16 @@ class CatalogVoiceManager:
 
     async def get_franchise_voice_stats(self, franchise: str) -> Dict[str, Any]:
         """Get voice statistics for a franchise."""
-        return dict(self.voice_metadata["franchises"].get(
-            franchise,
-            {
-                "total_characters": 0,
-                "characters_with_voice": 0,
-                "voice_availability": 0.0,
-            },
-        ))
+        return dict(
+            self.voice_metadata["franchises"].get(
+                franchise,
+                {
+                    "total_characters": 0,
+                    "characters_with_voice": 0,
+                    "voice_availability": 0.0,
+                },
+            )
+        )
 
     async def search_characters_by_voice_quality(
         self,
@@ -281,7 +282,6 @@ class CatalogVoiceManager:
                         "characters_with_voice", 0
                     ),
                     "voice_availability": franchise_info.get("characters_with_voice", 0)
-
                     / max(franchise_info.get("total_characters", 1), 1),
                 }
 

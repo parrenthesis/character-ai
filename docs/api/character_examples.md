@@ -28,10 +28,10 @@ llm:
   temperature: 0.7
   max_tokens: 150
 stt:
-  model: "whisper-base"
+  model: "wav2vec2-base"
   language: "en"
 tts:
-  model: "xtts"
+  model: "coqui"
   voice_id: "sparkle_voice"
   speed: 1.0
 consent:
@@ -73,11 +73,11 @@ llm:
   max_tokens: 200
   system_prompt: "You are a helpful robot assistant focused on education and learning."
 stt:
-  model: "whisper-large"
+  model: "wav2vec2-large"
   language: "en"
   noise_reduction: true
 tts:
-  model: "xtts"
+  model: "coqui"
   voice_id: "robot_voice"
   speed: 0.9
   pitch: 1.1

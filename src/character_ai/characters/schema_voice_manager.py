@@ -20,13 +20,20 @@ logger = logging.getLogger(__name__)
 class SchemaVoiceManager:
     """Voice management for the new schema format (configs/characters/)."""
 
-    def __init__(self, base_path: Optional[Path] = None):
+    def __init__(self, base_path: Optional[Path] = None, config: Optional[Any] = None):
         """Initialize schema voice manager."""
         self.base_path = base_path or Path.cwd()
         self.characters_dir = self.base_path / "configs" / "characters"
         self.voice_manager = VoiceManager()
         self.voice_metadata_file = self.characters_dir / "voice_metadata.json"
         self.voice_metadata = self._load_voice_metadata()
+        # Initialize config with defaults if not provided
+        if config is None:
+            from ..core.config import Config
+
+            self.config = Config()
+        else:
+            self.config = config
 
     def _load_voice_metadata(self) -> Dict[str, Any]:
         """Load voice metadata from storage."""
@@ -76,6 +83,7 @@ class SchemaVoiceManager:
                 return None
 
             import yaml
+
             with open(profile_file, "r") as f:
                 return yaml.safe_load(f)  # type: ignore[no-any-return]
         except Exception as e:
@@ -88,12 +96,14 @@ class SchemaVoiceManager:
         voice_file_path: str,
         quality_score: Optional[float] = None,
     ) -> bool:
-        """Clone character voice from a single file using real XTTS voice processing."""
+        """Clone character voice from a single file using real Coqui TTS voice processing."""
         try:
             # Check if character exists in new schema format
             character_profile = self._get_character_profile(character_name)
             if not character_profile:
-                logger.error(f"Character '{character_name}' not found in configs/characters/")
+                logger.error(
+                    f"Character '{character_name}' not found in configs/characters/"
+                )
                 return False
 
             # Get voice samples directory (raw input)
@@ -110,42 +120,56 @@ class SchemaVoiceManager:
                 logger.error(f"Voice file not found: {voice_file_path}")
                 return False
 
-            # Copy to voice samples directory
+            # Copy to voice samples directory if not already there
             dest_file = voice_samples_dir / voice_file.name
             import shutil
-            shutil.copy2(voice_file, dest_file)
 
-            # REAL VOICE CLONING: Process voice with XTTS
-            processed_voice_path = await self._process_voice_with_xtts(
+            if voice_file.resolve() != dest_file.resolve():
+                shutil.copy2(voice_file, dest_file)
+
+            # REAL VOICE CLONING: Process voice with Coqui TTS
+            processed_voice_path = await self._process_voice_with_coqui(
                 character_name=character_name,
                 voice_file_path=str(dest_file),
                 processed_samples_dir=processed_samples_dir,
-                quality_score=quality_score
+                quality_score=quality_score,
             )
 
             if not processed_voice_path:
-                logger.error(f"Failed to process voice for character '{character_name}'")
+                logger.error(
+                    f"Failed to process voice for character '{character_name}'"
+                )
                 return False
 
             # Update voice metadata
             voice_key = character_name
             self.voice_metadata["characters"][voice_key] = {
                 "character_name": character_name,
-                "voice_file_path": str(dest_file.relative_to(self.base_path)),  # Raw voice sample
-                "processed_voice_path": processed_voice_path,  # Processed voice file
-                "voice_samples_dir": str(voice_samples_dir.relative_to(self.base_path)),  # Voice samples directory
-                "processed_samples_dir": str(processed_samples_dir.relative_to(self.base_path)),  # Processed samples directory
+                "voice_file_path": str(
+                    dest_file.relative_to(self.base_path)
+                ),  # Raw voice sample
+                "processed_voice_path": str(
+                    Path(processed_voice_path).relative_to(self.base_path)
+                ),  # Processed voice file
+                "voice_samples_dir": str(
+                    voice_samples_dir.relative_to(self.base_path)
+                ),  # Voice samples directory
+                "processed_samples_dir": str(
+                    processed_samples_dir.relative_to(self.base_path)
+                ),  # Processed samples directory
                 "quality_score": quality_score or 0.8,
                 "cloned_at": datetime.now(timezone.utc).isoformat(),
                 "available": True,
                 "voice_processed": True,  # Indicates real voice processing was done
-                "xtts_integration_ready": True,  # Indicates ready for TTS integration
+                "coqui_integration_ready": True,  # Indicates ready for TTS integration
             }
 
             # Save metadata
             self._save_voice_metadata()
 
-            logger.info(f"Voice cloned and processed for character '{character_name}' with XTTS")
+            logger.info(
+                f"Voice cloned and processed for character '{character_name}' with Coqui TTS"
+            )
             return True
 
         except Exception as e:
@@ -164,7 +188,9 @@ class SchemaVoiceManager:
             # Check if character exists in new schema format
             character_profile = self._get_character_profile(character_name)
             if not character_profile:
-                logger.error(f"Character '{character_name}' not found in configs/characters/")
+                logger.error(
+                    f"Character '{character_name}' not found in configs/characters/"
+                )
                 return False
 
             # Get voice samples directory
@@ -175,7 +201,7 @@ class SchemaVoiceManager:
 
             # Get all audio files from samples directory
             audio_files: list[Path] = []
-            for ext in ['*.wav', '*.mp3', '*.flac', '*.m4a']:
+            for ext in ["*.wav", "*.mp3", "*.flac", "*.m4a"]:
                 audio_files.extend(samples_dir.glob(ext))
 
             if not audio_files:
@@ -183,47 +209,66 @@ class SchemaVoiceManager:
                 return False
 
             # Get character's processed samples directory (output)
-            character_processed_samples_dir = self._get_processed_samples_dir(character_name)
+            character_processed_samples_dir = self._get_processed_samples_dir(
+                character_name
+            )
             character_processed_samples_dir.mkdir(parents=True, exist_ok=True)
 
-            # REAL VOICE CLONING: Process each audio file with XTTS
+            # REAL VOICE CLONING: Process each audio file with Coqui TTS
             processed_files = []
             for audio_file in audio_files:
                 # Copy to voice samples directory first
-                char_voice_samples_dir: Path = self._get_voice_samples_dir(character_name)
+                char_voice_samples_dir: Path = self._get_voice_samples_dir(
+                    character_name
+                )
                 char_voice_samples_dir.mkdir(parents=True, exist_ok=True)
                 dest_file = char_voice_samples_dir / audio_file.name
 
                 # Copy file if source and destination are different
                 if audio_file.resolve() != dest_file.resolve():
                     import shutil
+
                     shutil.copy2(audio_file, dest_file)
 
-                # REAL VOICE PROCESSING: Process with XTTS (always process, even if file already exists)
-                processed_voice_path = await self._process_voice_with_xtts(
+                # REAL VOICE PROCESSING: Process with Coqui TTS (always process, even if file already exists)
+                processed_voice_path = await self._process_voice_with_coqui(
                     character_name=character_name,
                     voice_file_path=str(dest_file),
                     processed_samples_dir=character_processed_samples_dir,
-                    quality_score=0.8 if quality == "high" else 0.6
+                    quality_score=0.8 if quality == "high" else 0.6,
                 )
 
                 if processed_voice_path:
                     processed_files.append(processed_voice_path)
-                    logger.info(f"Processed voice sample: {audio_file.name} -> {processed_voice_path}")
+                    logger.info(
+                        f"Processed voice sample: {audio_file.name} -> {processed_voice_path}"
+                    )
                 else:
                     # Fallback: just copy the original file
-                    processed_filename = f"{audio_file.stem}_processed_{quality}{audio_file.suffix}"
-                    processed_dest = character_processed_samples_dir / processed_filename
+                    processed_filename = (
+                        f"{audio_file.stem}_processed_{quality}{audio_file.suffix}"
+                    )
+                    processed_dest = (
+                        character_processed_samples_dir / processed_filename
+                    )
                     shutil.copy2(audio_file, processed_dest)
-                    processed_files.append(str(processed_dest.relative_to(self.base_path)))
-                    logger.warning(f"Voice processing failed for {audio_file.name}, using original file")
+                    processed_files.append(
+                        str(processed_dest.relative_to(self.base_path))
+                    )
+                    logger.warning(
+                        f"Voice processing failed for {audio_file.name}, using original file"
+                    )
 
             # Update voice metadata
             voice_key = character_name
             self.voice_metadata["characters"][voice_key] = {
                 "character_name": character_name,
-                "voice_samples_dir": str(samples_dir.relative_to(self.base_path)),  # Original input directory
-                "processed_samples_dir": str(character_processed_samples_dir.relative_to(self.base_path)),  # Processed output directory
+                "voice_samples_dir": str(
+                    samples_dir.relative_to(self.base_path)
+                ),  # Original input directory
+                "processed_samples_dir": str(
+                    character_processed_samples_dir.relative_to(self.base_path)
+                ),  # Processed output directory
                 "processed_files": processed_files,  # Processed file paths
                 "quality": quality,
                 "language": language,
@@ -238,14 +283,20 @@ class SchemaVoiceManager:
             # Save metadata
             self._save_voice_metadata()
 
-            logger.info(f"Voice cloned for character '{character_name}' from {len(audio_files)} samples")
+            logger.info(
+                f"Voice cloned for character '{character_name}' from {len(audio_files)} samples"
+            )
             return True
 
         except Exception as e:
-            logger.error(f"Error cloning voice from samples for character '{character_name}': {e}")
+            logger.error(
+                f"Error cloning voice from samples for character '{character_name}': {e}"
+            )
             return False
 
-    async def get_character_voice_info(self, character_name: str) -> Optional[Dict[str, Any]]:
+    async def get_character_voice_info(
+        self, character_name: str
+    ) -> Optional[Dict[str, Any]]:
         """Get voice information for a character."""
         try:
             voice_key = character_name
@@ -258,14 +309,18 @@ class SchemaVoiceManager:
             if "voice_file_path" in voice_info:
                 voice_file = Path(voice_info["voice_file_path"])
                 if voice_file.exists():
-                    voice_info["file_size_mb"] = round(voice_file.stat().st_size / (1024 * 1024), 2)
+                    voice_info["file_size_mb"] = round(
+                        voice_file.stat().st_size / (1024 * 1024), 2
+                    )
                 else:
                     voice_info["file_size_mb"] = 0
 
             return voice_info
 
         except Exception as e:
-            logger.error(f"Error getting voice info for character '{character_name}': {e}")
+            logger.error(
+                f"Error getting voice info for character '{character_name}': {e}"
+            )
             return None
 
     async def list_characters_with_voice(self) -> List[Dict[str, Any]]:
@@ -294,6 +349,7 @@ class SchemaVoiceManager:
                 voice_samples_dir = Path(voice_info["voice_samples_dir"])
                 if voice_samples_dir.exists():
                     import shutil
+
                     shutil.rmtree(voice_samples_dir)
 
             # Remove from metadata
@@ -311,11 +367,19 @@ class SchemaVoiceManager:
         """Get voice analytics and statistics."""
         try:
             total_characters = len(self.voice_metadata["characters"])
-            available_voices = sum(1 for info in self.voice_metadata["characters"].values()
-                                 if info.get("available", False))
+            available_voices = sum(
+                1
+                for info in self.voice_metadata["characters"].values()
+                if info.get("available", False)
+            )
 
-            quality_scores = [info.get("quality_score", 0) for info in self.voice_metadata["characters"].values()]
-            avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0
+            quality_scores = [
+                info.get("quality_score", 0)
+                for info in self.voice_metadata["characters"].values()
+            ]
+            avg_quality = (
+                sum(quality_scores) / len(quality_scores) if quality_scores else 0
+            )
 
             return {
                 "total_characters": total_characters,
@@ -332,7 +396,10 @@ class SchemaVoiceManager:
         """Export voice catalog to JSON file."""
         try:
             if not output_file:
-                output_file = self.characters_dir / f"voice_catalog_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                output_file = (
+                    self.characters_dir
+                    / f"voice_catalog_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                )
 
             export_data = {
                 "voice_catalog_export": {
@@ -359,12 +426,16 @@ class SchemaVoiceManager:
                 data = json.load(f)
 
             if "voice_catalog_export" not in data:
-                raise ValueError("Invalid voice catalog format: missing 'voice_catalog_export' section")
+                raise ValueError(
+                    "Invalid voice catalog format: missing 'voice_catalog_export' section"
+                )
 
             imported_count = 0
             errors = []
 
-            for voice_info in data.get("voice_catalog_export", {}).get("characters", []):
+            for voice_info in data.get("voice_catalog_export", {}).get(
+                "characters", []
+            ):
                 try:
                     character_name = voice_info.get("character_name")
                     if not character_name:
@@ -376,14 +447,18 @@ class SchemaVoiceManager:
                     imported_count += 1
 
                 except Exception as e:
-                    errors.append(f"Error importing voice info for {voice_info.get('character_name', 'unknown')}: {e}")
+                    errors.append(
+                        f"Error importing voice info for {voice_info.get('character_name', 'unknown')}: {e}"
+                    )
 
             # Save metadata
             self._save_voice_metadata()
 
             result = {
                 "imported_count": imported_count,
-                "total_voice_info": len(data.get("voice_catalog_export", {}).get("characters", [])),
+                "total_voice_info": len(
+                    data.get("voice_catalog_export", {}).get("characters", [])
+                ),
                 "errors": errors,
             }
 
@@ -394,21 +469,22 @@ class SchemaVoiceManager:
             logger.error(f"Error importing voice catalog: {e}")
             raise
 
-    async def _process_voice_with_xtts(
+    async def _process_voice_with_coqui(
         self,
         character_name: str,
         voice_file_path: str,
         processed_samples_dir: Path,
         quality_score: Optional[float] = None,
     ) -> Optional[str]:
-        """Process voice file with XTTS to create voice embeddings and processed voice."""
+        """Process voice file with Coqui TTS to create voice embeddings and processed voice."""
         try:
-
             import librosa
             import numpy as np
 
             # Load and validate audio file
-            audio_data, sample_rate = librosa.load(voice_file_path, sr=22050)
+            # Get sample rate from config
+            sample_rate = getattr(self.config.tts, "voice_cloning_sample_rate", 22050)
+            audio_data, sample_rate = librosa.load(voice_file_path, sr=sample_rate)
 
             # Audio quality checks
             duration = len(audio_data) / sample_rate
@@ -418,17 +494,17 @@ class SchemaVoiceManager:
 
             if duration > 30.0:
                 logger.warning(f"Voice sample long: {duration:.2f}s (trimming to 30s)")
-                audio_data = audio_data[:int(30.0 * sample_rate)]
+                audio_data = audio_data[: int(30.0 * sample_rate)]
 
-            # Create voice embeddings using mel-spectrogram (XTTS-compatible)
+            # Create voice embeddings using mel-spectrogram (Coqui TTS-compatible)
             mel_spectrogram = librosa.feature.melspectrogram(
                 y=audio_data,
                 sr=sample_rate,
                 n_fft=1024,
                 hop_length=256,
-                n_mels=80,  # XTTS standard
+                n_mels=80,  # Coqui TTS standard
                 fmin=0,
-                fmax=8000
+                fmax=8000,
             )
 
             # Convert to log scale
@@ -444,8 +520,8 @@ class SchemaVoiceManager:
                 embedding=voice_embedding,
                 sample_rate=sample_rate,
                 mel_spectrogram=log_mel,
-                algorithm="xtts_v2_mel_embedding",
-                quality_score=quality_score or 0.8
+                algorithm="coqui_mel_embedding",
+                quality_score=quality_score or 0.8,
             )
 
             # Create processed voice file (normalized and optimized)
@@ -456,31 +532,39 @@ class SchemaVoiceManager:
 
             # Save processed voice file
             import soundfile as sf
+
             sf.write(processed_voice_file, normalized_audio, sample_rate)
 
             # Create voice metadata file
-            voice_metadata_file = processed_samples_dir / f"{character_name}_metadata.json"
+            voice_metadata_file = (
+                processed_samples_dir / f"{character_name}_metadata.json"
+            )
             voice_metadata = {
                 "character_name": character_name,
-                "original_file": voice_file_path,
-                "processed_file": str(processed_voice_file),
-                "embedding_file": str(embedding_file),
+                "original_file": str(Path(voice_file_path).relative_to(self.base_path)),
+                "processed_file": str(processed_voice_file.relative_to(self.base_path)),
+                "embedding_file": str(embedding_file.relative_to(self.base_path)),
                 "sample_rate": sample_rate,
                 "duration": duration,
                 "quality_score": quality_score or 0.8,
                 "embedding_dimension": len(voice_embedding),
                 "mel_spectrogram_shape": log_mel.shape,
                 "processed_at": datetime.now(timezone.utc).isoformat(),
-                "xtts_compatible": True
+                "coqui_compatible": True,
             }
 
             import json
+
             with open(voice_metadata_file, "w") as f:
                 json.dump(voice_metadata, f, indent=2)
 
-            logger.info(f"Voice processed for '{character_name}': embedding={len(voice_embedding)}D, duration={duration:.2f}s")
+            logger.info(
+                f"Voice processed for '{character_name}': embedding={len(voice_embedding)}D, duration={duration:.2f}s"
+            )
             return str(processed_voice_file)
 
         except Exception as e:
-            logger.error(f"Error processing voice with XTTS for '{character_name}': {e}")
+            logger.error(
+                f"Error processing voice with Coqui TTS for '{character_name}': {e}"
+            )
             return None

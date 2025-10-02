@@ -139,7 +139,9 @@ class VoiceActivityDetector:
 
         return energy, spectral_centroid, zero_crossing_rate
 
-    def _update_adaptive_thresholds(self, energy: float, spectral_centroid: float) -> None:
+    def _update_adaptive_thresholds(
+        self, energy: float, spectral_centroid: float
+    ) -> None:
         """Update adaptive thresholds based on noise floor estimation."""
 
         if self.config.adaptive_threshold:
@@ -254,8 +256,8 @@ class VoiceActivityDetector:
             elif self.current_state == VoiceState.SPEECH_START:
                 # Check if minimum speech duration reached
                 if (
-                    self.speech_start_time is not None and
-                    timestamp - self.speech_start_time
+                    self.speech_start_time is not None
+                    and timestamp - self.speech_start_time
                 ) * 1000 >= self.config.min_speech_duration_ms:
                     new_state = VoiceState.SPEECH_ACTIVE
 

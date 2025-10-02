@@ -191,7 +191,10 @@ class LLMFactory:
         return []  # type: ignore
 
     def switch_llm_provider(
-        self, llm_type: LLMType, new_provider: LLMProvider, new_model: Optional[str] = None
+        self,
+        llm_type: LLMType,
+        new_provider: LLMProvider,
+        new_model: Optional[str] = None,
     ) -> None:
         """Switch LLM provider and model."""
         config = self.config_manager.get_config(llm_type)
@@ -209,7 +212,12 @@ class LLMFactory:
 
     def get_available_providers(self) -> Dict[str, list]:
         """Get available providers and their models."""
-        providers: Dict[str, List[str]] = {"local": [], "ollama": [], "openai": [], "anthropic": []}
+        providers: Dict[str, List[str]] = {
+            "local": [],
+            "ollama": [],
+            "openai": [],
+            "anthropic": [],
+        }
 
         # Local models (installed)
         installed_models = self.model_manager.list_installed_models()

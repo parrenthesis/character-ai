@@ -9,10 +9,12 @@ from .main import cli
 
 __all__ = ["cli"]
 
+
 # Export the CLI function directly to avoid import warnings
 def main() -> None:
     """Main CLI entry point."""
     cli()
+
 
 if __name__ == "__main__":
     main()

@@ -29,7 +29,7 @@ class CharacterBundler:
         franchise: str,
         include_voice: bool = True,
         include_models: bool = True,
-        output_path: str | None = None
+        output_path: str | None = None,
     ) -> str:
         """
         Bundle a character for production deployment.
@@ -50,7 +50,9 @@ class CharacterBundler:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             bundles_dir = Path("bundles")
             bundles_dir.mkdir(exist_ok=True)
-            output_path = str(bundles_dir / f"{character_id}_{franchise}_{timestamp}.tar.gz")
+            output_path = str(
+                bundles_dir / f"{character_id}_{franchise}_{timestamp}.tar.gz"
+            )
 
         # Create bundle directory
         bundle_dir = Path(f"temp_bundle_{character_id}")
@@ -85,6 +87,7 @@ class CharacterBundler:
             # Clean up temporary directory
             if bundle_dir.exists():
                 import shutil
+
                 shutil.rmtree(bundle_dir)
 
     def _copy_character_assets(self, character_id: str, bundle_dir: Path) -> None:
@@ -95,7 +98,7 @@ class CharacterBundler:
             raise ValueError(f"Character not found: {character_id}")
 
         # Copy profile and prompts
-        for file_name in ['profile.yaml', 'prompts.yaml']:
+        for file_name in ["profile.yaml", "prompts.yaml"]:
             src_file = character_dir / file_name
             if src_file.exists():
                 dst_file = bundle_dir / file_name
@@ -118,7 +121,9 @@ class CharacterBundler:
                     print(f"  ✓ Copied voice: {voice_file.name}")
 
         # Copy voice samples if they exist
-        voice_samples_dir = self.base_path / "configs" / "characters" / character_id / "voice_samples"
+        voice_samples_dir = (
+            self.base_path / "configs" / "characters" / character_id / "voice_samples"
+        )
         if voice_samples_dir.exists():
             samples_dir = bundle_dir / "voice_samples"
             samples_dir.mkdir(exist_ok=True)
@@ -136,18 +141,20 @@ class CharacterBundler:
         models_dir.mkdir(exist_ok=True)
 
         # Read character profile to get model names
-        profile_file = self.base_path / "configs" / "characters" / character_id / "profile.yaml"
+        profile_file = (
+            self.base_path / "configs" / "characters" / character_id / "profile.yaml"
+        )
         if not profile_file.exists():
             print(f"  ⚠️  Character profile not found: {profile_file}")
             return
 
-        with open(profile_file, 'r') as f:
+        with open(profile_file, "r") as f:
             profile = yaml.safe_load(f)
 
         # Get model names from profile
-        llm_model = profile.get('llm', {}).get('model', 'phi-3-mini-4k-instruct')
-        stt_model = profile.get('stt', {}).get('model', 'whisper-base')
-        tts_model = profile.get('tts', {}).get('model', 'xtts')
+        llm_model = profile.get("llm", {}).get("model", "phi-3-mini-4k-instruct")
+        stt_model = profile.get("stt", {}).get("model", "wav2vec2-base")
+        tts_model = profile.get("tts", {}).get("model", "coqui")
 
         print("  📋 Character model requirements:")
         print(f"    LLM: {llm_model}")
@@ -166,10 +173,10 @@ class CharacterBundler:
         # Copy STT model - simple file lookup
         stt_path = self._find_stt_model(stt_model)
         if stt_path:
-            whisper_bundle_dir = models_dir / "whisper"
-            whisper_bundle_dir.mkdir(exist_ok=True)
+            wav2vec2_bundle_dir = models_dir / "wav2vec2"
+            wav2vec2_bundle_dir.mkdir(exist_ok=True)
 
-            dst_file = whisper_bundle_dir / stt_path.name
+            dst_file = wav2vec2_bundle_dir / stt_path.name
             dst_file.write_bytes(stt_path.read_bytes())
             print(f"  ✓ Copied STT model: {stt_path.name}")
         else:
@@ -201,28 +208,29 @@ class CharacterBundler:
 
     def _find_stt_model(self, model_name: str) -> Optional[Path]:
         """Find STT model file by name."""
-        whisper_dir = self.base_path / "models" / "whisper"
-        if not whisper_dir.exists():
+        wav2vec2_dir = self.base_path / "models" / "wav2vec2"
+        if not wav2vec2_dir.exists():
             return None
 
         # Map model names to filenames
         stt_mapping = {
-            "whisper-base": "base.pt",
-            "whisper-tiny": "tiny.pt",
-            "whisper-small": "small.pt",
-            "whisper-medium": "medium.pt",
-            "whisper-large": "large.pt"
+            "wav2vec2-base": "wav2vec2-base.pt",
+            "wav2vec2-large": "wav2vec2-large.pt",
+            "facebook/wav2vec2-base": "wav2vec2-base.pt",
+            "facebook/wav2vec2-large": "wav2vec2-large.pt",
         }
 
         filename = stt_mapping.get(model_name, f"{model_name}.pt")
-        model_path = whisper_dir / filename
+        model_path = wav2vec2_dir / filename
 
         if model_path.exists():
             return model_path
 
         return None
 
-    def _create_deployment_config(self, character_id: str, franchise: str, bundle_dir: Path) -> None:
+    def _create_deployment_config(
+        self, character_id: str, franchise: str, bundle_dir: Path
+    ) -> None:
         """Create deployment configuration for the character."""
 
         config = {
@@ -231,52 +239,48 @@ class CharacterBundler:
                 "franchise": franchise,
                 "deployment": {
                     "environment": "production",
-                    "scaling": {
-                        "min_replicas": 1,
-                        "max_replicas": 10
-                    },
-                    "resources": {
-                        "cpu": "1000m",
-                        "memory": "2Gi"
-                    }
-                }
+                    "scaling": {"min_replicas": 1, "max_replicas": 10},
+                    "resources": {"cpu": "1000m", "memory": "2Gi"},
+                },
             },
             "monitoring": {
                 "enabled": True,
                 "metrics": ["response_time", "error_rate", "throughput"],
                 "alerts": {
                     "error_rate_threshold": 0.05,
-                    "response_time_threshold": 2000
-                }
+                    "response_time_threshold": 2000,
+                },
             },
             "security": {
                 "content_filter": True,
                 "age_appropriate": True,
-                "rate_limiting": {
-                    "requests_per_minute": 60
-                }
-            }
+                "rate_limiting": {"requests_per_minute": 60},
+            },
         }
 
         config_file = bundle_dir / "deployment.yaml"
         config_file.write_text(json.dumps(config, indent=2))
         print("  ✓ Created deployment configuration")
 
-    def _create_bundle_manifest(self, character_id: str, franchise: str, bundle_dir: Path) -> None:
+    def _create_bundle_manifest(
+        self, character_id: str, franchise: str, bundle_dir: Path
+    ) -> None:
         """Create bundle manifest with metadata."""
 
         # Read character profile to get model names
-        profile_file = self.base_path / "configs" / "characters" / character_id / "profile.yaml"
+        profile_file = (
+            self.base_path / "configs" / "characters" / character_id / "profile.yaml"
+        )
         model_names = {}
 
         if profile_file.exists():
-            with open(profile_file, 'r') as f:
+            with open(profile_file, "r") as f:
                 profile = yaml.safe_load(f)
 
             model_names = {
-                "llm": profile.get('llm', {}).get('model', 'phi-3-mini-4k-instruct'),
-                "stt": profile.get('stt', {}).get('model', 'whisper-base'),
-                "tts": profile.get('tts', {}).get('model', 'xtts')
+                "llm": profile.get("llm", {}).get("model", "phi-3-mini-4k-instruct"),
+                "stt": profile.get("stt", {}).get("model", "wav2vec2-base"),
+                "tts": profile.get("tts", {}).get("model", "coqui"),
             }
 
         manifest = {
@@ -291,16 +295,16 @@ class CharacterBundler:
                 "voices": "voices/",
                 "voice_samples": "voice_samples/",
                 "models": "models/",
-                "deployment": "deployment.yaml"
+                "deployment": "deployment.yaml",
             },
             "requirements": {
                 "python_version": ">=3.10",
                 "dependencies": [
                     "character-ai>=1.0.0",
                     "torch>=2.3.0",
-                    "transformers>=4.52.0"
-                ]
-            }
+                    "transformers>=4.52.0",
+                ],
+            },
         }
 
         manifest_file = bundle_dir / "manifest.json"
@@ -329,18 +333,18 @@ class CharacterBundler:
             safe_members = []
             for member in tar.getmembers():
                 # Skip members with absolute paths or parent directory traversal
-                if member.name.startswith('/') or '..' in member.name:
+                if member.name.startswith("/") or ".." in member.name:
                     continue
                 # Keep the relative directory structure but ensure it's safe
                 # Remove any leading slashes and normalize the path
-                safe_name = member.name.lstrip('/')
-                if safe_name and not safe_name.startswith('..'):
+                safe_name = member.name.lstrip("/")
+                if safe_name and not safe_name.startswith(".."):
                     member.name = safe_name
                     safe_members.append(member)
 
             tar.extractall(extract_dir, members=safe_members)  # nosec B202 - members are filtered for security
 
-        print(f"✅ Bundle extracted to: {extract_dir}")
+        print(f"Bundle extracted to: {extract_dir}")
         return str(extract_dir)
 
     def validate_bundle(self, bundle_path: str) -> bool:
@@ -357,21 +361,56 @@ class CharacterBundler:
         try:
             with tarfile.open(bundle_path, "r:gz") as tar:
                 # Check for required files
-                required_files = [
-                    "profile.yaml",
-                    "prompts.yaml",
-                    "manifest.json"
-                ]
+                required_files = ["profile.yaml", "prompts.yaml", "manifest.json"]
 
                 file_names = tar.getnames()
-                for required_file in required_files:
-                    if required_file not in file_names:
-                        print(f"❌ Missing required file: {required_file}")
-                        return False
 
-                print(f"✅ Bundle validation passed: {bundle_path}")
-                return True
+                # Check if files are at root level
+                root_files_present = all(f in file_names for f in required_files)
+                if root_files_present:
+                    print(f"Bundle validation passed: {bundle_path}")
+                    return True
+
+                # If not at root, look for character directory
+                # Look for any directory that contains the required files
+                character_dirs = [
+                    name
+                    for name in file_names
+                    if name.endswith("/") and name.count("/") == 1
+                ]
+
+                # If no single-level directories, look for any subdirectory
+                if not character_dirs:
+                    # Find any directory that might contain the files
+                    potential_dirs = set()
+                    for file_name in file_names:
+                        if "/" in file_name:
+                            dir_name = file_name.split("/")[0] + "/"
+                            potential_dirs.add(dir_name)
+                    character_dirs = list(potential_dirs)
+
+                if not character_dirs:
+                    print("No character directory found in bundle")
+                    return False
+
+                # Check each potential directory
+                for character_dir in character_dirs:
+                    character_dir = character_dir.rstrip("/")
+                    all_files_present = True
+
+                    for required_file in required_files:
+                        # Check in character directory
+                        if f"{character_dir}/{required_file}" not in file_names:
+                            all_files_present = False
+                            break
+
+                    if all_files_present:
+                        print(f"✅ Bundle validation passed: {bundle_path}")
+                        return True
+
+                print("Missing required files in any character directory")
+                return False
 
         except Exception as e:
-            print(f"❌ Bundle validation failed: {e}")
+            print(f"Bundle validation failed: {e}")
             return False

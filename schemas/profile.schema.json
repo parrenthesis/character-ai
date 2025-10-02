@@ -98,7 +98,7 @@
     "TTSConfig": {
       "properties": {
         "engine": {
-          "default": "xtts_v2",
+          "default": "coqui_tts",
           "title": "Engine",
           "type": "string"
         },

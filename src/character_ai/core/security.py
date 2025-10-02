@@ -125,7 +125,6 @@ class SecurityConfig:
             # Generate private key
             private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
-
             # Save private key
             with open(self.private_key_file, "wb") as f:
                 f.write(
@@ -367,8 +366,10 @@ class DeviceIdentityManager:
                 signature = private_key.sign(data, algorithm=hashes.SHA256())
             elif isinstance(private_key, EllipticCurvePrivateKey):
                 # EC uses algorithm but not padding
-                signature = private_key.sign(data, signature_algorithm=ECDSA(hashes.SHA256()))
-            elif hasattr(private_key, 'sign'):
+                signature = private_key.sign(
+                    data, signature_algorithm=ECDSA(hashes.SHA256())
+                )
+            elif hasattr(private_key, "sign"):
                 # RSA uses both padding and algorithm
                 signature = private_key.sign(
                     data,
@@ -403,8 +404,10 @@ class DeviceIdentityManager:
                 public_key.verify(signature, data, algorithm=hashes.SHA256())
             elif isinstance(public_key, EllipticCurvePublicKey):
                 # EC uses algorithm but not padding
-                public_key.verify(signature, data, signature_algorithm=ECDSA(hashes.SHA256()))
-            elif hasattr(public_key, 'verify'):
+                public_key.verify(
+                    signature, data, signature_algorithm=ECDSA(hashes.SHA256())
+                )
+            elif hasattr(public_key, "verify"):
                 # RSA uses both padding and algorithm
                 public_key.verify(
                     signature,

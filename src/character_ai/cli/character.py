@@ -41,12 +41,20 @@ def character_commands() -> None:
 @click.option("--ai-generate", help="Generate character from AI description")
 @click.option("--output", "-o", help="Save character to file")
 def create(
-    name: str, species: str, personality: str, voice_style: str, interactive: bool, template: str, ai_generate: str, output: str
+    name: str,
+    species: str,
+    personality: str,
+    voice_style: str,
+    interactive: bool,
+    template: str,
+    ai_generate: str,
+    output: str,
 ) -> None:
     """Create a new character."""
     try:
         if interactive:
             import asyncio
+
             asyncio.run(_interactive_character_creation())
             return
 
@@ -70,7 +78,7 @@ def create(
 
         # Create character profile
         character_profile = CharacterProfile(
-            id=name.lower().replace(' ', '_'),
+            id=name.lower().replace(" ", "_"),
             display_name=name,
             character_type=species,
             voice_style=voice_style,
@@ -83,7 +91,7 @@ def create(
             _save_character(character_profile, output)
         else:
             # Save to new schema format in configs/characters/
-            character_id = name.lower().replace(' ', '_')
+            character_id = name.lower().replace(" ", "_")
             character_dir = Path.cwd() / "configs" / "characters" / character_id
             character_dir.mkdir(parents=True, exist_ok=True)
 
@@ -129,8 +137,7 @@ async def _interactive_character_creation() -> None:
         llm = factory.get_character_creation_llm()
 
         # Generate character using LLM
-        prompt = (
-            f"""Create a character profile based on this description: "{description}"
+        prompt = f"""Create a character profile based on this description: "{description}"
 
 Please provide a JSON response with:
 - name: Character name
@@ -141,7 +148,6 @@ Please provide a JSON response with:
 - backstory: Brief character backstory
 
 Format as valid JSON only."""
-        )
 
         click.echo("Generating character with AI...")
         response = await llm.generate(prompt, max_tokens=500, temperature=0.8)
@@ -156,7 +162,7 @@ Format as valid JSON only."""
 
                 # Create character profile
                 character_profile = CharacterProfile(
-                    id=character_data.get("name", "Unknown").lower().replace(' ', '_'),
+                    id=character_data.get("name", "Unknown").lower().replace(" ", "_"),
                     display_name=character_data.get("name", "Unknown"),
                     character_type=character_data.get("species", "Unknown"),
                     voice_style=character_data.get("voice_style", "neutral"),
@@ -168,10 +174,14 @@ Format as valid JSON only."""
                 click.echo("\n🎭 Generated Character:")
                 click.echo(f"Name: {character_profile.display_name}")
                 click.echo(f"Species: {character_profile.character_type}")
-                click.echo(f"Personality: {character_profile.traits.get('personality', '')}")
+                click.echo(
+                    f"Personality: {character_profile.traits.get('personality', '')}"
+                )
                 click.echo(f"Voice Style: {character_profile.voice_style}")
-                if character_profile.traits.get('backstory'):
-                    click.echo(f"Backstory: {character_profile.traits.get('backstory')}")
+                if character_profile.traits.get("backstory"):
+                    click.echo(
+                        f"Backstory: {character_profile.traits.get('backstory')}"
+                    )
 
                 # Ask if user wants to save
                 if click.confirm("\nSave this character?"):
@@ -193,7 +203,9 @@ Format as valid JSON only."""
                     _save_character_prompts(character_profile, str(prompts_file))
 
                     click.echo(f"✓ Character directory created: {character_dir}")
-                    click.echo(f"✓ Voice samples directory created: {voice_samples_dir}")
+                    click.echo(
+                        f"✓ Voice samples directory created: {voice_samples_dir}"
+                    )
                 else:
                     click.echo("Character not saved.")
             else:
@@ -238,7 +250,7 @@ def _create_from_template(template_name: str, name: str) -> None:
         character = template.create_character(name)
 
         # Save character to new schema format
-        character_id = name.lower().replace(' ', '_')
+        character_id = name.lower().replace(" ", "_")
         character_dir = Path.cwd() / "configs" / "characters" / character_id
         character_dir.mkdir(parents=True, exist_ok=True)
 
@@ -260,9 +272,9 @@ def _create_from_template(template_name: str, name: str) -> None:
         click.echo(f"✓ Character '{name}' created from template '{template_name}'!")
         click.echo(f"Species: {character.dimensions.species.value}")
         click.echo(f"Archetype: {character.dimensions.archetype.value}")
-        personality_traits = ', '.join([
-            t.value for t in character.dimensions.personality_traits
-        ])
+        personality_traits = ", ".join(
+            [t.value for t in character.dimensions.personality_traits]
+        )
         click.echo(f"Personality: {personality_traits}")
 
     except Exception as e:
@@ -464,7 +476,9 @@ def show(character_name: str, format: str) -> None:
                 "personality_traits": [
                     trait.value for trait in character.dimensions.personality_traits
                 ],
-                "abilities": [ability.value for ability in character.dimensions.abilities],
+                "abilities": [
+                    ability.value for ability in character.dimensions.abilities
+                ],
                 "topics": [topic.value for topic in character.dimensions.topics],
                 "backstory": character.dimensions.backstory,
                 "goals": character.dimensions.goals,
@@ -570,7 +584,13 @@ def templates() -> None:
 @click.option("--personality", help="Filter by personality trait")
 @click.option("--ability", help="Filter by ability")
 @click.option("--topic", help="Filter by topic")
-def search(species: Optional[str], archetype: Optional[str], personality: Optional[str], ability: Optional[str], topic: Optional[str]) -> None:
+def search(
+    species: Optional[str],
+    archetype: Optional[str],
+    personality: Optional[str],
+    ability: Optional[str],
+    topic: Optional[str],
+) -> None:
     """Search characters by criteria."""
     try:
         import asyncio
@@ -676,7 +696,6 @@ def stats() -> None:
 @click.argument("character_name")
 @click.option("--message", "-m", help="Message to send to character")
 @click.option("--interactive", "-i", is_flag=True, help="Interactive conversation mode")
-
 def chat(character_name: str, message: Optional[str], interactive: bool) -> None:
     """Chat with a character."""
     try:
@@ -735,7 +754,9 @@ def catalog() -> None:
     type=click.Path(exists=True),
     help="Directory containing voice files for characters",
 )
-def import_catalog(catalog_file: str, franchise: Optional[str], voice_dir: Optional[str]) -> None:
+def import_catalog(
+    catalog_file: str, franchise: Optional[str], voice_dir: Optional[str]
+) -> None:
     """Import character catalog from YAML file with optional voice file support."""
     try:
         import asyncio
@@ -795,7 +816,14 @@ def export_catalog(franchise: Optional[str], output: Optional[str]) -> None:
     "--voice-available", is_flag=True, help="Only characters with voice available"
 )
 def search_catalog(
-    text: Optional[str], franchise: Optional[str], species: Optional[str], archetype: Optional[str], personality: Optional[str], ability: Optional[str], topic: Optional[str], voice_available: bool
+    text: Optional[str],
+    franchise: Optional[str],
+    species: Optional[str],
+    archetype: Optional[str],
+    personality: Optional[str],
+    ability: Optional[str],
+    topic: Optional[str],
+    voice_available: bool,
 ) -> None:
     """Search catalog characters by criteria."""
     try:
@@ -944,7 +972,12 @@ def collection() -> None:
 @click.option("--description", help="Collection description")
 @click.option("--author", help="Collection author")
 @click.option("--license", help="Collection license")
-def create_collection(collection_name: str, description: Optional[str], author: Optional[str], license: Optional[str]) -> None:
+def create_collection(
+    collection_name: str,
+    description: Optional[str],
+    author: Optional[str],
+    license: Optional[str],
+) -> None:
     """Create new character collection."""
     try:
         import asyncio
@@ -1001,7 +1034,6 @@ def export_collection(collection_name: str, output: Optional[str]) -> None:
         catalog = CharacterCatalog()
         output_path = asyncio.run(
             catalog.export_collection(collection_name, Path(output) if output else None)
-
         )
 
         click.echo(f"✓ Collection exported to {output_path}")
@@ -1112,7 +1144,9 @@ def voice() -> None:
 @click.argument("character_name")
 @click.argument("voice_file", type=click.Path(exists=True))
 @click.option("--quality-score", type=float, help="Voice quality score (0.0-1.0)")
-def clone_voice(character_name: str, voice_file: str, quality_score: Optional[float]) -> None:
+def clone_voice(
+    character_name: str, voice_file: str, quality_score: Optional[float]
+) -> None:
     """Clone voice for a character using new schema format."""
     try:
         import asyncio
@@ -1134,7 +1168,9 @@ def clone_voice(character_name: str, voice_file: str, quality_score: Optional[fl
             if quality_score:
                 click.echo(f"⭐ Quality score: {quality_score}")
         else:
-            click.echo(f"❌ Failed to clone voice for character '{character_name}'", err=True)
+            click.echo(
+                f"❌ Failed to clone voice for character '{character_name}'", err=True
+            )
             raise click.Abort()
 
     except Exception as e:
@@ -1222,7 +1258,9 @@ def list_voices(min_quality: float, max_quality: float) -> None:
 def remove_voice(character_name: str) -> None:
     """Remove voice for a character using new schema format."""
     try:
-        if not click.confirm(f"Are you sure you want to remove voice for character '{character_name}'?"):
+        if not click.confirm(
+            f"Are you sure you want to remove voice for character '{character_name}'?"
+        ):
             click.echo("Voice removal cancelled.")
             return
 
@@ -1238,7 +1276,9 @@ def remove_voice(character_name: str) -> None:
         if success:
             click.echo(f"✅ Voice removed for character '{character_name}'")
         else:
-            click.echo(f"❌ Failed to remove voice for character '{character_name}'", err=True)
+            click.echo(
+                f"❌ Failed to remove voice for character '{character_name}'", err=True
+            )
             raise click.Abort()
 
     except Exception as e:
@@ -1324,9 +1364,16 @@ def import_voice_catalog(voice_catalog_file: str) -> None:
 @voice.command()
 @click.argument("character")
 @click.argument("voice_samples", type=click.Path(exists=True))
-@click.option("--quality", default="high", type=click.Choice(["low", "medium", "high", "ultra-high"]), help="Voice quality setting")
+@click.option(
+    "--quality",
+    default="high",
+    type=click.Choice(["low", "medium", "high", "ultra-high"]),
+    help="Voice quality setting",
+)
 @click.option("--language", default="en", help="Voice language")
-def clone_from_samples(character: str, voice_samples: str, quality: str, language: str) -> None:
+def clone_from_samples(
+    character: str, voice_samples: str, quality: str, language: str
+) -> None:
     """Clone character voice from multiple samples using new schema format."""
     try:
         import asyncio
@@ -1344,7 +1391,7 @@ def clone_from_samples(character: str, voice_samples: str, quality: str, languag
 
         # Get all audio files from samples directory
         audio_files: List[Path] = []
-        for ext in ['*.wav', '*.mp3', '*.flac', '*.m4a']:
+        for ext in ["*.wav", "*.mp3", "*.flac", "*.m4a"]:
             audio_files.extend(samples_dir.glob(ext))
 
         if not audio_files:
@@ -1361,20 +1408,26 @@ def clone_from_samples(character: str, voice_samples: str, quality: str, languag
                 character_name=character,
                 voice_samples_dir=voice_samples,
                 quality=quality,
-                language=language
+                language=language,
             )
         )
 
         if success:
-            click.echo(f"✅ Voice cloned and processed for character '{character}' from {len(audio_files)} samples")
+            click.echo(
+                f"✅ Voice cloned and processed for character '{character}' from {len(audio_files)} samples"
+            )
             click.echo(f"🎤 Quality: {quality}")
             click.echo(f"🌍 Language: {language}")
-            click.echo("🧠 XTTS voice embeddings created")
+            click.echo("🧠 Coqui TTS voice embeddings created")
             click.echo(f"📁 Raw samples: configs/characters/{character}/voice_samples/")
-            click.echo(f"📁 Processed samples: configs/characters/{character}/processed_samples/")
+            click.echo(
+                f"📁 Processed samples: configs/characters/{character}/processed_samples/"
+            )
             click.echo("🔗 TTS integration ready - character can speak in cloned voice")
         else:
-            click.echo(f"❌ Failed to clone voice for character '{character}'", err=True)
+            click.echo(
+                f"❌ Failed to clone voice for character '{character}'", err=True
+            )
             raise click.Abort()
 
     except Exception as e:
@@ -1396,7 +1449,12 @@ def franchise() -> None:
     "--permissions",
     help='Permissions JSON (e.g., \'{"read": true, "write": true, "admin": false}\')',
 )
-def create_franchise(franchise_name: str, description: str, owner: str, permissions: Optional[Dict[str, Any]]) -> None:
+def create_franchise(
+    franchise_name: str,
+    description: str,
+    owner: str,
+    permissions: Optional[Dict[str, Any]],
+) -> None:
     """Create a new franchise."""
     try:
         import asyncio
@@ -1408,7 +1466,11 @@ def create_franchise(franchise_name: str, description: str, owner: str, permissi
         permissions_dict = None
         if permissions:
             try:
-                permissions_dict = permissions if isinstance(permissions, dict) else json.loads(permissions)
+                permissions_dict = (
+                    permissions
+                    if isinstance(permissions, dict)
+                    else json.loads(permissions)
+                )
             except json.JSONDecodeError:
                 click.echo("Error: Invalid permissions JSON format", err=True)
                 raise click.Abort()
@@ -1473,7 +1535,6 @@ def franchise_info(franchise_name: str) -> None:
 
         catalog_storage = CatalogStorage()
         franchise_info = asyncio.run(catalog_storage.get_franchise_info(franchise_name))
-
 
         if not franchise_info:
             click.echo(f"Franchise '{franchise_name}' not found.", err=True)
@@ -1583,7 +1644,7 @@ def add_relationship(
         await catalog_storage.store_character(character, franchise)
 
         click.echo(
-                f"✓ Added relationship: {character_name} -> {related_character} ({relationship_type})"
+            f"✓ Added relationship: {character_name} -> {related_character} ({relationship_type})"
         )
 
     try:
@@ -1649,7 +1710,12 @@ def localization() -> None:
 @click.option("--description", help="Localized description")
 @click.option("--franchise", default="original", help="Franchise name")
 def add_localization(
-    character_name: str, language: str, localized_name: str, backstory: Optional[str], description: Optional[str], franchise: str
+    character_name: str,
+    language: str,
+    localized_name: str,
+    backstory: Optional[str],
+    description: Optional[str],
+    franchise: str,
 ) -> None:
     """Add a localization for a character."""
 
@@ -1970,7 +2036,13 @@ def export_costs(output: str) -> None:
 @click.option("--include-voice", is_flag=True, help="Include voice models in bundle")
 @click.option("--include-models", is_flag=True, help="Include LLM models in bundle")
 @click.option("--output", "-o", help="Output path for bundle")
-def bundle(character: str, franchise: str, include_voice: bool, include_models: bool, output: str) -> None:
+def bundle(
+    character: str,
+    franchise: str,
+    include_voice: bool,
+    include_models: bool,
+    output: str,
+) -> None:
     """Bundle character for production deployment."""
     try:
         from ..characters.bundler import CharacterBundler
@@ -1984,7 +2056,7 @@ def bundle(character: str, franchise: str, include_voice: bool, include_models: 
             franchise=franchise,
             include_voice=include_voice,
             include_models=include_models,
-            output_path=output
+            output_path=output,
         )
 
         click.echo(f"✅ Character bundle created: {bundle_path}")
@@ -2019,7 +2091,9 @@ def extract_bundle(bundle_path: str, extract_to: str) -> None:
         raise click.Abort()
 
 
-def _save_character_profile(character_profile: CharacterProfile, file_path: str) -> None:
+def _save_character_profile(
+    character_profile: CharacterProfile, file_path: str
+) -> None:
     """Save character profile to new schema format."""
     import yaml
 
@@ -2034,29 +2108,28 @@ def _save_character_profile(character_profile: CharacterProfile, file_path: str)
         "safety": {
             "content_filter": True,
             "age_appropriate": True,
-            "moderation": "strict"
+            "moderation": "strict",
         },
         "llm": {
             "model": "phi-3-mini-4k-instruct",
             "provider": "local",
-            "prompt_template": "You are {character_name}, a {character_type}. {personality_traits}"
+            "prompt_template": "You are {character_name}, a {character_type}. {personality_traits}",
         },
-        "stt": {
-            "model": "whisper-base",
-            "language": character_profile.language
-        },
+        "stt": {"model": "wav2vec2-base", "language": character_profile.language},
         "tts": {
-            "model": "xtts",
+            "model": "coqui",
             "voice_style": character_profile.voice_style,
-            "voice_artifact": None
-        }
+            "voice_artifact": None,
+        },
     }
 
     with open(file_path, "w") as f:
         yaml.dump(profile_data, f, default_flow_style=False)
 
 
-def _save_character_prompts(character_profile: CharacterProfile, file_path: str) -> None:
+def _save_character_prompts(
+    character_profile: CharacterProfile, file_path: str
+) -> None:
     """Save character prompts to new schema format."""
     import yaml
 
@@ -2064,9 +2137,9 @@ def _save_character_prompts(character_profile: CharacterProfile, file_path: str)
     prompts_data = {
         "system_prompt": f"You are {character_profile.display_name}, a {character_profile.character_type}. {character_profile.traits.get('personality', '')}",
         "greeting": f"Hello! I'm {character_profile.display_name}. How can I help you today?",
-        "topics": character_profile.traits.get('topics', []),
-        "personality_traits": character_profile.traits.get('personality', ''),
-        "voice_style": character_profile.voice_style
+        "topics": character_profile.traits.get("topics", []),
+        "personality_traits": character_profile.traits.get("personality", ""),
+        "voice_style": character_profile.voice_style,
     }
 
     with open(file_path, "w") as f:
@@ -2079,40 +2152,39 @@ def _save_enhanced_character_profile(character: Character, file_path: str) -> No
 
     # Create profile data in new schema format
     profile_data = {
-        "id": character.name.lower().replace(' ', '_'),
+        "id": character.name.lower().replace(" ", "_"),
         "display_name": character.name,
         "character_type": character.dimensions.species.value,
         "voice_style": character.voice_style,
         "language": character.language,
         "traits": {
-            "personality": ', '.join([t.value for t in character.dimensions.personality_traits]),
+            "personality": ", ".join(
+                [t.value for t in character.dimensions.personality_traits]
+            ),
             "abilities": [a.value for a in character.dimensions.abilities],
             "topics": [t.value for t in character.dimensions.topics],
             "backstory": character.dimensions.backstory,
             "goals": character.dimensions.goals,
             "fears": character.dimensions.fears,
             "likes": character.dimensions.likes,
-            "dislikes": character.dimensions.dislikes
+            "dislikes": character.dimensions.dislikes,
         },
         "safety": {
             "content_filter": True,
             "age_appropriate": True,
-            "moderation": "strict"
+            "moderation": "strict",
         },
         "llm": {
             "model": "phi-3-mini-4k-instruct",
             "provider": "local",
-            "prompt_template": f"You are {character.name}, a {character.dimensions.species.value}. {', '.join([t.value for t in character.dimensions.personality_traits])}"
+            "prompt_template": f"You are {character.name}, a {character.dimensions.species.value}. {', '.join([t.value for t in character.dimensions.personality_traits])}",
         },
-        "stt": {
-            "model": "whisper-base",
-            "language": character.language
-        },
+        "stt": {"model": "wav2vec2-base", "language": character.language},
         "tts": {
-            "model": "xtts",
+            "model": "coqui",
             "voice_style": character.voice_style,
-            "voice_artifact": None
-        }
+            "voice_artifact": None,
+        },
     }
 
     with open(file_path, "w") as f:
@@ -2124,7 +2196,9 @@ def _save_enhanced_character_prompts(character: Character, file_path: str) -> No
     import yaml
 
     # Create prompts data
-    personality_traits = ', '.join([t.value for t in character.dimensions.personality_traits])
+    personality_traits = ", ".join(
+        [t.value for t in character.dimensions.personality_traits]
+    )
     topics = [t.value for t in character.dimensions.topics]
 
     prompts_data = {
@@ -2137,7 +2211,7 @@ def _save_enhanced_character_prompts(character: Character, file_path: str) -> No
         "goals": character.dimensions.goals,
         "fears": character.dimensions.fears,
         "likes": character.dimensions.likes,
-        "dislikes": character.dimensions.dislikes
+        "dislikes": character.dimensions.dislikes,
     }
 
     with open(file_path, "w") as f:
@@ -2147,8 +2221,12 @@ def _save_enhanced_character_prompts(character: Character, file_path: str) -> No
 @character_commands.command()
 @click.argument("character_name")
 @click.option("--text", "-t", help="Send text message to character")
-@click.option("--interactive", "-i", is_flag=True, help="Start interactive chat session")
-@click.option("--voice", "-v", is_flag=True, help="Enable voice interaction (requires microphone)")
+@click.option(
+    "--interactive", "-i", is_flag=True, help="Start interactive chat session"
+)
+@click.option(
+    "--voice", "-v", is_flag=True, help="Enable voice interaction (requires microphone)"
+)
 def test(character_name: str, text: str, interactive: bool, voice: bool) -> None:
     """Test character interaction during development."""
     try:
@@ -2161,7 +2239,10 @@ def test(character_name: str, text: str, interactive: bool, voice: bool) -> None
         # Load character profile
         character_dir = Path("configs/characters") / character_name
         if not character_dir.exists():
-            click.echo(f"Error: Character '{character_name}' not found in configs/characters/", err=True)
+            click.echo(
+                f"Error: Character '{character_name}' not found in configs/characters/",
+                err=True,
+            )
             raise click.Abort()
 
         profile_file = character_dir / "profile.yaml"
@@ -2171,33 +2252,42 @@ def test(character_name: str, text: str, interactive: bool, voice: bool) -> None
 
         # Load character configuration
         import yaml
-        with open(profile_file, 'r') as f:
+
+        with open(profile_file, "r") as f:
             character_config = yaml.safe_load(f)
 
-        click.echo(f"🤖 Testing character: {character_config.get('display_name', character_name)}")
+        click.echo(
+            f"🤖 Testing character: {character_config.get('display_name', character_name)}"
+        )
         click.echo(f"📝 Species: {character_config.get('character_type', 'unknown')}")
-        click.echo(f"🎭 Personality: {character_config.get('traits', {}).get('personality', 'unknown')}")
+        click.echo(
+            f"🎭 Personality: {character_config.get('traits', {}).get('personality', 'unknown')}"
+        )
 
         # Initialize LLM
-        llm_config = character_config.get('llm', {})
-        model_name = llm_config.get('model', 'phi-3-mini-4k-instruct')
+        llm_config = character_config.get("llm", {})
+        model_name = llm_config.get("model", "phi-3-mini-4k-instruct")
 
         click.echo(f"🧠 Loading LLM model: {model_name}")
 
         # For development, use local model if available
-        if model_name.startswith('phi-3') or model_name.startswith('llama'):
+        if model_name.startswith("phi-3") or model_name.startswith("llama"):
             # Use local model for development
             config_manager = LLMConfigManager()
             from ..core.llm.manager import OpenModelManager
+
             model_manager = OpenModelManager()
             llm_factory = LLMFactory(config_manager, model_manager)
             llm = llm_factory.get_runtime_llm()
             click.echo("✅ Local LLM loaded for development testing")
         else:
-            click.echo("⚠️  Using cloud LLM - consider using local model for development")
+            click.echo(
+                "⚠️  Using cloud LLM - consider using local model for development"
+            )
             # Fallback to cloud model
             config_manager = LLMConfigManager()
             from ..core.llm.manager import OpenModelManager
+
             model_manager = OpenModelManager()
             llm_factory = LLMFactory(config_manager, model_manager)
             llm = llm_factory.get_runtime_llm()
@@ -2209,9 +2299,9 @@ def test(character_name: str, text: str, interactive: bool, voice: bool) -> None
             # Load character prompts
             prompts_file = character_dir / "prompts.yaml"
             if prompts_file.exists():
-                with open(prompts_file, 'r') as f:
+                with open(prompts_file, "r") as f:
                     prompts_config = yaml.safe_load(f)
-                system_prompt = prompts_config.get('system_prompt', '')
+                system_prompt = prompts_config.get("system_prompt", "")
                 # Use character's system prompt
                 full_prompt = f"{system_prompt}\n\nUser: {text}\nData:"
             else:
@@ -2223,9 +2313,13 @@ def test(character_name: str, text: str, interactive: bool, voice: bool) -> None
         # Test voice interaction
         if voice:
             voice_manager = SchemaVoiceManager()
-            voice_info = asyncio.run(voice_manager.get_character_voice_info(character_name))
-            if voice_info and voice_info.get('available'):
-                click.echo("🎤 Voice interaction enabled - character can speak with cloned voice")
+            voice_info = asyncio.run(
+                voice_manager.get_character_voice_info(character_name)
+            )
+            if voice_info and voice_info.get("available"):
+                click.echo(
+                    "🎤 Voice interaction enabled - character can speak with cloned voice"
+                )
                 click.echo("📁 Voice files:")
                 click.echo(f"  - Embedding: {voice_info.get('embedding_file', 'N/A')}")
                 click.echo(f"  - Quality: {voice_info.get('quality_score', 'N/A')}")
@@ -2240,13 +2334,13 @@ def test(character_name: str, text: str, interactive: bool, voice: bool) -> None
             prompts_file = character_dir / "prompts.yaml"
             system_prompt = ""
             if prompts_file.exists():
-                with open(prompts_file, 'r') as f:
+                with open(prompts_file, "r") as f:
                     prompts_config = yaml.safe_load(f)
-                system_prompt = prompts_config.get('system_prompt', '')
+                system_prompt = prompts_config.get("system_prompt", "")
 
             while True:
                 user_input = click.prompt("You", default="", show_default=False)
-                if user_input.lower() in ['quit', 'exit', 'q']:
+                if user_input.lower() in ["quit", "exit", "q"]:
                     break
 
                 # Use character's system prompt

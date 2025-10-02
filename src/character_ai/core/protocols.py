@@ -1,5 +1,5 @@
 """
-Protocols and interfaces for VoiceAI Research Toolkit.
+Protocols and interfaces for Character AI Platform.
 
 Defines the contracts that all components must implement for type-safe
 interaction and flexible architecture.
@@ -319,7 +319,7 @@ class StreamingTextProcessor(Protocol):
 
 
 class BaseComponent(ABC):
-    """Base class for all VoiceAI components."""
+    """Base class for all Character AI Platform components."""
 
     def __init__(self, name: str, config: Optional[Any] = None) -> None:
         self.name = name

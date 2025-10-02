@@ -3,9 +3,9 @@
 Install a prebuilt models_bundle.tar.gz onto the device, verifying checksums.
 """
 
+import hashlib
 import json
 import tarfile
-import hashlib
 from pathlib import Path
 
 BUNDLE = Path("models_bundle.tar.gz")
@@ -42,5 +42,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

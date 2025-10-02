@@ -24,16 +24,26 @@ logger = logging.getLogger(__name__)
 # Suppress expected warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="character_ai.cli")
 warnings.filterwarnings("ignore", category=UserWarning, message="CUDA.*unknown error")
-warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*found in sys.modules.*")
-warnings.filterwarnings("ignore", category=RuntimeWarning, message="coroutine.*was never awaited")
-warnings.filterwarnings("ignore", category=PendingDeprecationWarning, message="Please use.*import python_multipart")
+warnings.filterwarnings(
+    "ignore", category=RuntimeWarning, message=".*found in sys.modules.*"
+)
+warnings.filterwarnings(
+    "ignore", category=RuntimeWarning, message="coroutine.*was never awaited"
+)
+warnings.filterwarnings(
+    "ignore",
+    category=PendingDeprecationWarning,
+    message="Please use.*import python_multipart",
+)
 warnings.filterwarnings("ignore", category=UserWarning, message=".*CUDA.*")
 warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*coroutine.*")
+
 
 def detect_cuda_availability() -> bool:
     """Detect CUDA availability with graceful fallback."""
     try:
         import torch
+
         return torch.cuda.is_available()
     except ImportError:
         return False
@@ -170,7 +180,13 @@ def status() -> None:
 @click.option("--interactive", is_flag=True, help="Interactive setup with choices")
 @click.option("--offline", is_flag=True, help="Show manual download instructions")
 @click.option("--verify", is_flag=True, help="Verify installed models")
-def setup(download_models: bool, model_size: str, interactive: bool, offline: bool, verify: bool) -> None:
+def setup(
+    download_models: bool,
+    model_size: str,
+    interactive: bool,
+    offline: bool,
+    verify: bool,
+) -> None:
     """Setup platform with automatic model download and configuration."""
     from ..core.llm.manager import OpenModelManager
 

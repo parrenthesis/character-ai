@@ -240,8 +240,9 @@ class CharacterValidator:
                     message=f"Too many personality traits ({traits_count}, "
                     f"maximum {max_traits})",
                     field="personality_traits",
-                    suggestions=["Reduce the number of personality traits for "
-                                "clarity"],
+                    suggestions=[
+                        "Reduce the number of personality traits for " "clarity"
+                    ],
                 )
             )
 
@@ -450,7 +451,6 @@ class CharacterValidator:
         return None
 
     def get_validation_summary(self, results: List[ValidationResult]) -> Dict[str, Any]:
-
         """Get a summary of validation results."""
         total_results = len(results)
         critical_errors = len(

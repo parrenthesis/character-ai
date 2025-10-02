@@ -9,22 +9,22 @@ jobs:
     name: Auto-merge Dependabot PRs
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
-    
+
     steps:
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: '1.7.1'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
         run: poetry install --no-interaction
@@ -39,8 +39,7 @@ jobs:
 
       - name: Auto-merge PR
         if: success()
-        uses: fastify/github-action-merge-dependency-updates@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          target: minor
-          merge-method: squash
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

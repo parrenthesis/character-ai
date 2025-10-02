@@ -7,7 +7,9 @@ from typing import Iterable
 from character_ai.characters.voice_manager import VoiceManager
 
 
-async def _recompute_for_character(vm: VoiceManager, character: str, *, force: bool) -> bool:
+async def _recompute_for_character(
+    vm: VoiceManager, character: str, *, force: bool
+) -> bool:
     voice_path = await vm.get_character_voice_path(character)
     if not voice_path:
         # Try conventional path under voices dir
@@ -24,23 +26,29 @@ async def _recompute_for_character(vm: VoiceManager, character: str, *, force: b
 async def main_async(characters: Iterable[str], force: bool) -> int:
     vm = VoiceManager()
     if characters:
-        results = await asyncio.gather(*[_recompute_for_character(vm, c, force=force) for c in characters])
+        results = await asyncio.gather(
+            *[_recompute_for_character(vm, c, force=force) for c in characters]
+        )
         return 0 if all(results) else 1
     # all known voices
     names = vm.list_character_voices()
-    results = await asyncio.gather(*[_recompute_for_character(vm, c, force=force) for c in names])
+    results = await asyncio.gather(
+        *[_recompute_for_character(vm, c, force=force) for c in names]
+    )
     return 0 if all(results) else 1
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Recompute stored voice embeddings")
-    parser.add_argument("characters", nargs="*", help="Character names (default: all known)")
-    parser.add_argument("--force", action="store_true", help="Force recompute even if checksum matches")
+    parser.add_argument(
+        "characters", nargs="*", help="Character names (default: all known)"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force recompute even if checksum matches"
+    )
     args = parser.parse_args()
     return asyncio.run(main_async(args.characters, args.force))
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-

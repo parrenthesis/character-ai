@@ -25,7 +25,6 @@ class CatalogStorage:
     """Enterprise catalog storage with franchise-based organization."""
 
     def __init__(self, catalog_dir: Path = Path.cwd() / "catalog"):
-
         self.catalog_dir = catalog_dir
         self.characters_dir = catalog_dir / "characters"
         self.voices_dir = catalog_dir / "voices"
@@ -461,7 +460,11 @@ class CatalogStorage:
 
     async def _build_search_index(self) -> Dict[str, Any]:
         """Build search index from all characters."""
-        search_index: Dict[str, Any] = {"characters": {}, "franchises": {}, "search_terms": {}}
+        search_index: Dict[str, Any] = {
+            "characters": {},
+            "franchises": {},
+            "search_terms": {},
+        }
 
         try:
             # Create directories if they don't exist
@@ -967,7 +970,6 @@ class CatalogStorage:
         return franchise_dir.exists()
 
     async def get_franchise_info(self, franchise_name: str) -> Optional[Dict[str, Any]]:
-
         """Get franchise information and statistics."""
         try:
             if not await self.franchise_exists(franchise_name):
@@ -1089,7 +1091,6 @@ class CatalogStorage:
                 "created_at": franchise_metadata.get("created_at", ""),
                 "character_count": franchise_metadata.get("character_count", 0),
                 "voice_availability": franchise_metadata.get("voice_availability", 0.0),
-
             }
 
             self.index["last_updated"] = datetime.now(timezone.utc).isoformat()

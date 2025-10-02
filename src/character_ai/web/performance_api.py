@@ -104,7 +104,6 @@ async def get_performance_metrics(
         raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 
-
 @performance_router.get("/budgets")
 async def get_latency_budgets() -> Dict[str, Any]:
     """Get latency budgets for all components."""
@@ -156,7 +155,6 @@ async def check_budget_compliance(
     except Exception as e:
         logger.error("Failed to check budget compliance", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to check budget compliance")
-
 
 
 @performance_router.post("/test")
@@ -336,7 +334,6 @@ async def get_performance_reports(
     except Exception as e:
         logger.error("Failed to get performance reports", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to get performance reports")
-
 
 
 @performance_router.post("/clear-metrics")

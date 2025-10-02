@@ -248,9 +248,7 @@ class LogAggregator:
         total_logs = self.stats["total_logs"]
         if isinstance(total_logs, (int, float)):
             self.stats["error_rate"] = (
-                error_count / int(total_logs)
-                if int(total_logs) > 0
-                else 0.0
+                error_count / int(total_logs) if int(total_logs) > 0 else 0.0
             )
         else:
             self.stats["error_rate"] = 0.0
@@ -322,7 +320,6 @@ class LogAggregator:
             if query.character_ids:
                 candidates = [
                     log for log in candidates if log.character_id in query.character_ids
-
                 ]
 
             # Apply text search

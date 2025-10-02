@@ -228,7 +228,7 @@ async def get_character_recommendations(
                     archetype=Archetype.HELPER,
                     personality_traits=[PersonalityTrait.FRIENDLY],
                     abilities=[Ability.TEACHING],
-                    topics=[Topic.SCIENCE, Topic.FRIENDSHIP, Topic.STORIES]
+                    topics=[Topic.SCIENCE, Topic.FRIENDSHIP, Topic.STORIES],
                 ),
                 voice_style="neutral",
                 metadata={},
@@ -240,7 +240,7 @@ async def get_character_recommendations(
                     archetype=Archetype.GUARDIAN,
                     personality_traits=[PersonalityTrait.FRIENDLY],
                     abilities=[Ability.MAGIC],
-                    topics=[Topic.ADVENTURES, Topic.MAGIC, Topic.STORIES]
+                    topics=[Topic.ADVENTURES, Topic.MAGIC, Topic.STORIES],
                 ),
                 voice_style="friendly",
                 metadata={},
@@ -282,7 +282,6 @@ async def get_character_recommendations(
         logger.error(f"Failed to get character recommendations: {e}")
         raise HTTPException(
             status_code=500, detail=f"Failed to get character recommendations: {str(e)}"
-
         )
 
 
@@ -304,7 +303,7 @@ async def get_adaptive_conversation_style(
                 archetype=Archetype.HELPER,
                 personality_traits=[PersonalityTrait.FRIENDLY],
                 abilities=[Ability.TEACHING],
-                topics=[]
+                topics=[],
             ),
             voice_style="neutral",
             metadata={},

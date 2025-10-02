@@ -12,22 +12,22 @@ jobs:
   security-scan:
     name: Security Analysis
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: '1.7.1'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Setup development environment
+      - name: Setup development environment (secure architecture)
         run: make setup-dev
 
       - name: Run Bandit security scan
@@ -45,12 +45,8 @@ jobs:
             --short-report
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+        run: |
+          docker run --rm -v "$PWD:/workspace" aquasec/trivy fs /workspace --format sarif --output trivy-results.sarif
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
@@ -71,30 +67,30 @@ jobs:
 
       - name: Comment PR with security results
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            
+
             // Read security reports
             let banditResults = {};
             let safetyResults = {};
-            
+
             try {
               banditResults = JSON.parse(fs.readFileSync('bandit-report.json', 'utf8'));
             } catch (e) {
               console.log('No Bandit results found');
             }
-            
+
             try {
               safetyResults = JSON.parse(fs.readFileSync('safety-report.json', 'utf8'));
             } catch (e) {
               console.log('No Safety results found');
             }
-            
+
             // Generate comment
             let comment = '## 🔒 Security Scan Results\n\n';
-            
+
             if (banditResults.results && banditResults.results.length > 0) {
               comment += '### ⚠️ Bandit Security Issues\n';
               banditResults.results.forEach(issue => {
@@ -103,7 +99,7 @@ jobs:
             } else {
               comment += '### ✅ No Bandit security issues found\n';
             }
-            
+
             if (safetyResults.vulnerabilities && safetyResults.vulnerabilities.length > 0) {
               comment += '\n### ⚠️ Dependency Vulnerabilities\n';
               safetyResults.vulnerabilities.forEach(vuln => {
@@ -112,7 +108,7 @@ jobs:
             } else {
               comment += '\n### ✅ No dependency vulnerabilities found\n';
             }
-            
+
             // Post comment
             github.rest.issues.createComment({
               issue_number: context.issue.number,

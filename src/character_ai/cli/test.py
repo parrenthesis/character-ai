@@ -19,8 +19,8 @@ sys.path.append(
 )
 
 try:
-    from audio_tester import AudioTester  # type: ignore
-    from mock_hardware import MockHardwareManager  # type: ignore
+    from audio_tester import AudioTester
+    from mock_hardware import MockHardwareManager
 except ImportError:
     # Testing utilities not available, create mock classes
     class MockAudioTester:

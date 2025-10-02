@@ -729,7 +729,7 @@ CHARACTER_TEMPLATES = {
         ],
         abilities=[Ability.NATURE_CONTROL, Ability.HEALING, Ability.GUIDANCE],
         topics=[Topic.NATURE, Topic.MAGIC, Topic.ART],
-        voice_style="whisper",
+        voice_style="soft",
         tags=["spirit", "nature", "magic", "peaceful"],
     ),
     "musical_centaur": CharacterTemplate(

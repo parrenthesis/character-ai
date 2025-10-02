@@ -138,8 +138,7 @@ class AICharacterGenerator:
 
     def _create_generation_prompt(self, description: str) -> str:
         """Create a structured prompt for character generation using best practices."""
-        return (
-            f"""You are a character creation assistant. Create a character based on this
+        return f"""You are a character creation assistant. Create a character based on this
  description: "{description}"
 
 IMPORTANT: Respond with ONLY valid JSON. No explanations, no additional text.
@@ -169,7 +168,6 @@ Example:
 }}
 
 Response:"""
-        )
 
     async def _generate_character_data(self, prompt: str, max_retries: int = 3) -> str:
         """Generate character data using the LLM with retry logic and validation."""
@@ -483,8 +481,7 @@ Response:"""
                 dimensions=CharacterDimensions(
                     species=base_character.dimensions.species,
                     archetype=base_character.dimensions.archetype,
-                    personality_traits=base_character.dimensions.personality_traits.copy
-(),
+                    personality_traits=base_character.dimensions.personality_traits.copy(),
                     abilities=base_character.dimensions.abilities.copy(),
                     topics=base_character.dimensions.topics.copy(),
                     backstory=base_character.dimensions.backstory,
@@ -670,16 +667,13 @@ Response:"""
             ):
                 personality_traits.append(PersonalityTrait.CURIOUS)
             if any(word in description_lower for word in ["kind", "helpful", "caring"]):
-
                 personality_traits.append(PersonalityTrait.KIND)
 
             # Determine abilities
             abilities = [Ability.PROTECTION]  # Default
             if any(word in description_lower for word in ["magic", "magical", "spell"]):
-
                 abilities.append(Ability.MAGIC)
             if any(word in description_lower for word in ["healing", "healer", "help"]):
-
                 abilities.append(Ability.HEALING)
             if any(word in description_lower for word in ["flying", "fly", "wing"]):
                 abilities.append(Ability.FLYING)
@@ -689,7 +683,6 @@ Response:"""
             # Determine topics
             topics = [Topic.FRIENDSHIP]  # Default
             if any(word in description_lower for word in ["magic", "magical", "spell"]):
-
                 topics.append(Topic.MAGIC)
             if any(
                 word in description_lower for word in ["nature", "garden", "forest"]
@@ -699,7 +692,6 @@ Response:"""
                 topics.append(Topic.MUSIC)
             if any(
                 word in description_lower for word in ["adventure", "explore", "travel"]
-
             ):
                 topics.append(Topic.ADVENTURES)
 

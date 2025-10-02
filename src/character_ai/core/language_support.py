@@ -235,7 +235,9 @@ class LanguageDetector:
 class LocalizationManager:
     """Manages language packs and localization."""
 
-    def __init__(self, language_packs_dir: Path = Path.cwd() / "configs/language_packs"):
+    def __init__(
+        self, language_packs_dir: Path = Path.cwd() / "configs/language_packs"
+    ):
         self.language_packs_dir = language_packs_dir
         self.language_packs: Dict[LanguageCode, LanguagePack] = {}
         self.detector = LanguageDetector()

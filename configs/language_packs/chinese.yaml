@@ -11,14 +11,14 @@ safety_patterns:
       - "\\b(死|死亡|死亡|谋杀)\\b"
     severity: "high"
     weight: 3.0
-  
+
   harassment:
     patterns:
       - "\\b(愚蠢|白痴|愚蠢|仇恨|丑陋|肥胖)\\b"
       - "\\b(闭嘴|闭嘴|安静)\\b"
     severity: "medium"
     weight: 2.0
-  
+
   inappropriate:
     patterns:
       - "\\b(性|性|裸体|裸体|私处)\\b"

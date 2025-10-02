@@ -2,4 +2,6 @@
 Core module for the Character AI.
 """
 
-__all__ = []
+from typing import List
+
+__all__: List[str] = []

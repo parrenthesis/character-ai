@@ -307,7 +307,6 @@ class GrafanaIntegration:
                 "annotations": {
                     "summary": "High error rate detected",
                     "description": "Error rate is above 0.1 requests/sec for 2 minutes",
-
                 },
             },
             {

@@ -219,7 +219,9 @@ class ToySetup:
                 # Verify setup
                 character_info = await self.engine.get_character_info()
             if character_info:
-                logger.info(f"My Little Pony toy setup complete: {character_info['name']}")
+                logger.info(
+                    f"My Little Pony toy setup complete: {character_info['name']}"
+                )
             else:
                 logger.info("My Little Pony toy setup complete")
 
@@ -234,14 +236,15 @@ class ToySetup:
         try:
             voice_files = {"bumblebee": "/factory/character_voices/bumblebee_voice.wav"}
 
-
             results = await self.inject_character_voices(voice_files)
             character_info = None
             if self.engine is not None:
                 await self.engine.set_active_character("bumblebee")
                 character_info = await self.engine.get_character_info()
             if character_info:
-                logger.info(f"Transformers toy setup complete: {character_info['name']}")
+                logger.info(
+                    f"Transformers toy setup complete: {character_info['name']}"
+                )
             else:
                 logger.info("Transformers toy setup complete")
 

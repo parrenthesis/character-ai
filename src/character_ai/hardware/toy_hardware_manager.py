@@ -14,6 +14,8 @@ try:
 except ImportError:
     psutil = None  # type: ignore
 
+from .power_manager import PowerManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,6 +39,7 @@ class ToyHardwareManager:
         self.buttons: Optional[Dict[str, Any]] = None
         self.leds: Optional[Dict[str, Any]] = None
         self.battery: Optional[Dict[str, Any]] = None
+        self.power_manager = PowerManager()
 
     async def initialize(self) -> None:
         """Initialize hardware interfaces. Continues on per-component errors."""
@@ -86,6 +89,12 @@ class ToyHardwareManager:
             resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
         except Exception as e:
             logger.warning(f"Could not set memory limit: {e}")
+
+        # Initialize power manager
+        try:
+            await self.power_manager.initialize()
+        except Exception as e:
+            logger.error(f"Failed to initialize power manager: {e}")
 
         return optimizations
 

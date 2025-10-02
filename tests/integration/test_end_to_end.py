@@ -33,7 +33,7 @@ def _make_tone_wav_bytes(sample_rate: int = 16000, duration_s: float = 0.5) -> b
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_engine_e2e_whisper_llama_cpp_text_only():
+async def test_engine_e2e_wav2vec2_llama_cpp_text_only() -> None:
     # Gate on explicit opt-in
     if os.getenv("CAI_RUN_INTEGRATION") != "1":
         pytest.skip("skipping integration test: CAI_RUN_INTEGRATION!=1")
@@ -76,7 +76,7 @@ async def test_engine_e2e_whisper_llama_cpp_text_only():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_engine_e2e_with_tts_audio_optional():
+async def test_engine_e2e_with_tts_audio_optional() -> None:
     # Separate gate for TTS, since it can be heavy
     if os.getenv("CAI_RUN_TTS") != "1":
         pytest.skip("skipping integration TTS test: CAI_RUN_TTS!=1")

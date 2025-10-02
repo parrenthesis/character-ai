@@ -36,16 +36,18 @@ class EdgeModelOptimizer:
             "optimizations": {},
         }
 
-    async def optimize_whisper_for_toy(self) -> Config:
-        """Return a Config tuned for Whisper on edge (default to 'tiny' or 'base')."""
+    async def optimize_wav2vec2_for_toy(self) -> Config:
+        """Return a Config tuned for Wav2Vec2 on edge."""
         cfg = deepcopy(self.base_config)
-        cfg.models.whisper_model = cfg.models.whisper_model or "tiny"
+        cfg.models.wav2vec2_model = (
+            cfg.models.wav2vec2_model or "facebook/wav2vec2-base"
+        )
         cfg.interaction.sample_rate = cfg.interaction.sample_rate or 16000
         cfg.use_free_models_only = True
         cfg.enable_cpu_limiting = True
         cfg.max_cpu_threads = getattr(self.constraints, "max_cpu_cores", 2)
-        self._summary["optimizations"]["whisper"] = {
-            "model": cfg.models.whisper_model,
+        self._summary["optimizations"]["wav2vec2"] = {
+            "model": cfg.models.wav2vec2_model,
             "sample_rate": cfg.models.sample_rate,
         }
         return cfg
@@ -70,16 +72,16 @@ class EdgeModelOptimizer:
         }
         return cfg
 
-    async def optimize_xtts_for_toy(self) -> Config:
-        """Return a Config tuned for XTTS on edge."""
+    async def optimize_coqui_for_toy(self) -> Config:
+        """Return a Config tuned for Coqui TTS on edge."""
         cfg = deepcopy(self.base_config)
-        cfg.models.xtts_model = (
-            cfg.models.xtts_model or "tts_models/multilingual/multi-dataset/xtts_v2"
+        cfg.models.coqui_model = (
+            cfg.models.coqui_model or "tts_models/en/ljspeech/tacotron2-DDC"
         )
         cfg.use_free_models_only = True
         cfg.enable_cpu_limiting = True
         cfg.max_cpu_threads = getattr(self.constraints, "max_cpu_cores", 2)
-        self._summary["optimizations"]["xtts"] = {"model": cfg.models.xtts_model}
+        self._summary["optimizations"]["coqui"] = {"model": cfg.models.coqui_model}
         return cfg
 
     async def get_edge_optimization_summary(self) -> Dict[str, Any]:
@@ -89,7 +91,7 @@ class EdgeModelOptimizer:
     # Compatibility with older tests expecting a single call
     async def optimize_all_models_for_toy(self) -> Dict[str, Any]:
         """Run per-model optimizations and return a combined summary."""
-        await self.optimize_whisper_for_toy()
+        await self.optimize_wav2vec2_for_toy()
         await self.optimize_llm_for_toy()
-        await self.optimize_xtts_for_toy()
+        await self.optimize_coqui_for_toy()
         return await self.get_edge_optimization_summary()

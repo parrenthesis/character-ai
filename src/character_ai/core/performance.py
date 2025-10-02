@@ -93,7 +93,6 @@ class PerformanceTracker:
                 "memory", 50, 150, 300, 500, "Session memory operations"
             ),
             "api": LatencyBudget("api", 100, 500, 1000, 2000, "API request processing"),
-
         }
 
         logger.info(
@@ -151,7 +150,10 @@ class PerformanceTracker:
             ]
 
     def get_performance_report(
-        self, component: str, operation: Optional[str] = None, time_window_seconds: float = 3600
+        self,
+        component: str,
+        operation: Optional[str] = None,
+        time_window_seconds: float = 3600,
     ) -> PerformanceReport:
         """Generate a performance report for a component."""
         metrics = self.get_component_metrics(component, time_window_seconds)

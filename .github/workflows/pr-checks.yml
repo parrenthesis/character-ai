@@ -6,7 +6,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.10'
-  POETRY_VERSION: '1.7.1'
+  POETRY_VERSION: '1.8.3'
   POETRY_CACHE_DIR: ~/.cache/poetry
 
 jobs:
@@ -16,22 +16,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        env:
+          POETRY_VERSION: ${{ env.POETRY_VERSION }}
 
       - name: Cache Poetry dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/poetry
@@ -40,7 +40,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment
+      - name: Setup development environment (secure architecture)
         run: make setup-dev
 
       - name: Run quick linting
@@ -52,20 +52,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        env:
+          POETRY_VERSION: ${{ env.POETRY_VERSION }}
 
       - name: Cache Poetry dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/poetry
@@ -74,7 +76,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment
+      - name: Setup development environment (secure architecture)
         run: make setup-dev
 
       - name: Run quick security checks
@@ -96,20 +98,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        env:
+          POETRY_VERSION: ${{ env.POETRY_VERSION }}
 
       - name: Cache Poetry dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/poetry
@@ -118,7 +122,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      - name: Setup development environment
+      - name: Setup development environment (secure architecture)
         run: make setup-dev
 
       - name: Run quick tests

@@ -207,7 +207,6 @@ class SessionMemory:
                 "max_turns": self.config.get_limits_for_character(character_name)[0],
                 "max_tokens": self.config.get_limits_for_character(character_name)[1],
                 "max_age_seconds": self.config.get_limits_for_character(character_name)[
-
                     2
                 ],
             },

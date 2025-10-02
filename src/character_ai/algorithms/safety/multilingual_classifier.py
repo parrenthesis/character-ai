@@ -97,7 +97,6 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
             "violence": {
                 "patterns": [
                     r"\b(töten|verletzen|schaden|gewalt|kämpfen|angreifen|zerstören)\b",
-
                     r"\b(waffe|pistole|messer|bombe|explodieren)\b",
                     r"\b(sterben|tod|tot|morden)\b",
                 ],

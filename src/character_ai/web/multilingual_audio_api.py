@@ -152,9 +152,11 @@ async def synthesize_speech(
         # Encode audio data to base64
         import base64
 
-        audio_b64 = base64.b64encode(result.audio_result.audio_data.data if result.audio_result.audio_data else b"").decode(
-            "utf-8"
-        )
+        audio_b64 = base64.b64encode(
+            result.audio_result.audio_data.data
+            if result.audio_result.audio_data
+            else b""
+        ).decode("utf-8")
 
         return TTSResponse(
             audio_data=audio_b64,
@@ -163,8 +165,12 @@ async def synthesize_speech(
             cultural_adaptations=result.cultural_adaptations,
             voice_characteristics=result.voice_characteristics,
             processing_time_ms=result.processing_time_ms,
-            sample_rate=result.audio_result.audio_data.sample_rate if result.audio_result.audio_data else 0,
-            duration=result.audio_result.audio_data.duration if result.audio_result.audio_data else 0.0,
+            sample_rate=result.audio_result.audio_data.sample_rate
+            if result.audio_result.audio_data
+            else 0,
+            duration=result.audio_result.audio_data.duration
+            if result.audio_result.audio_data
+            else 0.0,
         )
 
     except Exception as e:
@@ -201,7 +207,7 @@ async def transcribe_audio(
         # Create AudioData object
         audio = AudioData(
             data=audio_data,
-            sample_rate=16000,  # Default for Whisper
+            sample_rate=16000,  # Default for Wav2Vec2
             channels=1,
             duration=0.0,  # Will be calculated
             format="wav",
@@ -219,7 +225,9 @@ async def transcribe_audio(
             cultural_adaptations=result.cultural_adaptations,
             voice_characteristics=result.voice_characteristics,
             processing_time_ms=result.processing_time_ms,
-            segments=result.audio_result.metadata.get("segments", 0) if result.audio_result.metadata else 0,
+            segments=result.audio_result.metadata.get("segments", 0)
+            if result.audio_result.metadata
+            else 0,
         )
 
     except Exception as e:
@@ -318,7 +326,11 @@ async def stream_tts_audio(
 
         # Return audio as streaming response
         return StreamingResponse(
-            io.BytesIO(result.audio_result.audio_data.data if result.audio_result.audio_data else b""),
+            io.BytesIO(
+                result.audio_result.audio_data.data
+                if result.audio_result.audio_data
+                else b""
+            ),
             media_type="audio/wav",
             headers={
                 "Content-Disposition": "inline",
@@ -374,9 +386,11 @@ async def batch_tts_synthesis(
             # Encode audio data to base64
             import base64
 
-            audio_b64 = base64.b64encode(result.audio_result.audio_data.data if result.audio_result.audio_data else b"").decode(
-                "utf-8"
-            )
+            audio_b64 = base64.b64encode(
+                result.audio_result.audio_data.data
+                if result.audio_result.audio_data
+                else b""
+            ).decode("utf-8")
 
             results.append(
                 TTSResponse(
@@ -386,8 +400,12 @@ async def batch_tts_synthesis(
                     cultural_adaptations=result.cultural_adaptations,
                     voice_characteristics=result.voice_characteristics,
                     processing_time_ms=result.processing_time_ms,
-                    sample_rate=result.audio_result.audio_data.sample_rate if result.audio_result.audio_data else 0,
-                    duration=result.audio_result.audio_data.duration if result.audio_result.audio_data else 0.0,
+                    sample_rate=result.audio_result.audio_data.sample_rate
+                    if result.audio_result.audio_data
+                    else 0,
+                    duration=result.audio_result.audio_data.duration
+                    if result.audio_result.audio_data
+                    else 0.0,
                 )
             )
 

@@ -147,7 +147,6 @@ class CrashReporter:
 
                 logger.info(
                     "Loaded persisted crash reports", count=len(data.get("reports", []))
-
                 )
         except Exception as e:
             logger.error("Failed to load persisted crash reports", error=str(e))

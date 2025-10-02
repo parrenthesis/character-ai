@@ -78,7 +78,6 @@ class ELKIntegration:
 
         logger.info(
             "ELKIntegration initialized", es_url=self.es_url, kibana_url=self.kibana_url
-
         )
 
     async def create_index_template(self) -> bool:
@@ -154,7 +153,9 @@ class ELKIntegration:
         try:
             async with httpx.AsyncClient(timeout=self.elasticsearch.timeout) as client:
                 response = await client.post(
-                    f"{self.es_url}/{index_name}/_doc", json=document, auth=self.auth  # type: ignore
+                    f"{self.es_url}/{index_name}/_doc",
+                    json=document,
+                    auth=self.auth,  # type: ignore
                 )
                 response.raise_for_status()
                 return True
@@ -265,7 +266,6 @@ class ELKIntegration:
         if source:
             es_query["query"]["bool"]["must"].append({"term": {"source": source.value}})  # type: ignore
 
-
         try:
             index_pattern = f"{self.elasticsearch.index_prefix}-*"
             async with httpx.AsyncClient(timeout=self.elasticsearch.timeout) as client:
@@ -315,8 +315,9 @@ class ELKIntegration:
             index_pattern = f"{self.elasticsearch.index_prefix}-*"
             async with httpx.AsyncClient(timeout=self.elasticsearch.timeout) as client:
                 response = await client.post(
-                    f"{self.es_url}/{index_pattern}/_search", json=query, auth=self.auth  # type: ignore
-
+                    f"{self.es_url}/{index_pattern}/_search",
+                    json=query,
+                    auth=self.auth,  # type: ignore
                 )
                 response.raise_for_status()
 

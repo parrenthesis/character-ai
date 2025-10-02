@@ -17,9 +17,8 @@ import click
 logger = logging.getLogger(__name__)
 
 # Allowed commands for security
-ALLOWED_COMMANDS = {
-    "docker", "cp", "uvicorn", "python"
-}
+ALLOWED_COMMANDS = {"docker", "cp", "uvicorn", "python"}
+
 
 def safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess:
     """Safely run subprocess with command validation."""
@@ -111,7 +110,9 @@ def _build_docker_deployment(environment: str, models: bool) -> None:
     click.echo("✓ Docker images built successfully!")
 
 
-def _build_standard_deployment(environment: str, models: bool, output: Optional[str]) -> None:
+def _build_standard_deployment(
+    environment: str, models: bool, output: Optional[str]
+) -> None:
     """Build standard deployment package."""
     if not output:
         output = f"deployment-{environment}"
@@ -167,7 +168,11 @@ python -m character_ai.web.toy_api
     help="Deployment environment",
 )
 @click.option("--port", type=int, default=8000, help="Port to run on")
-@click.option("--host", default="127.0.0.1", help="Host to bind to (use 0.0.0.0 only with proper security)")
+@click.option(
+    "--host",
+    default="127.0.0.1",
+    help="Host to bind to (use 0.0.0.0 only with proper security)",
+)
 @click.option("--workers", type=int, default=1, help="Number of worker processes")
 def start(environment: str, port: int, host: str, workers: int) -> None:
     """Start the platform in production mode."""
@@ -199,9 +204,7 @@ def start(environment: str, port: int, host: str, workers: int) -> None:
             )
         else:
             # Use development server
-            safe_subprocess_run(
-                ["python", "-m", "character_ai.web.toy_api"]
-            )
+            safe_subprocess_run(["python", "-m", "character_ai.web.toy_api"])
 
     except Exception as e:
         click.echo(f"Error starting platform: {e}", err=True)
@@ -275,8 +278,9 @@ def backup(environment: str, backup_dir: Optional[str]) -> None:
 
         # Backup characters
         if Path("characters").exists():
-            safe_subprocess_run(["cp", "-r", "characters/", str(backup_path / "characters")])
-
+            safe_subprocess_run(
+                ["cp", "-r", "characters/", str(backup_path / "characters")]
+            )
 
         # Backup models (if not too large)
         if Path("models").exists():
@@ -402,7 +406,9 @@ def update(environment: str, force: bool) -> None:
     try:
         click.echo(f"Updating deployment for {environment} environment...")
 
-        if not force and not click.confirm("Are you sure you want to update the deployment?"):
+        if not force and not click.confirm(
+            "Are you sure you want to update the deployment?"
+        ):
             click.echo("Update cancelled.")
             return
 

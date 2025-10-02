@@ -76,6 +76,8 @@ clean:
 	rm -rf .ruff_cache/
 	rm -rf .tox/
 	rm -rf .cache/
+	rm -rf .venv/
+	rm -f poetry.lock
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
@@ -132,16 +134,22 @@ docker-compose-down:
 
 # Setup targets
 setup:
-	@echo "Setting up environment with security dependencies..."
-	poetry install --only=main
-	poetry run pip install numpy==1.24.3 cryptography PyJWT pydantic-core==2.33.2 psutil --force-reinstall
+	@echo "Setting up environment with secure architecture (PyTorch 2.8.0 + Wav2Vec2 + Coqui TTS)..."
+	export PATH="$$HOME/.pyenv/bin:$$PATH" && eval "$$(pyenv init -)" && poetry env use python && poetry install --only=main
+	poetry run pip install torch>=2.8.0 torchaudio>=2.8.0 --force-reinstall
+	poetry run pip install numpy==1.22.0 cryptography PyJWT pydantic-core==2.33.2 psutil==5.9.8 --force-reinstall
 	poetry run pip install llama-cpp-python --force-reinstall --no-cache-dir
+	poetry run pip install numpy==1.22.0 fsspec==2024.6.1 networkx==2.8.8 --force-reinstall
+	poetry run pip install numpy==1.22.2 --force-reinstall --no-deps
 
 setup-dev:
-	@echo "Setting up development environment..."
-	poetry install
-	poetry run pip install numpy==1.24.3 cryptography PyJWT pydantic-core==2.33.2 psutil --force-reinstall
+	@echo "Setting up development environment with secure architecture (PyTorch 2.8.0 + Wav2Vec2 + Coqui TTS)..."
+	export PATH="$$HOME/.pyenv/bin:$$PATH" && eval "$$(pyenv init -)" && poetry env use python && poetry install
+	poetry run pip install torch>=2.8.0 torchaudio>=2.8.0 --force-reinstall
+	poetry run pip install numpy==1.22.0 cryptography PyJWT pydantic-core==2.33.2 psutil==5.9.8 --force-reinstall
 	poetry run pip install llama-cpp-python --force-reinstall --no-cache-dir
+	poetry run pip install numpy==1.22.0 fsspec==2024.6.1 networkx==2.8.8 --force-reinstall
+	poetry run pip install numpy==1.22.2 --force-reinstall --no-deps
 	poetry run pre-commit install
 
 # Security and Quality
@@ -158,7 +166,8 @@ lint:
 	poetry run black --check src/ tests/
 	poetry run isort --check-only src/ tests/
 	poetry run ruff check src/ tests/
-	poetry run mypy src/
+	cd src && poetry run mypy . --ignore-missing-imports
+	cd tests && poetry run mypy . --ignore-missing-imports
 
 lint-dev:
 	@echo "Running development linting checks..."
@@ -167,7 +176,8 @@ lint-dev:
 	poetry run black --check src/ tests_dev/
 	poetry run isort --check-only src/ tests_dev/
 	poetry run ruff check src/ tests_dev/
-	poetry run mypy src/
+	cd src && poetry run mypy . --ignore-missing-imports
+	cd tests_dev && poetry run mypy . --ignore-missing-imports
 
 format:
 	@echo "Formatting code..."

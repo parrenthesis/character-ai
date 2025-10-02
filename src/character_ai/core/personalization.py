@@ -181,7 +181,6 @@ class PreferenceLearner:
         self.localization_manager = get_localization_manager()
         self._conversation_style_keywords = {
             "formal": ["please", "thank you", "sir", "madam", "would you", "could you"],
-
             "casual": ["hey", "what's up", "cool", "awesome", "yeah", "sure"],
             "friendly": ["hi", "hello", "how are you", "nice to meet you", "great"],
             "professional": [
@@ -366,8 +365,9 @@ class PreferenceLearner:
                 patterns.append(
                     InteractionPattern(
                         pattern_type="concise_communication",
-                        frequency=len([length for length in input_lengths if length < 5]
-),
+                        frequency=len(
+                            [length for length in input_lengths if length < 5]
+                        ),
                         confidence=0.7,
                         examples=[
                             (
@@ -383,8 +383,9 @@ class PreferenceLearner:
                 patterns.append(
                     InteractionPattern(
                         pattern_type="detailed_communication",
-                        frequency=len([length for length in input_lengths if length > 20
-]),
+                        frequency=len(
+                            [length for length in input_lengths if length > 20]
+                        ),
                         confidence=0.7,
                         examples=[
                             (
@@ -414,7 +415,8 @@ class PersonalizationManager:
         # Don't load data during instantiation - load when actually needed
 
         logger.info(
-            "PersonalizationManager initialized", extra={"storage_path": str(storage_path)}
+            "PersonalizationManager initialized",
+            extra={"storage_path": str(storage_path)},
         )
 
     def _load_profiles(self) -> None:

@@ -7,6 +7,7 @@ Tests device identity, JWT authentication, RBAC, and rate limiting.
 import tempfile
 import time
 from pathlib import Path
+from typing import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -26,7 +27,7 @@ from character_ai.web.toy_api import app
 class TestDeviceIdentity:
     """Test DeviceIdentity class."""
 
-    def test_device_identity_creation(self):
+    def test_device_identity_creation(self) -> None:
         """Test creating a device identity."""
         device = DeviceIdentity(
             device_id="test-device-123",
@@ -42,7 +43,7 @@ class TestDeviceIdentity:
         assert device.created_at > 0
         assert device.last_seen > 0
 
-    def test_device_identity_serialization(self):
+    def test_device_identity_serialization(self) -> None:
         """Test device identity serialization."""
         device = DeviceIdentity(
             device_id="test-device-123",
@@ -68,7 +69,7 @@ class TestDeviceIdentityManager:
     """Test DeviceIdentityManager class."""
 
     @pytest.fixture
-    def temp_config(self):
+    def temp_config(self) -> Generator[SecurityConfig, None, None]:
         """Create a temporary config for testing."""
         with tempfile.TemporaryDirectory() as temp_dir:
             config = SecurityConfig(
@@ -80,12 +81,14 @@ class TestDeviceIdentityManager:
             yield config
 
     @pytest.fixture
-    def device_manager(self, temp_config):
+    def device_manager(self, temp_config: SecurityConfig) -> DeviceIdentityManager:
         """Create a device manager for testing."""
         return DeviceIdentityManager(temp_config)
 
     @pytest.mark.asyncio
-    async def test_initialize_new_device(self, device_manager):
+    async def test_initialize_new_device(
+        self, device_manager: DeviceIdentityManager
+    ) -> None:
         """Test initializing a new device."""
         await device_manager.initialize()
 
@@ -98,7 +101,9 @@ class TestDeviceIdentityManager:
         assert "write" in device.capabilities
 
     @pytest.mark.asyncio
-    async def test_jwt_token_generation(self, device_manager):
+    async def test_jwt_token_generation(
+        self, device_manager: DeviceIdentityManager
+    ) -> None:
         """Test JWT token generation and verification."""
         await device_manager.initialize()
 
@@ -110,13 +115,17 @@ class TestDeviceIdentityManager:
         # Verify token
         payload = device_manager.verify_jwt_token(token)
         assert payload is not None
-        assert payload["device_id"] == device_manager.get_device_identity().device_id
+        device_identity = device_manager.get_device_identity()
+        assert device_identity is not None
+        assert payload["device_id"] == device_identity.device_id
         assert payload["role"] == "user"
         assert "iat" in payload
         assert "exp" in payload
 
     @pytest.mark.asyncio
-    async def test_jwt_token_expiry(self, device_manager):
+    async def test_jwt_token_expiry(
+        self, device_manager: DeviceIdentityManager
+    ) -> None:
         """Test JWT token expiry."""
         await device_manager.initialize()
 
@@ -136,7 +145,7 @@ class TestDeviceIdentityManager:
         assert payload is None
 
     @pytest.mark.asyncio
-    async def test_rate_limiting(self, device_manager):
+    async def test_rate_limiting(self, device_manager: DeviceIdentityManager) -> None:
         """Test rate limiting functionality."""
         await device_manager.initialize()
 
@@ -157,7 +166,9 @@ class TestDeviceIdentityManager:
         assert device_manager.check_rate_limit(client_id) is False
 
     @pytest.mark.asyncio
-    async def test_cryptographic_keys(self, device_manager):
+    async def test_cryptographic_keys(
+        self, device_manager: DeviceIdentityManager
+    ) -> None:
         """Test cryptographic key generation and usage."""
         await device_manager.initialize()
 
@@ -184,7 +195,7 @@ class TestSecurityMiddleware:
     """Test SecurityMiddleware class."""
 
     @pytest.fixture
-    def mock_device_manager(self):
+    def mock_device_manager(self) -> Mock:
         """Create a mock device manager."""
         manager = Mock(spec=DeviceIdentityManager)
         manager.verify_jwt_token.return_value = {
@@ -201,13 +212,13 @@ class TestSecurityMiddleware:
         return manager
 
     @pytest.fixture
-    def security_middleware(self, mock_device_manager):
+    def security_middleware(self, mock_device_manager: Mock) -> SecurityMiddleware:
         """Create security middleware with mock device manager."""
         return SecurityMiddleware(mock_device_manager)
 
     def test_get_current_device_valid_token(
-        self, security_middleware, mock_device_manager
-    ):
+        self, security_middleware: SecurityMiddleware, mock_device_manager: Mock
+    ) -> None:
         """Test getting current device with valid token."""
         device = security_middleware.get_current_device("valid-token")
 
@@ -217,8 +228,8 @@ class TestSecurityMiddleware:
         mock_device_manager.verify_jwt_token.assert_called_once_with("valid-token")
 
     def test_get_current_device_invalid_token(
-        self, security_middleware, mock_device_manager
-    ):
+        self, security_middleware: SecurityMiddleware, mock_device_manager: Mock
+    ) -> None:
         """Test getting current device with invalid token."""
         mock_device_manager.verify_jwt_token.return_value = None
 
@@ -227,7 +238,7 @@ class TestSecurityMiddleware:
         assert device is None
         mock_device_manager.verify_jwt_token.assert_called_once_with("invalid-token")
 
-    def test_check_permission(self, security_middleware):
+    def test_check_permission(self, security_middleware: SecurityMiddleware) -> None:
         """Test permission checking."""
         device = DeviceIdentity(
             device_id="test-device",
@@ -243,7 +254,7 @@ class TestSecurityMiddleware:
         # Should not have required capability
         assert security_middleware.check_permission(device, "admin") is False
 
-    def test_check_role(self, security_middleware):
+    def test_check_role(self, security_middleware: SecurityMiddleware) -> None:
         """Test role checking."""
         user_device = DeviceIdentity(
             device_id="user-device",
@@ -275,7 +286,7 @@ class TestSecurityAPI:
     """Test security-related API endpoints."""
 
     @pytest.fixture
-    def mock_security_manager(self):
+    def mock_security_manager(self) -> AsyncMock:
         """Create a mock security manager."""
         manager = AsyncMock(spec=DeviceIdentityManager)
         manager.initialize.return_value = None
@@ -294,7 +305,7 @@ class TestSecurityAPI:
         )
         return manager
 
-    def test_register_device(self, mock_security_manager):
+    def test_register_device(self, mock_security_manager: AsyncMock) -> None:
         """Test device registration endpoint."""
         with patch(
             "character_ai.web.toy_api.get_security_manager",
@@ -311,7 +322,9 @@ class TestSecurityAPI:
                 assert data["token_type"] == "bearer"
                 assert data["role"] == "user"
 
-    def test_get_current_device_info_authenticated(self, mock_security_manager):
+    def test_get_current_device_info_authenticated(
+        self, mock_security_manager: AsyncMock
+    ) -> None:
         """Test getting current device info when authenticated."""
         # Mock the authentication dependency
         mock_device = DeviceIdentity(
@@ -322,7 +335,7 @@ class TestSecurityAPI:
         )
 
         # Override the dependency
-        async def mock_require_authentication():
+        async def mock_require_authentication() -> DeviceIdentity:
             return mock_device
 
         app.dependency_overrides[require_authentication] = mock_require_authentication
@@ -339,11 +352,11 @@ class TestSecurityAPI:
         finally:
             app.dependency_overrides.clear()
 
-    def test_get_current_device_info_unauthenticated(self):
+    def test_get_current_device_info_unauthenticated(self) -> None:
         """Test getting current device info when not authenticated."""
 
         # Override the dependency to raise an authentication error
-        async def mock_require_authentication():
+        async def mock_require_authentication() -> None:
             from fastapi import HTTPException, status
 
             raise HTTPException(
@@ -362,7 +375,7 @@ class TestSecurityAPI:
         finally:
             app.dependency_overrides.clear()
 
-    def test_generate_token(self, mock_security_manager):
+    def test_generate_token(self, mock_security_manager: AsyncMock) -> None:
         """Test token generation endpoint."""
         mock_device = DeviceIdentity(
             device_id="test-device-123",
@@ -372,7 +385,7 @@ class TestSecurityAPI:
         )
 
         # Override the dependency
-        async def mock_require_authentication():
+        async def mock_require_authentication() -> DeviceIdentity:
             return mock_device
 
         app.dependency_overrides[require_authentication] = mock_require_authentication
@@ -393,7 +406,7 @@ class TestSecurityAPI:
         finally:
             app.dependency_overrides.clear()
 
-    def test_get_public_key(self, mock_security_manager):
+    def test_get_public_key(self, mock_security_manager: AsyncMock) -> None:
         """Test getting public key endpoint."""
         with patch(
             "character_ai.web.toy_api.get_security_manager",
@@ -413,7 +426,7 @@ class TestSecurityIntegration:
     """Integration tests for security system."""
 
     @pytest.mark.asyncio
-    async def test_full_authentication_flow(self):
+    async def test_full_authentication_flow(self) -> None:
         """Test the complete authentication flow."""
         with tempfile.TemporaryDirectory() as temp_dir:
             config = SecurityConfig(
@@ -434,9 +447,9 @@ class TestSecurityIntegration:
             # Verify token
             payload = device_manager.verify_jwt_token(token)
             assert payload is not None
-            assert (
-                payload["device_id"] == device_manager.get_device_identity().device_id
-            )
+            device_identity = device_manager.get_device_identity()
+            assert device_identity is not None
+            assert payload["device_id"] == device_identity.device_id
 
             # Test rate limiting
             assert device_manager.check_rate_limit("test-client") is True

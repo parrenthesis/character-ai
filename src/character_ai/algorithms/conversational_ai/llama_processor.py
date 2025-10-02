@@ -170,7 +170,6 @@ class LlamaProcessor(BaseTextProcessor):
             logger.error(f"Error processing text with Llama: {e}")
             return await self._create_error_result(f"Llama text processing failed: {e}")
 
-
     async def generate_text(self, prompt: str, **kwargs: Any) -> TextResult:
         """Generate text from prompt."""
         if not self._initialized:
@@ -207,7 +206,6 @@ class LlamaProcessor(BaseTextProcessor):
             logger.error(f"Error generating text with Llama: {e}")
             return await self._create_error_result(f"Llama text generation failed: {e}")
 
-
     async def get_embeddings(self, text: str) -> TextResult:  # type: ignore
         """Extract embeddings from text."""
         if not self._initialized:
@@ -223,7 +221,6 @@ class LlamaProcessor(BaseTextProcessor):
                 raise RuntimeError("Tokenizer not initialized")
             inputs = self.tokenizer(
                 text, return_tensors="pt", padding=True, truncation=True, max_length=512
-
             ).to(self.device)
 
             # Get embeddings from model
@@ -311,8 +308,12 @@ class LlamaProcessor(BaseTextProcessor):
                     temperature=temperature,
                     top_p=top_p,
                     do_sample=do_sample,
-                    pad_token_id=self.tokenizer.eos_token_id if self.tokenizer else None,
-                    eos_token_id=self.tokenizer.eos_token_id if self.tokenizer else None,
+                    pad_token_id=self.tokenizer.eos_token_id
+                    if self.tokenizer
+                    else None,
+                    eos_token_id=self.tokenizer.eos_token_id
+                    if self.tokenizer
+                    else None,
                     repetition_penalty=1.1,
                 )
 

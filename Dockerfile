@@ -30,13 +30,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && apt-get autoremove -y
 
+# Set working directory
+WORKDIR /app
+
 # Copy dependency files
 COPY pyproject.toml poetry.lock ./
 
 # Install Poetry and dependencies
-RUN pip install poetry==1.7.1
-RUN poetry config virtualenvs.create false
-RUN poetry install --only=main --no-dev
+RUN pip install poetry==1.7.1 && \
+    poetry config virtualenvs.create false && \
+    poetry install --only=main --no-dev
 
 # Stage 3: Runtime image
 FROM base as runtime
@@ -64,19 +67,20 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=cai:cai . /app
 WORKDIR /app
 
-# Install application
-RUN pip install -e .[llama_cpp,tts-xtts,audio,ml] --no-deps
+# Install application with new architecture dependencies
+RUN pip install --no-cache-dir -e .[llama_cpp,tts,audio,ml] --no-deps
 
-# Fix dependency conflicts and clean up
-RUN pip install numpy==1.24.3 cryptography PyJWT --force-reinstall \
-    && pip cache purge
+# Install secure dependencies (PyTorch 2.8.0+ for security)
+RUN pip install --no-cache-dir torch==2.8.0 torchaudio==2.8.0 --force-reinstall && \
+    pip install --no-cache-dir numpy==1.24.3 cryptography==41.0.7 PyJWT==2.8.0 --force-reinstall && \
+    pip cache purge
 
 # Install model bundle into /app/models and verify checksums (optional)
 RUN python scripts/install_model_bundle.py || echo "No model bundle found, skipping installation"
 
 # Create healthcheck script
-RUN echo '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1' > /app/healthcheck.sh \
-    && chmod +x /app/healthcheck.sh
+RUN printf '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1\n' > /app/healthcheck.sh && \
+    chmod +x /app/healthcheck.sh
 
 # Switch to non-root user
 USER cai
@@ -90,4 +94,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Default command
 CMD ["python", "-m", "character.ai.web.toy_api"]
-

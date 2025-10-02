@@ -66,14 +66,14 @@ class StreamingConfig:
     buffer_size_ms: int = 1000  # 1 second buffer
 
     # STT parameters
-    stt_model: str = "whisper-base"
+    stt_model: str = "wav2vec2-base"
     stt_language: str = "en"
     stt_vad_enabled: bool = True
     stt_partial_results: bool = True
     stt_max_alternatives: int = 3
 
     # TTS parameters
-    tts_model: str = "xtts"
+    tts_model: str = "coqui"
     tts_voice: str = "default"
     tts_speed: float = 1.0
     tts_emotion: str = "neutral"
@@ -81,9 +81,7 @@ class StreamingConfig:
     # Streaming parameters
     max_audio_duration_ms: int = 30000  # 30 seconds max
     silence_timeout_ms: int = 2000  # 2 seconds silence timeout
-    connection_timeout_ms: int = (
-        30000  # 30 seconds connection timeout (configurable via streaming.connection_timeout_ms)
-    )
+    connection_timeout_ms: int = 30000  # 30 seconds connection timeout (configurable via streaming.connection_timeout_ms)
 
     # WebSocket parameters
     websocket_ping_interval: int = 20
@@ -133,32 +131,35 @@ class StreamingAudioProcessor:
         try:
             # Initialize STT processor
             try:
-                from ..algorithms.conversational_ai.whisper_processor import (
-                    WhisperProcessor,
+                from ..algorithms.conversational_ai.wav2vec2_processor import (
+                    Wav2Vec2Processor,
                 )
 
                 # Create a mock config for the processor
-                from ..config import Config  # type: ignore
+                from ..config import Config
+
                 mock_config = Config()
-                self.stt_processor = WhisperProcessor(mock_config)
+                self.stt_processor = Wav2Vec2Processor(mock_config)
                 if self.stt_processor is not None:
                     await self.stt_processor.initialize()
             except ImportError:
-                logger.warning("WhisperProcessor not available, using placeholder")
+                logger.warning("Wav2Vec2Processor not available, using placeholder")
                 self.stt_processor = None
 
             # Initialize TTS processor
             try:
-                from ..algorithms.conversational_ai.xtts_processor import XTTSProcessor
+                from ..algorithms.conversational_ai.coqui_processor import (
+                    CoquiProcessor,
+                )
                 from ..config import Config
 
                 # Create a mock config for the processor
                 mock_config = Config()
-                self.tts_processor = XTTSProcessor(mock_config)
+                self.tts_processor = CoquiProcessor(mock_config)
                 if self.tts_processor is not None:
                     await self.tts_processor.initialize()
             except ImportError:
-                logger.warning("XTTSProcessor not available, using placeholder")
+                logger.warning("CoquiTTSProcessor not available, using placeholder")
                 self.tts_processor = None
 
             # Initialize VAD detector
@@ -207,7 +208,9 @@ class StreamingAudioProcessor:
         # Process accumulated audio
         asyncio.create_task(self._process_accumulated_audio())
 
-    def _on_vad_state_change(self, old_state: Any, new_state: Any, timestamp: float) -> None:
+    def _on_vad_state_change(
+        self, old_state: Any, new_state: Any, timestamp: float
+    ) -> None:
         """Handle VAD state change."""
         logger.debug(
             f"VAD state changed from {old_state} to {new_state} at {timestamp}"
@@ -279,7 +282,6 @@ class StreamingAudioProcessor:
                 if vad_result.is_voice and self.state == StreamingState.IDLE:
                     self.state = StreamingState.LISTENING
                 elif not vad_result.is_voice and self.state == StreamingState.LISTENING:
-
                     # Check for silence timeout
                     if (
                         time.time() - self.last_audio_time
@@ -443,7 +445,9 @@ class StreamingWebSocketHandler:
 
         logger.info("StreamingWebSocketHandler initialized")
 
-    async def handle_connection(self, websocket: WebSocketServerProtocol, path: str) -> None:
+    async def handle_connection(
+        self, websocket: WebSocketServerProtocol, path: str
+    ) -> None:
         """Handle a new WebSocket connection."""
 
         connection_id = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
@@ -485,7 +489,9 @@ class StreamingWebSocketHandler:
             if connection_id in self.active_connections:
                 del self.active_connections[connection_id]
 
-    async def _handle_audio_data(self, websocket: WebSocketServerProtocol, audio_data: bytes) -> None:
+    async def _handle_audio_data(
+        self, websocket: WebSocketServerProtocol, audio_data: bytes
+    ) -> None:
         """Handle incoming audio data."""
         try:
             # Process audio data
@@ -496,14 +502,16 @@ class StreamingWebSocketHandler:
                 channels=1,
                 timestamp=time.time(),
                 sequence_number=0,
-                is_final=False
+                is_final=False,
             )
             await self.processor.process_audio_chunk(audio_chunk)
         except Exception as e:
             logger.error(f"Error processing audio data: {e}")
             await self._send_error(websocket, str(e))
 
-    async def _handle_message(self, websocket: WebSocketServerProtocol, message: str) -> None:
+    async def _handle_message(
+        self, websocket: WebSocketServerProtocol, message: str
+    ) -> None:
         """Handle incoming WebSocket message."""
 
         try:
@@ -597,7 +605,9 @@ class StreamingWebSocketHandler:
         except Exception as e:
             logger.error(f"Error sending transcript: {e}")
 
-    async def _send_audio(self, websocket: WebSocketServerProtocol, audio_data: bytes) -> None:
+    async def _send_audio(
+        self, websocket: WebSocketServerProtocol, audio_data: bytes
+    ) -> None:
         """Send audio data to client."""
 
         # Encode audio as base64

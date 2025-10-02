@@ -82,7 +82,6 @@ class CharacterCollection:
         return results
 
     def _matches_criteria(self, character: Character, criteria: Dict[str, Any]) -> bool:
-
         """Check if character matches search criteria."""
         # Species filter
         if "species" in criteria:

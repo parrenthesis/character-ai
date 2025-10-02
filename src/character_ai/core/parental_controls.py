@@ -268,11 +268,11 @@ class ParentalControlManager:
         self.alerts: List[SafetyAlert] = []
         self.active_sessions: Dict[str, Dict[str, Any]] = {}  # child_id -> session data
 
-
         # Don't load data during instantiation - load when actually needed
 
         logger.info(
-            "ParentalControlManager initialized", extra={"storage_path": str(storage_path)}
+            "ParentalControlManager initialized",
+            extra={"storage_path": str(storage_path)},
         )
 
     def _load_profiles(self) -> None:
@@ -532,7 +532,6 @@ class ParentalControlManager:
 
     def _apply_content_filters(
         self, profile: ParentalControlProfile, content: str, safety_result: SafetyResult
-
     ) -> bool:
         """Apply content filtering rules."""
         filter_config = profile.content_filter
@@ -564,7 +563,7 @@ class ParentalControlManager:
 
                 # Check if detected language is in restricted languages
                 if (
-                    detection_result.detected_language
+                    detection_result.detected_language.value
                     in filter_config.language_restrictions
                 ):
                     logger.info(

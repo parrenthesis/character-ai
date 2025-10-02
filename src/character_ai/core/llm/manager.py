@@ -178,7 +178,11 @@ class OpenModelManager:
                 recommended.append(model)
         return recommended
 
-    async def download_model(self, model_name: str, progress_callback: Optional[Callable[[float], None]] = None) -> bool:
+    async def download_model(
+        self,
+        model_name: str,
+        progress_callback: Optional[Callable[[float], None]] = None,
+    ) -> bool:
         """Download a model asynchronously."""
         if model_name not in self.available_models:
             logger.error(f"Unknown model: {model_name}")
@@ -226,8 +230,12 @@ class OpenModelManager:
             logger.error(f"Error downloading {model_name}: {e}")
             return False
 
-    def _download_file(self, url: str, file_path: Path, progress_callback: Optional[Callable[[float], None]] = None) -> bool:
-
+    def _download_file(
+        self,
+        url: str,
+        file_path: Path,
+        progress_callback: Optional[Callable[[float], None]] = None,
+    ) -> bool:
         """Download file with progress tracking."""
         try:
             response = requests.get(url, stream=True, timeout=30)
@@ -245,7 +253,6 @@ class OpenModelManager:
                         if progress_callback:
                             progress = (
                                 (downloaded / total_size * 100) if total_size > 0 else 0
-
                             )
                             progress_callback(progress)
 

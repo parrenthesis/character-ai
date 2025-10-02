@@ -12,7 +12,9 @@ import soundfile as sf
 from character_ai.algorithms.conversational_ai.llama_cpp_processor import (
     LlamaCppProcessor,
 )
-from character_ai.algorithms.conversational_ai.whisper_processor import WhisperProcessor
+from character_ai.algorithms.conversational_ai.wav2vec2_processor import (
+    Wav2Vec2Processor,
+)
 from character_ai.core.config import Config
 from character_ai.core.protocols import AudioData
 
@@ -31,8 +33,8 @@ def _require_file(path: str) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_whisper_llama_cpp_chain():
-    """Test Whisper -> Llama.cpp chain without full engine."""
+async def test_wav2vec2_llama_cpp_chain() -> None:
+    """Test Wav2Vec2 -> Llama.cpp chain without full engine."""
     if os.getenv("CAI_RUN_INTEGRATION") != "1":
         pytest.skip("skipping integration test: CAI_RUN_INTEGRATION!=1")
 
@@ -56,25 +58,25 @@ async def test_whisper_llama_cpp_chain():
     )
 
     try:
-        # Test Whisper
-        whisper = WhisperProcessor(Config())
-        await whisper.initialize()
+        # Test Wav2Vec2
+        wav2vec2 = Wav2Vec2Processor(Config())
+        await wav2vec2.initialize()
 
         # Mock the audio processing to avoid actual audio processing
-        result = await whisper.process_audio(audio_data)
+        result = await wav2vec2.process_audio(audio_data)
 
         # Should get some text output (may be empty for tone audio)
         assert result is not None
         assert result.text is not None
-        # For tone audio, Whisper may return empty text, which is expected
+        # For tone audio, Wav2Vec2 may return empty text, which is expected
 
-        await whisper.shutdown()
+        await wav2vec2.shutdown()
 
         # Test Llama.cpp
         llama = LlamaCppProcessor(Config())
         await llama.initialize()
 
-        # Generate text from the whisper output (use a fallback if whisper returned empty)
+        # Generate text from the wav2vec2 output (use a fallback if wav2vec2 returned empty)
         input_text = (
             result.text
             if result.text and len(result.text.strip()) > 0

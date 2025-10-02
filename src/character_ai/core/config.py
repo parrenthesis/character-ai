@@ -1,5 +1,5 @@
 """
-Configuration management for VoiceAI Research Toolkit.
+Configuration management for Character AI Platform.
 
 Handles environment-specific configurations, GPU settings, and model parameters.
 """
@@ -61,7 +61,7 @@ class RepresentationLearningConfig:
 class VoiceCloningConfig:
     """Voice cloning model configuration."""
 
-    xtts_model: str = "tts_models/multilingual/multi-dataset/xtts_v2"
+    coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"
     bark_model: str = "suno/bark"
     sovits_model: str = "so-vits-svc"
     max_audio_length: float = 30.0
@@ -91,8 +91,8 @@ class MultimodalFusionConfig:
 class ConversationalAIConfig:
     """Conversational AI model configuration."""
 
-    whisper_model: str = "openai/whisper-base"
-    xtts_model: str = "tts_models/multilingual/multi-dataset/xtts_v2"
+    wav2vec2_model: str = "facebook/wav2vec2-base"
+    coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"
     llama_model: str = "meta-llama/Llama-2-7b-hf"
     max_audio_length: float = 30.0
     sample_rate: int = 16000
@@ -103,18 +103,15 @@ class ModelConfig:
     """Model configuration settings."""
 
     # Conversational AI
-    whisper_model: str = "base"  # tiny, base, small, medium, large
-    xtts_model: str = "tts_models/multilingual/multi-dataset/xtts_v2"
+    wav2vec2_model: str = "facebook/wav2vec2-base"  # Wav2Vec2 model for STT
+    coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"  # Coqui TTS model
     llama_model: str = "llama-2-7b-chat"
     llama_quantization: str = "4bit"  # 4bit, 8bit, fp16
     llama_backend: str = "transformers"  # transformers | llama_cpp
     llama_gguf_path: str = "models/llm/tinyllama-1.1b-q4_k_m.gguf"
 
     # Representation Learning
-    wav2vec2_model: str = "facebook/wav2vec2-base"
     clap_model: str = "laion/larger_clap_music_and_speech"
-
-    # Voice Cloning
     bark_model: str = "suno/bark"
     so_vits_model: str = "so-vits-svc"
 
@@ -132,8 +129,6 @@ class ModelConfig:
 
     def __post_init__(self) -> None:
         """Validate model configuration."""
-        if self.whisper_model not in ["tiny", "base", "small", "medium", "large"]:
-            raise ValueError(f"Invalid Whisper model: {self.whisper_model}")
         if self.llama_quantization not in ["4bit", "8bit", "fp16"]:
             raise ValueError(f"Invalid Llama quantization: {self.llama_quantization}")
 
@@ -242,7 +237,9 @@ class PathsConfig:
 
     models_dir: Path = field(default_factory=lambda: Path.cwd() / "models")
     voices_dir: Path = field(default_factory=lambda: Path.cwd() / "catalog/voices")
-    characters_dir: Path = field(default_factory=lambda: Path.cwd() / "configs/characters")
+    characters_dir: Path = field(
+        default_factory=lambda: Path.cwd() / "configs/characters"
+    )
     characters_index: Path = field(
         default_factory=lambda: Path.cwd() / "configs/characters/index.yaml"
     )
@@ -335,7 +332,7 @@ class StreamingConfig:
 
 @dataclass
 class Config:
-    """Main configuration class for VoiceAI Research Toolkit."""
+    """Main configuration class for Character AI Platform."""
 
     # Environment
     environment: Environment = Environment.DEVELOPMENT
@@ -457,25 +454,30 @@ class Config:
             import torch
 
             if self.torch_threads is not None:
-                torch.set_num_threads(self.torch_threads)
+                if hasattr(torch, "set_num_threads"):
+                    torch.set_num_threads(self.torch_threads)
                 # Only set interop threads if PyTorch hasn't been used yet
                 try:
-                    torch.set_num_interop_threads(self.torch_threads)
+                    if hasattr(torch, "set_num_interop_threads"):
+                        torch.set_num_interop_threads(self.torch_threads)
                 except RuntimeError:
                     # PyTorch already initialized, skip interop threads
                     pass
             else:
                 if self.max_cpu_threads is not None:
-                    torch.set_num_threads(self.max_cpu_threads)
+                    if hasattr(torch, "set_num_threads"):
+                        torch.set_num_threads(self.max_cpu_threads)
                 # Only set interop threads if PyTorch hasn't been used yet
                 try:
-                    if self.max_cpu_threads is not None:
+                    if self.max_cpu_threads is not None and hasattr(
+                        torch, "set_num_interop_threads"
+                    ):
                         torch.set_num_interop_threads(self.max_cpu_threads)
                 except RuntimeError:
                     # PyTorch already initialized, skip interop threads
                     pass
-        except ImportError:
-            pass  # PyTorch not available
+        except (ImportError, AttributeError):
+            pass  # PyTorch not available or missing methods
 
     @classmethod
     def from_file(cls, config_path: Union[str, Path]) -> "Config":
@@ -554,10 +556,12 @@ class Config:
         )
 
         models = ModelConfig(
-            whisper_model=getenv_str("CAI_MODELS__WHISPER_MODEL", "tiny"),
-            xtts_model=getenv_str(
-                "CAI_MODELS__XTTS_MODEL",
-                "tts_models/multilingual/multi-dataset/xtts_v2",
+            wav2vec2_model=getenv_str(
+                "CAI_MODELS__WAV2VEC2_MODEL", "facebook/wav2vec2-base"
+            ),
+            coqui_model=getenv_str(
+                "CAI_MODELS__COQUI_MODEL",
+                "tts_models/en/ljspeech/tacotron2-DDC",
             ),
             llama_model=getenv_str(
                 "CAI_MODELS__LLAMA_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
@@ -627,7 +631,6 @@ class Config:
         )
         language_support = LanguageSupportConfig(
             default_language=getenv_str("CAI_LANGUAGE_SUPPORT__DEFAULT_LANGUAGE", "en"),
-
             auto_detection_enabled=getenv_bool(
                 "CAI_LANGUAGE_SUPPORT__AUTO_DETECTION_ENABLED", True
             ),
@@ -692,7 +695,6 @@ class Config:
                 "CAI_PERSONALIZATION__PREFERENCE_LEARNING_ENABLED", True
             ),
             style_adaptation=getenv_bool("CAI_PERSONALIZATION__STYLE_ADAPTATION", True),
-
         )
 
         parental_controls = ParentalControlsConfig(
@@ -701,7 +703,6 @@ class Config:
                 "CAI_PARENTAL_CONTROLS__DEFAULT_SAFETY_LEVEL", "moderate"
             ),
             alert_threshold=getenv_float("CAI_PARENTAL_CONTROLS__ALERT_THRESHOLD", 0.7),
-
             time_limit_default=getenv_int(
                 "CAI_PARENTAL_CONTROLS__TIME_LIMIT_DEFAULT", 60
             ),
@@ -771,11 +772,10 @@ class Config:
                 "cuda_graphs": self.gpu.cuda_graphs,
             },
             "models": {
-                "whisper_model": self.models.whisper_model,
-                "xtts_model": self.models.xtts_model,
+                "wav2vec2_model": self.models.wav2vec2_model,
+                "coqui_model": self.models.coqui_model,
                 "llama_model": self.models.llama_model,
                 "llama_quantization": self.models.llama_quantization,
-                "wav2vec2_model": self.models.wav2vec2_model,
                 "clap_model": self.models.clap_model,
                 "bark_model": self.models.bark_model,
                 "so_vits_model": self.models.so_vits_model,

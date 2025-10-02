@@ -125,7 +125,6 @@ Examples:
         status_parser = subparsers.add_parser("status", help="Show LLM status")
         status_parser.add_argument("--json", action="store_true", help="Output as JSON")
 
-
         # Test
         test_parser = subparsers.add_parser("test", help="Test LLM connections")
         test_parser.add_argument(
@@ -181,9 +180,15 @@ Examples:
             for model in installed_models:
                 print(f"  - {model}")
         else:
-            available_models: List[ModelInfo] = self.model_manager.list_available_models()
+            available_models: List[
+                ModelInfo
+            ] = self.model_manager.list_available_models()
             if args.use_case:
-                available_models = [m for m in available_models if m.recommended_for and args.use_case in m.recommended_for]
+                available_models = [
+                    m
+                    for m in available_models
+                    if m.recommended_for and args.use_case in m.recommended_for
+                ]
 
             print("Available models:")
             for model in available_models:  # type: ignore
@@ -215,7 +220,6 @@ Examples:
                 print(f"\rProgress: {progress:.1f}%", end="", flush=True)
 
         success = await self.model_manager.download_model(model_name, progress_callback)
-
 
         if success:
             print(f"\n✓ Successfully installed {model_name}")
@@ -276,7 +280,6 @@ Examples:
             )
             print(
                 f"Character creation provider set to {args.character_creation_provider}"
-
             )
 
         if args.character_creation_model:

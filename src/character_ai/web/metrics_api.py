@@ -26,7 +26,8 @@ async def get_metrics() -> Response:
         logger.info("Metrics endpoint accessed")
 
         return PlainTextResponse(
-            content=metrics_data.decode('utf-8'), media_type="text/plain; version=0.0.4; charset=utf-8"
+            content=metrics_data.decode("utf-8"),
+            media_type="text/plain; version=0.0.4; charset=utf-8",
         )
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}")

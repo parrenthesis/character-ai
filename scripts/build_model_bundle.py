@@ -5,10 +5,9 @@ Build an offline model bundle with manifest and checksums.
 Outputs models_bundle.tar.gz with manifest.json describing included files.
 """
 
-import json
-import os
-import tarfile
 import hashlib
+import json
+import tarfile
 from pathlib import Path
 
 BUNDLE_NAME = "models_bundle.tar.gz"
@@ -61,5 +60,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

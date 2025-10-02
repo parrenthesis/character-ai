@@ -253,7 +253,6 @@ async def health_metrics() -> Dict[str, Any]:
         for crash in recent_crashes:
             severity_counts[crash.severity] = severity_counts.get(crash.severity, 0) + 1
 
-
         # Count by component
         component_counts: Dict[str, int] = {}
         for crash in recent_crashes:

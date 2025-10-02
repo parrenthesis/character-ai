@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Character AI Application
@@ -14,6 +14,9 @@ services:
       - CAI_ENVIRONMENT=production
       - CAI_PATHS__MODELS_DIR=/app/models
       - CAI_MODELS__LLAMA_BACKEND=llama_cpp
+      - CAI_TTS__PROCESSOR=coqui
+      - CAI_TTS__VOICE_CLONING=true
+      - CAI_INTERACTION__STT_LANGUAGE=en
       - PYTHONUNBUFFERED=1
     volumes:
       - ./models:/app/models:ro
@@ -41,11 +44,11 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
     networks:
       - character-ai-network
 

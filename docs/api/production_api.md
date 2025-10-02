@@ -4,6 +4,19 @@
 
 The Character AI provides a comprehensive REST API for production deployment with enterprise-grade security, monitoring, and scalability.
 
+## Architecture
+
+**Secure ML Pipeline:**
+```
+Audio Input → Wav2Vec2 (STT) → LLM → Coqui TTS (TTS + Voice Cloning) → Audio Output
+```
+
+**Key Features:**
+- **Wav2Vec2**: Secure speech-to-text processing
+- **Coqui TTS**: High-quality text-to-speech with native voice cloning
+- **Secure PyTorch 2.8.0+**: All security vulnerabilities patched
+- **Edge-optimized**: Low-latency real-time interaction
+
 ## Base URL
 
 ```
@@ -263,6 +276,30 @@ Synthesize text to speech.
 }
 ```
 
+#### POST /voice/clone
+Clone a voice from audio samples.
+
+**Request Body:**
+```json
+{
+  "character_id": "char_123",
+  "voice_samples": ["base64_audio_1", "base64_audio_2"],
+  "voice_name": "custom_voice",
+  "language": "en"
+}
+```
+
+**Response:**
+```json
+{
+  "voice_id": "custom_voice_456",
+  "character_id": "char_123",
+  "status": "cloned",
+  "processing_time_ms": 2000,
+  "quality_score": 0.92
+}
+```
+
 ### LLM Management
 
 #### GET /llm/models
@@ -338,9 +375,10 @@ Get system metrics.
     "error_rate_percent": 0.5
   },
   "models": {
-    "whisper_processing_time_ms": 800,
+    "wav2vec2_processing_time_ms": 800,
     "llm_processing_time_ms": 1200,
-    "tts_processing_time_ms": 600
+    "coqui_tts_processing_time_ms": 600,
+    "voice_cloning_processing_time_ms": 1200
   }
 }
 ```

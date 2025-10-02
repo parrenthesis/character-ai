@@ -32,7 +32,9 @@ class VoiceManager:
         cfg = Config()
         self.voice_storage_dir = Path(voice_storage_dir or str(cfg.paths.voices_dir))
         # Don't create directories during instantiation - create when actually needed
-        self.character_voices: Dict[str, str] = {}  # character_name -> processed_voice_file_path
+        self.character_voices: Dict[
+            str, str
+        ] = {}  # character_name -> processed_voice_file_path
         self.min_duration_s: float = 1.5
         # Derived artifacts storage (embeddings) - use catalog voices directory
         self.voices_artifacts_root: Path = Path(cfg.paths.voices_dir)
@@ -45,7 +47,7 @@ class VoiceManager:
         self,
         character_name: str,
         voice_file_path: str,
-        xtts_processor: Any,
+        tts_processor: Any,
         *,
         force_recompute_embedding: bool = False,
     ) -> bool:
@@ -72,6 +74,7 @@ class VoiceManager:
 
             # Copy file to voice_samples
             import shutil
+
             shutil.copy2(voice_file_path, voice_samples_path)
 
             # Best-effort audio sanity check
@@ -97,14 +100,14 @@ class VoiceManager:
                     f"Unable to pre-validate audio format for {voice_samples_path}"
                 )
 
-            # Validate via XTTS by attempting a short synthesis using the reference
+            # Validate via Coqui TTS by attempting a short synthesis using the reference
             try:
-                await xtts_processor.inject_character_voice(
+                await tts_processor.inject_character_voice(
                     character_name, str(voice_samples_path), "test", "en"
                 )
             except Exception as e:
                 logger.error(
-                    f"XTTS inject_character_voice failed for {character_name}: {e}"
+                    f"Coqui TTS inject_character_voice failed for {character_name}: {e}"
                 )
                 return False
 
@@ -140,7 +143,11 @@ class VoiceManager:
         if processed_voices_dir.exists():
             # Look for voice files in processed_voices directory
             for voice_file in processed_voices_dir.iterdir():
-                if voice_file.is_file() and voice_file.suffix.lower() in ['.wav', '.mp3', '.flac']:
+                if voice_file.is_file() and voice_file.suffix.lower() in [
+                    ".wav",
+                    ".mp3",
+                    ".flac",
+                ]:
                     return str(voice_file)
 
         return None
@@ -149,18 +156,18 @@ class VoiceManager:
         self,
         character_name: str,
         text: str,
-        xtts_processor: Any,
+        tts_processor: Any,
     ) -> AudioData:
         """Synthesize speech using character's injected voice and return AudioData."""
         try:
             voice_path = await self.get_character_voice_path(character_name)
             if not voice_path:
                 # Fallback: synthesize without a reference voice
-                result = await xtts_processor.synthesize(text)
+                result = await tts_processor.synthesize(text)
                 return result.audio_data if not result.error else result  # type: ignore
 
             # Use the easy injection method
-            result = await xtts_processor.inject_character_voice(
+            result = await tts_processor.inject_character_voice(
                 character_name, voice_path, text
             )
             if result.error:
@@ -189,6 +196,7 @@ class VoiceManager:
                 character_dir = self.voice_storage_dir / character_name
                 if character_dir.exists():
                     import shutil
+
                     shutil.rmtree(character_dir)
 
                 del self.character_voices[character_name]
@@ -213,7 +221,9 @@ class VoiceManager:
             for character_dir in self.voice_storage_dir.iterdir():
                 if character_dir.is_dir():
                     processed_voices_dir = character_dir / "processed_voices"
-                    if processed_voices_dir.exists() and any(processed_voices_dir.iterdir()):
+                    if processed_voices_dir.exists() and any(
+                        processed_voices_dir.iterdir()
+                    ):
                         character_voices.append(character_dir.name)
         return character_voices
 
@@ -222,6 +232,7 @@ class VoiceManager:
         # Remove all character directories
         if self.voice_storage_dir.exists():
             import shutil
+
             for character_dir in self.voice_storage_dir.iterdir():
                 if character_dir.is_dir():
                     shutil.rmtree(character_dir)

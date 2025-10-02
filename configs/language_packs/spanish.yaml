@@ -11,14 +11,14 @@ safety_patterns:
       - "\\b(morir|muerte|muerto|asesinar)\\b"
     severity: "high"
     weight: 3.0
-  
+
   harassment:
     patterns:
       - "\\b(estúpido|idiota|tonto|odio|feo|gordo)\\b"
       - "\\b(cállate|callate|callate)\\b"
     severity: "medium"
     weight: 2.0
-  
+
   inappropriate:
     patterns:
       - "\\b(sexo|sexual|desnudo|desnuda|partes privadas)\\b"

@@ -22,10 +22,11 @@ logger = logging.getLogger(__name__)
 class AudioTester:
     """Test the character.ai with audio files."""
 
-    def __init__(self, test_audio_dir: str = None):
+    def __init__(self, test_audio_dir: str | None = None) -> None:
         if test_audio_dir is None:
             # Use temporary directory to avoid creating files in project root
             import tempfile
+
             self.test_audio_dir = Path(tempfile.mkdtemp(prefix="test_audio_"))
         else:
             self.test_audio_dir = Path(test_audio_dir)
@@ -33,17 +34,17 @@ class AudioTester:
 
         # Lazy initialization to avoid import-time side effects
         self._constraints = HardwareConstraints()
-        self._hardware_manager = None
-        self._engine = None
+        self._hardware_manager: ToyHardwareManager | None = None
+        self._engine: RealTimeInteractionEngine | None = None
 
     @property
-    def hardware_manager(self):
+    def hardware_manager(self) -> ToyHardwareManager:
         if self._hardware_manager is None:
             self._hardware_manager = ToyHardwareManager(self._constraints)
         return self._hardware_manager
 
     @property
-    def engine(self):
+    def engine(self) -> RealTimeInteractionEngine:
         if self._engine is None:
             self._engine = RealTimeInteractionEngine(self.hardware_manager)
         return self._engine
@@ -116,7 +117,9 @@ class AudioTester:
             return {
                 "success": result.error is None,
                 "response_text": result.text,
-                "character": result.metadata.get("character", "Unknown"),
+                "character": result.metadata.get("character", "Unknown")
+                if result.metadata
+                else "Unknown",
                 "error": result.error,
                 "metadata": result.metadata,
             }

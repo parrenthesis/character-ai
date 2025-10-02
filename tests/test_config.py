@@ -11,53 +11,53 @@ from character_ai.core.config import Config, Environment
 class TestConfig:
     """Test configuration management."""
 
-    def test_config_default_initialization(self):
+    def test_config_default_initialization(self) -> None:
         """Test default config initialization."""
         config = Config()
         assert config is not None
         assert config.environment == Environment.DEVELOPMENT
 
-    def test_config_with_environment(self):
+    def test_config_with_environment(self) -> None:
         """Test config initialization with specific environment."""
         config = Config(environment=Environment.PRODUCTION)
         assert config.environment == Environment.PRODUCTION
 
-    def test_config_runtime_section(self):
+    def test_config_runtime_section(self) -> None:
         """Test runtime configuration section."""
         config = Config()
         assert hasattr(config, "runtime")
         assert hasattr(config.runtime, "target_latency_s")
         assert hasattr(config.runtime, "streaming_enabled")
 
-    def test_config_interaction_section(self):
+    def test_config_interaction_section(self) -> None:
         """Test interaction configuration section."""
         config = Config()
         assert hasattr(config, "interaction")
         assert hasattr(config.interaction, "sample_rate")
         assert hasattr(config.interaction, "channels")
 
-    def test_config_tts_section(self):
+    def test_config_tts_section(self) -> None:
         """Test TTS configuration section."""
         config = Config()
         assert hasattr(config, "tts")
         assert hasattr(config.tts, "language")
         assert hasattr(config.tts, "default_voice_style")
 
-    def test_config_safety_section(self):
+    def test_config_safety_section(self) -> None:
         """Test safety configuration section."""
         config = Config()
         assert hasattr(config, "safety")
         assert hasattr(config.safety, "banned_terms")
         assert hasattr(config.safety, "max_output_tokens")
 
-    def test_config_paths_section(self):
+    def test_config_paths_section(self) -> None:
         """Test paths configuration section."""
         config = Config()
         assert hasattr(config, "paths")
         assert hasattr(config.paths, "models_dir")
         assert hasattr(config.paths, "voices_dir")
 
-    def test_config_models_section(self):
+    def test_config_models_section(self) -> None:
         """Test models configuration section."""
         config = Config()
         assert hasattr(config, "models")
@@ -75,7 +75,7 @@ class TestConfig:
             "CAI_MODELS__LLAMA_BACKEND": "transformers",
         },
     )
-    def test_config_environment_overrides(self):
+    def test_config_environment_overrides(self) -> None:
         """Test configuration environment variable overrides."""
         config = Config()
 
@@ -91,7 +91,7 @@ class TestConfig:
         assert config.paths.models_dir.name == "models"  # Default value
         assert config.models.llama_backend == "transformers"  # Default value
 
-    def test_config_basic_functionality(self):
+    def test_config_basic_functionality(self) -> None:
         """Test basic config functionality."""
         config = Config()
 
@@ -105,7 +105,7 @@ class TestConfig:
         assert hasattr(config, "api")
         assert hasattr(config, "gpu")
 
-    def test_config_environment_enum(self):
+    def test_config_environment_enum(self) -> None:
         """Test environment enum values."""
         assert Environment.DEVELOPMENT.value == "development"
         assert Environment.PRODUCTION.value == "production"

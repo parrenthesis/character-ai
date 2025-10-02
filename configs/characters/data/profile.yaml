@@ -25,10 +25,10 @@ llm:
   temperature: 0.3
   max_tokens: 200
 stt:
-  model: "whisper-base"
+  model: "wav2vec2-base"
   language: "en"
 tts:
-  model: "xtts"
+  model: "coqui"
   voice_id: "data_voice"
   speed: 0.9
 consent:

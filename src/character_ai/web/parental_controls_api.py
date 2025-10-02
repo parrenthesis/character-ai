@@ -231,7 +231,6 @@ async def update_profile(
 
         return {"status": "success", "message": f"Profile updated for child {child_id}"}
 
-
     except HTTPException:
         raise
     except Exception as e:

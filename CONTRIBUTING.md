@@ -24,7 +24,7 @@ Thank you for your interest in contributing to the Character AI! This guide will
    ```bash
    # Install Poetry if you haven't already
    curl -sSL https://install.python-poetry.org | python3 -
-   
+
    # Set up development environment (handles all dependencies and conflicts)
    make setup-dev
    ```
@@ -188,13 +188,13 @@ poetry run detect-secrets scan --update .secrets.baseline
 ```python
 def process_character_request(request: CharacterRequest) -> CharacterResponse:
     """Process a character interaction request.
-    
+
     Args:
         request: The character request containing user input and context
-        
+
     Returns:
         CharacterResponse with generated response and metadata
-        
+
     Raises:
         ValidationError: If request format is invalid
         ProcessingError: If character processing fails

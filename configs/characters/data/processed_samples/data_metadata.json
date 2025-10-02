@@ -1,16 +1,16 @@
 {
   "character_name": "data",
-  "original_file": "/home/exx/things/interactive-character-platform/configs/characters/data/voice_samples/data_voice.wav",
-  "processed_file": "/home/exx/things/interactive-character-platform/configs/characters/data/processed_samples/data_voice.wav",
-  "embedding_file": "/home/exx/things/interactive-character-platform/configs/characters/data/processed_samples/data_embedding.npz",
+  "original_file": "configs/characters/data/voice_samples/data_voice.wav",
+  "processed_file": "configs/characters/data/processed_samples/data_voice.wav",
+  "embedding_file": "configs/characters/data/processed_samples/data_embedding.npz",
   "sample_rate": 22050,
   "duration": 458.4926984126984,
+  "algorithm": "coqui_tts",
   "quality_score": 0.8,
-  "embedding_dimension": 80,
   "mel_spectrogram_shape": [
     80,
     2584
   ],
-  "processed_at": "2025-09-30T04:08:20.510978+00:00",
-  "xtts_compatible": true
+  "embedding_dimension": 80,
+  "created_at": 1759365747.373407
 }

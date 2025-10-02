@@ -78,9 +78,7 @@ class MetricsCollector:
             "platform_info", "Platform version and configuration information"
         )
 
-        self.platform_info.info(
-            {"version": "1.0.0", "component": "character.ai"}
-        )
+        self.platform_info.info({"version": "1.0.0", "component": "character.ai"})
 
     def record_api_request(
         self, method: str, endpoint: str, status_code: int, duration: float

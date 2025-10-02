@@ -236,8 +236,8 @@ def generate(template: Optional[str], output: Optional[str]) -> None:
             },
             "models": {
                 "llm_backend": "llama_cpp",
-                "whisper_model": "whisper-base",
-                "xtts_model": "xtts-v2",
+                "wav2vec2_model": "facebook/wav2vec2-base",
+                "coqui_model": "tts_models/en/ljspeech/tacotron2-DDC",
             },
             "security": {
                 "jwt_secret": "${CAI_JWT_SECRET}",
@@ -278,8 +278,8 @@ def env() -> None:
             "CAI_JWT_SECRET": "JWT secret for authentication",
             "CAI_PRIVATE_KEY_FILE": "Path to private key file",
             "CAI_MODELS_DIR": "Directory for model files",
-            "CAI_WHISPER_MODEL": "Whisper model name",
-            "CAI_XTTS_MODEL": "XTTS model name",
+            "CAI_WAV2VEC2_MODEL": "Wav2Vec2 model name",
+            "CAI_COQUI_MODEL": "Coqui TTS model name",
             "CAI_ENABLE_HTTPS": "Enable HTTPS (true/false)",
             "CAI_CERT_FILE": "SSL certificate file",
             "CAI_KEY_FILE": "SSL private key file",

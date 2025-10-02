@@ -11,14 +11,14 @@ safety_patterns:
       - "\\b(mourir|mort|mort|assassiner)\\b"
     severity: "high"
     weight: 3.0
-  
+
   harassment:
     patterns:
       - "\\b(stupide|idiot|bête|haine|laid|gros)\\b"
       - "\\b(tais-toi|tais toi|ferme)\\b"
     severity: "medium"
     weight: 2.0
-  
+
   inappropriate:
     patterns:
       - "\\b(sexe|sexuel|nu|nue|parties privées)\\b"

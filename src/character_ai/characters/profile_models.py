@@ -31,7 +31,7 @@ class STTConfig(BaseModel):
 
 
 class TTSConfig(BaseModel):
-    engine: str = "xtts_v2"
+    engine: str = "coqui_tts"
     voice_artifact: Optional[str] = None  # voice.wav or voice_emb.npz
     watermark: bool = True
 

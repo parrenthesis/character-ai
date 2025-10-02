@@ -79,7 +79,7 @@ class LocalLLMProvider(LLMInterface):
                 self._tokenizer = AutoTokenizer.from_pretrained(
                     self.model_path,
                     revision="main",  # nosec B615 - Using main branch for stability
-                    trust_remote_code=False  # Disable remote code execution
+                    trust_remote_code=False,  # Disable remote code execution
                 )
                 self._model = AutoModelForCausalLM.from_pretrained(
                     self.model_path,
@@ -107,7 +107,11 @@ class LocalLLMProvider(LLMInterface):
                 stop=["</s>", "\n\n"],
             )
             return response["choices"][0]["text"]  # type: ignore
-        elif self.provider == "transformers" and self._model is not None and self._tokenizer is not None:
+        elif (
+            self.provider == "transformers"
+            and self._model is not None
+            and self._tokenizer is not None
+        ):
             import torch
 
             inputs = self._tokenizer(prompt, return_tensors="pt")
@@ -126,6 +130,7 @@ class LocalLLMProvider(LLMInterface):
 
     def stream(self, prompt: str, **kwargs: Any) -> AsyncGenerator[str, None]:
         """Stream response from local model"""
+
         async def _stream() -> AsyncGenerator[str, None]:
             # For now, generate full response and yield word by word
             response = await self.generate(prompt, **kwargs)
@@ -191,6 +196,7 @@ class OllamaProvider(LLMInterface):
 
     def stream(self, prompt: str, **kwargs: Any) -> AsyncGenerator[str, None]:
         """Stream response from Ollama"""
+
         async def _stream() -> AsyncGenerator[str, None]:
             await self._get_client()
 
@@ -249,7 +255,7 @@ class OpenAIProvider(LLMInterface):
         """Get OpenAI client"""
         if not self.client:
             try:
-                from openai import AsyncOpenAI  # type: ignore
+                from openai import AsyncOpenAI
 
                 self.client = AsyncOpenAI(api_key=self.api_key)
             except ImportError:
@@ -273,6 +279,7 @@ class OpenAIProvider(LLMInterface):
 
     def stream(self, prompt: str, **kwargs: Any) -> AsyncGenerator[str, None]:
         """Stream response from OpenAI"""
+
         async def _stream() -> AsyncGenerator[str, None]:
             await self._get_client()
 
@@ -319,7 +326,7 @@ class AnthropicProvider(LLMInterface):
         """Get Anthropic client"""
         if not self.client:
             try:
-                from anthropic import AsyncAnthropic  # type: ignore
+                from anthropic import AsyncAnthropic
 
                 self.client = AsyncAnthropic(api_key=self.api_key)
             except ImportError:
@@ -343,6 +350,7 @@ class AnthropicProvider(LLMInterface):
 
     def stream(self, prompt: str, **kwargs: Any) -> AsyncGenerator[str, None]:
         """Stream response from Anthropic"""
+
         async def _stream() -> AsyncGenerator[str, None]:
             await self._get_client()
 

@@ -47,7 +47,11 @@ def list_models(installed: bool, use_case: Optional[str]) -> None:
         else:
             available_models: List[ModelInfo] = model_manager.list_available_models()
             if use_case:
-                available_models = [m for m in available_models if m.recommended_for and use_case in m.recommended_for]
+                available_models = [
+                    m
+                    for m in available_models
+                    if m.recommended_for and use_case in m.recommended_for
+                ]
 
             click.echo("Available models:")
             for model in available_models:  # type: ignore
@@ -57,7 +61,9 @@ def list_models(installed: bool, use_case: Optional[str]) -> None:
                 click.echo(
                     f"  {installed_marker} {model.name} ({model.size}) - {model.description}"  # type: ignore
                 )
-                click.echo(f"    Recommended for: {', '.join(model.recommended_for or [])}")  # type: ignore
+                click.echo(
+                    f"    Recommended for: {', '.join(model.recommended_for or [])}"
+                )  # type: ignore
     except Exception as e:
         click.echo(f"Error listing models: {e}", err=True)
         raise click.Abort()
