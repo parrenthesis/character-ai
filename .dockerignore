@@ -71,8 +71,7 @@ node_modules/
 *.zip
 *.rar
 
-# Model files (these are large and should be handled separately)
-models/
+# Bundle files (these are large and should be handled separately)
 bundles/
 
 # Device files (generated at runtime)
