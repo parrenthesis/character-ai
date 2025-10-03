@@ -101,3 +101,6 @@ tests_dev/
 # Device identity and cryptographic keys (auto-generated)
 configs/device_*.json
 configs/device_*.pem
+
+# CI workflow backup
+.github/workflows/ci.yml.backup
