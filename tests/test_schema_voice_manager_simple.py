@@ -65,8 +65,14 @@ class TestSchemaVoiceManagerSimple:
 
             voice_manager = SchemaVoiceManager(Path(self.temp_dir))
 
-            # Create a test character profile
-            character_dir = self.temp_dir / "configs" / "characters" / "test_char"
+            # Create a test character profile with franchise organization
+            character_dir = (
+                self.temp_dir
+                / "configs"
+                / "characters"
+                / "other_franchises"
+                / "test_char"
+            )
             character_dir.mkdir(parents=True, exist_ok=True)
 
             profile_file = character_dir / "profile.yaml"
@@ -79,7 +85,9 @@ class TestSchemaVoiceManagerSimple:
             with open(profile_file, "w") as f:
                 yaml.dump(profile_data, f)
 
-            result = voice_manager._get_character_profile("test_char")
+            result = voice_manager._get_character_profile(
+                "test_char", "other_franchises"
+            )
             assert result is not None
             assert result["name"] == "Test Character"
 
@@ -94,7 +102,9 @@ class TestSchemaVoiceManagerSimple:
             )
 
             voice_manager = SchemaVoiceManager(Path(self.temp_dir))
-            result = voice_manager._get_character_profile("nonexistent")
+            result = voice_manager._get_character_profile(
+                "nonexistent", "other_franchises"
+            )
             assert result is None
 
         except ImportError as e:
@@ -108,9 +118,16 @@ class TestSchemaVoiceManagerSimple:
             )
 
             voice_manager = SchemaVoiceManager(Path(self.temp_dir))
-            result = voice_manager._get_voice_samples_dir("test_char")
+            result = voice_manager._get_voice_samples_dir(
+                "test_char", "other_franchises"
+            )
             expected = (
-                self.temp_dir / "configs" / "characters" / "test_char" / "voice_samples"
+                self.temp_dir
+                / "configs"
+                / "characters"
+                / "other_franchises"
+                / "test_char"
+                / "voice_samples"
             )
             assert result == expected
 
@@ -375,3 +392,35 @@ class TestSchemaVoiceManagerSimple:
 
         except ImportError as e:
             pytest.skip(f"get_voice_statistics test failed: {e}")
+
+    def test_get_character_path(self) -> None:
+        """Test get_character_path method."""
+        try:
+            from src.character_ai.characters.schema_voice_manager import (
+                SchemaVoiceManager,
+            )
+
+            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+
+            # Test Data character (Star Trek)
+            data_path = voice_manager.get_character_path("data", "star_trek")
+            expected_data_path = (
+                self.temp_dir / "configs" / "characters" / "star_trek" / "data"
+            )
+            assert data_path == expected_data_path
+
+            # Test unknown character (other_franchises)
+            unknown_path = voice_manager.get_character_path(
+                "unknown", "other_franchises"
+            )
+            expected_unknown_path = (
+                self.temp_dir
+                / "configs"
+                / "characters"
+                / "other_franchises"
+                / "unknown"
+            )
+            assert unknown_path == expected_unknown_path
+
+        except ImportError as e:
+            pytest.skip(f"get_character_path test failed: {e}")

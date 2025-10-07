@@ -109,14 +109,30 @@ class Wav2Vec2Processor(BaseAudioProcessor):
         try:
             start_time = time.time()
 
-            # Validate audio
-            if not audio.data or len(audio.data) == 0:
-                return await self._create_error_result("Empty audio data provided")
+            # Convert audio to numpy array (support bytes or ndarray)
+            raw_data: Any = audio.data  # allow runtime to pass bytes or ndarray
+            if isinstance(raw_data, (bytes, bytearray)):
+                audio_array = (
+                    np.frombuffer(raw_data, dtype=np.int16).astype(np.float32) / 32768.0
+                )
+            elif isinstance(raw_data, np.ndarray):
+                audio_array = raw_data.astype(np.float32)
+                # If multi-channel, average to mono
+                if audio_array.ndim == 2 and audio_array.shape[1] > 1:
+                    audio_array = audio_array.mean(axis=1)
+            else:
+                return await self._create_error_result("Unsupported audio data type")
 
-            # Convert audio bytes to numpy array
-            audio_array = (
-                np.frombuffer(audio.data, dtype=np.int16).astype(np.float32) / 32768.0
-            )
+            # Ensure 1-D contiguous array
+            if audio_array.ndim > 1:
+                audio_array = audio_array.reshape(-1)
+            audio_array = np.ascontiguousarray(audio_array)
+
+            # Guard against empty input after conversion
+            if audio_array.size == 0:
+                return await self._create_error_result(
+                    "Empty audio array after conversion"
+                )
 
             # Resample if necessary
             if audio.sample_rate != 16000:

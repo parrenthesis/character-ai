@@ -51,11 +51,15 @@ help:
 
 test:
 	@echo "Running tests for GitHub CI..."
+	# Set environment variable to fix XTTS v2 compatibility with PyTorch 2.8
+	export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 	# Run tests from tests/ directory
 	CAI_ENABLE_API_STARTUP=0 PYTHONUNBUFFERED=1 PYTHONWARNINGS="ignore::RuntimeWarning:sys:1,ignore::RuntimeWarning:unittest.mock,ignore::RuntimeWarning:tracemalloc" poetry run pytest -v -p pytest_asyncio tests/
 
 test-dev:
 	@echo "Running development test suite..."
+	# Set environment variable to fix XTTS v2 compatibility with PyTorch 2.8
+	export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 	# Run test suite from tests_dev/ directory
 	CAI_ENABLE_API_STARTUP=0 PYTHONUNBUFFERED=1 PYTHONWARNINGS="ignore::RuntimeWarning:sys:1,ignore::RuntimeWarning:unittest.mock,ignore::RuntimeWarning:tracemalloc" poetry run pytest -v -p pytest_asyncio -m "not integration" tests_dev/
 	@echo "Running integration tests..."
@@ -137,6 +141,8 @@ docker-compose-down:
 setup:
 	@echo "Setting up environment with secure architecture (PyTorch 2.8.0 + Wav2Vec2 + Coqui TTS)..."
 	export PATH="$$HOME/.pyenv/bin:$$PATH" && eval "$$(pyenv init -)" && poetry env use python && poetry install --only=main
+	# Set environment variable to fix XTTS v2 compatibility with PyTorch 2.8
+	export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 	poetry run pip install torch>=2.8.0 torchaudio>=2.8.0 --force-reinstall
 	poetry run pip install numpy==1.22.0 cryptography PyJWT pydantic-core==2.33.2 psutil==5.9.8 --force-reinstall
 	poetry run pip install llama-cpp-python --force-reinstall --no-cache-dir
@@ -145,6 +151,8 @@ setup:
 
 setup-dev:
 	@echo "Setting up development environment (minimal for disk space)..."
+	# Set environment variable to fix XTTS v2 compatibility with PyTorch 2.8
+	export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 	# Install only main dependencies to avoid disk space issues
 	poetry install --only main
 	# Install essential dev tools
@@ -159,6 +167,8 @@ setup-dev:
 # CI-optimized setup that skips heavy PyTorch reinstalls
 setup-ci:
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
+	# Set environment variable to fix XTTS v2 compatibility with PyTorch 2.8
+	export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 	# Install only essential dependencies to save disk space
 	poetry install --only main
 	# Clean up disk space aggressively before installing dev tools

@@ -35,6 +35,10 @@ class SchemaVoiceManager:
         else:
             self.config = config
 
+    def get_character_path(self, character: str, franchise: str) -> Path:
+        """Get character path with franchise organization."""
+        return self.characters_dir / franchise / character
+
     def _load_voice_metadata(self) -> Dict[str, Any]:
         """Load voice metadata from storage."""
         if self.voice_metadata_file.exists():
@@ -63,22 +67,26 @@ class SchemaVoiceManager:
         except Exception as e:
             logger.error(f"Error saving voice metadata: {e}")
 
-    def _get_character_dir(self, character_name: str) -> Path:
-        """Get character directory path."""
-        return self.characters_dir / character_name
+    def _get_character_dir(self, character_name: str, franchise: str) -> Path:
+        """Get character directory path with franchise organization."""
+        return self.get_character_path(character_name, franchise)
 
-    def _get_voice_samples_dir(self, character_name: str) -> Path:
+    def _get_voice_samples_dir(self, character_name: str, franchise: str) -> Path:
         """Get voice samples directory path (raw input)."""
-        return self._get_character_dir(character_name) / "voice_samples"
+        return self._get_character_dir(character_name, franchise) / "voice_samples"
 
-    def _get_processed_samples_dir(self, character_name: str) -> Path:
+    def _get_processed_samples_dir(self, character_name: str, franchise: str) -> Path:
         """Get processed samples directory path (processed output)."""
-        return self._get_character_dir(character_name) / "processed_samples"
+        return self._get_character_dir(character_name, franchise) / "processed_samples"
 
-    def _get_character_profile(self, character_name: str) -> Optional[Dict[str, Any]]:
+    def _get_character_profile(
+        self, character_name: str, franchise: str
+    ) -> Optional[Dict[str, Any]]:
         """Load character profile from configs/characters/ format."""
         try:
-            profile_file = self._get_character_dir(character_name) / "profile.yaml"
+            profile_file = (
+                self._get_character_dir(character_name, franchise) / "profile.yaml"
+            )
             if not profile_file.exists():
                 return None
 
@@ -93,25 +101,28 @@ class SchemaVoiceManager:
     async def clone_character_voice(
         self,
         character_name: str,
+        franchise: str,
         voice_file_path: str,
         quality_score: Optional[float] = None,
     ) -> bool:
         """Clone character voice from a single file using real Coqui TTS voice processing."""
         try:
             # Check if character exists in new schema format
-            character_profile = self._get_character_profile(character_name)
+            character_profile = self._get_character_profile(character_name, franchise)
             if not character_profile:
                 logger.error(
-                    f"Character '{character_name}' not found in configs/characters/"
+                    f"Character '{character_name}' not found in configs/characters/{franchise}/"
                 )
                 return False
 
             # Get voice samples directory (raw input)
-            voice_samples_dir = self._get_voice_samples_dir(character_name)
+            voice_samples_dir = self._get_voice_samples_dir(character_name, franchise)
             voice_samples_dir.mkdir(parents=True, exist_ok=True)
 
             # Get processed samples directory (processed output)
-            processed_samples_dir = self._get_processed_samples_dir(character_name)
+            processed_samples_dir = self._get_processed_samples_dir(
+                character_name, franchise
+            )
             processed_samples_dir.mkdir(parents=True, exist_ok=True)
 
             # Copy voice file to samples directory (raw input)
@@ -179,6 +190,7 @@ class SchemaVoiceManager:
     async def clone_character_voice_from_samples(
         self,
         character_name: str,
+        franchise: str,
         voice_samples_dir: str,
         quality: str = "high",
         language: str = "en",
@@ -186,10 +198,10 @@ class SchemaVoiceManager:
         """Clone character voice from multiple samples."""
         try:
             # Check if character exists in new schema format
-            character_profile = self._get_character_profile(character_name)
+            character_profile = self._get_character_profile(character_name, franchise)
             if not character_profile:
                 logger.error(
-                    f"Character '{character_name}' not found in configs/characters/"
+                    f"Character '{character_name}' not found in configs/characters/{franchise}/"
                 )
                 return False
 
@@ -210,7 +222,7 @@ class SchemaVoiceManager:
 
             # Get character's processed samples directory (output)
             character_processed_samples_dir = self._get_processed_samples_dir(
-                character_name
+                character_name, franchise
             )
             character_processed_samples_dir.mkdir(parents=True, exist_ok=True)
 
@@ -219,7 +231,7 @@ class SchemaVoiceManager:
             for audio_file in audio_files:
                 # Copy to voice samples directory first
                 char_voice_samples_dir: Path = self._get_voice_samples_dir(
-                    character_name
+                    character_name, franchise
                 )
                 char_voice_samples_dir.mkdir(parents=True, exist_ok=True)
                 dest_file = char_voice_samples_dir / audio_file.name

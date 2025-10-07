@@ -89,8 +89,31 @@ class LLMFactory:
         return instance
 
     def _get_model_path(self, model_name: str) -> Optional[str]:
-        """Get the actual model file path from the model manager."""
+        """Get the actual model file path for local provider.
+
+        Resolution order (path-first):
+        1) Explicit GGUF path from runtime config (configs/runtime.yaml → Config.models.llama_gguf_path)
+        2) Name-based lookup via OpenModelManager
+        3) Fallback to any installed model
+        """
         try:
+            # 1) Prefer explicit GGUF path from runtime config if present
+            try:
+                from character_ai.core.config import Config as CoreConfig  # lazy import
+
+                core_cfg = CoreConfig()
+                gguf_path = getattr(core_cfg.models, "llama_gguf_path", None)
+                if gguf_path:
+                    from pathlib import Path as _P
+
+                    p = _P(str(gguf_path))
+                    if p.exists():
+                        return str(p)
+            except Exception:
+                # Non-fatal: fall through to model manager lookup
+                pass
+
+            # 2) Name-based lookup via model manager
             model_path = self.model_manager.get_model_path(model_name)
             if model_path and model_path.exists():
                 return str(model_path)
@@ -98,7 +121,7 @@ class LLMFactory:
                 logger.warning(
                     f"Model {model_name} not found, trying to find any available model"
                 )
-                # Try to find any available model
+                # 3) Try to find any available model
                 installed_models = self.model_manager.list_installed_models()
                 if installed_models:
                     # Use the first available model

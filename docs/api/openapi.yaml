@@ -1,7 +1,8 @@
 openapi: 3.1.0
 info:
   title: Character AI API
-  description: "\n# Character AI API\n\nA comprehensive API for managing interactive\
+  description:
+    "\n# Character AI API\n\nA comprehensive API for managing interactive\
     \ AI characters in toys and devices.\n\n## Features\n\n- **Character Management**:\
     \ Create, configure, and manage AI characters\n- **Real-time Interaction**: Process\
     \ audio input and generate character responses\n- **Session Memory**: Maintain\
@@ -22,22 +23,22 @@ info:
     \ Memory\n\n- Rolling conversation windows\n- Configurable limits (turns, tokens,\
     \ age)\n- Character-specific memory policies\n- Privacy-focused (in-memory only)\n\
     \        "
-  version: 1.0.0
+  version: 1.0.1
 servers:
-- url: http://localhost:8000
-  description: Development server
-- url: https://api.character.ai.com
-  description: Production server
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.character.ai.com
+    description: Production server
 paths:
   /api/v1/toy/health:
     get:
       tags:
-      - toy
+        - toy
       summary: Health Check
       description: Health check for toy systems.
       operationId: health_check_api_v1_toy_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -48,12 +49,12 @@ paths:
   /api/v1/toy/characters:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Available Characters
       description: Get list of available characters.
       operationId: get_available_characters_api_v1_toy_characters_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -64,7 +65,7 @@ paths:
   /api/v1/toy/character/set:
     post:
       tags:
-      - toy
+        - toy
       summary: Set Active Character
       description: Set the active character for interactions.
       operationId: set_active_character_api_v1_toy_character_set_post
@@ -72,10 +73,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CharacterSetRequest'
+              $ref: "#/components/schemas/CharacterSetRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -83,16 +84,16 @@ paths:
                 additionalProperties: true
                 type: object
                 title: Response Set Active Character Api V1 Toy Character Set Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/character/create:
     post:
       tags:
-      - toy
+        - toy
       summary: Create Custom Character
       description: Create a custom character.
       operationId: create_custom_character_api_v1_toy_character_create_post
@@ -100,44 +101,45 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CharacterCreateRequest'
+              $ref: "#/components/schemas/CharacterCreateRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Create Custom Character Api V1 Toy Character Create
+                title:
+                  Response Create Custom Character Api V1 Toy Character Create
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/toy/character/info:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Character Info
       description: Get information about a character.
       operationId: get_character_info_api_v1_toy_character_info_get
       parameters:
-      - name: character_name
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Character Name
+        - name: character_name
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Character Name
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -145,16 +147,16 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Character Info Api V1 Toy Character Info Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/interact:
     post:
       tags:
-      - toy
+        - toy
       summary: Interact With Character
       description: Interact with the active character in real-time.
       operationId: interact_with_character_api_v1_toy_interact_post
@@ -162,25 +164,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/character_ai__web__toy_api__InteractionRequest'
+              $ref: "#/components/schemas/character_ai__web__toy_api__InteractionRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InteractionResponse'
-        '422':
+                $ref: "#/components/schemas/InteractionResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/interact/audio:
     post:
       tags:
-      - toy
+        - toy
       summary: Interact With Audio File
       description: Interact with character using uploaded audio file.
       operationId: interact_with_audio_file_api_v1_toy_interact_audio_post
@@ -188,30 +190,30 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_interact_with_audio_file_api_v1_toy_interact_audio_post'
+              $ref: "#/components/schemas/Body_interact_with_audio_file_api_v1_toy_interact_audio_post"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InteractionResponse'
-        '422':
+                $ref: "#/components/schemas/InteractionResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/profiles:
     get:
       tags:
-      - toy
+        - toy
       summary: List Profiles
       description: List installed character profiles with basic metadata.
       operationId: list_profiles_api_v1_toy_profiles_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -222,12 +224,12 @@ paths:
   /api/v1/toy/profiles/reload:
     post:
       tags:
-      - toy
+        - toy
       summary: Reload Profiles
       description: Reload character profiles from disk (configs/characters).
       operationId: reload_profiles_api_v1_toy_profiles_reload_post
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -238,9 +240,10 @@ paths:
   /api/v1/toy/profiles/upload:
     post:
       tags:
-      - toy
+        - toy
       summary: Upload Profile Archive
-      description: "Upload a zip archive containing a character profile folder (profile.yaml,\
+      description:
+        "Upload a zip archive containing a character profile folder (profile.yaml,\
         \ consent\n.yaml, voice artifact).\n\n    The archive is extracted under configs/characters/\
         \ and profiles are reloaded."
       operationId: upload_profile_archive_api_v1_toy_profiles_upload_post
@@ -248,82 +251,85 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_upload_profile_archive_api_v1_toy_profiles_upload_post'
+              $ref: "#/components/schemas/Body_upload_profile_archive_api_v1_toy_profiles_upload_post"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Upload Profile Archive Api V1 Toy Profiles Upload
+                title:
+                  Response Upload Profile Archive Api V1 Toy Profiles Upload
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/voices/embeddings/recompute:
     post:
       tags:
-      - toy
+        - toy
       summary: Recompute Voice Embeddings
-      description: "Recompute stored voice embeddings for one or all characters.\n\
+      description:
+        "Recompute stored voice embeddings for one or all characters.\n\
         \n    Requires admin token provided via `x-admin-token` header and configured\
         \ in env `CAI_\nADMIN_TOKEN`."
       operationId: recompute_voice_embeddings_api_v1_toy_voices_embeddings_recompute_post
       parameters:
-      - name: x-admin-token
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Admin-Token
+        - name: x-admin-token
+          in: header
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: X-Admin-Token
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecomputeEmbeddingsRequest'
+              $ref: "#/components/schemas/RecomputeEmbeddingsRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Recompute Voice Embeddings Api V1 Toy Voices Embeddings
+                title:
+                  Response Recompute Voice Embeddings Api V1 Toy Voices Embeddings
                   Recompute Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/memory/status:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Memory Status
       description: Get session memory status for a character or all characters.
       operationId: get_memory_status_api_v1_toy_memory_status_get
       parameters:
-      - name: character_name
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Character Name
+        - name: character_name
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Character Name
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -331,35 +337,35 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Memory Status Api V1 Toy Memory Status Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/memory/clear:
     post:
       tags:
-      - toy
+        - toy
       summary: Clear Memory
-      description: 'Clear session memory for a character or all characters.
+      description: "Clear session memory for a character or all characters.
 
 
-        Requires authentication. Admin role required for clearing all characters.'
+        Requires authentication. Admin role required for clearing all characters."
       operationId: clear_memory_api_v1_toy_memory_clear_post
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
       parameters:
-      - name: character_name
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Character Name
+        - name: character_name
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Character Name
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -367,66 +373,67 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Clear Memory Api V1 Toy Memory Clear Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/memory/conversation/{character_name}:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Conversation History
       description: Get conversation history for a character.
       operationId: get_conversation_history_api_v1_toy_memory_conversation__character_name__get
       parameters:
-      - name: character_name
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Character Name
-      - name: max_turns
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Max Turns
+        - name: character_name
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Character Name
+        - name: max_turns
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: integer
+              - type: "null"
+            title: Max Turns
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Get Conversation History Api V1 Toy Memory Conversation  Character
+                title:
+                  Response Get Conversation History Api V1 Toy Memory Conversation  Character
                   Name  Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/safety/analyze:
     post:
       tags:
-      - toy
+        - toy
       summary: Analyze Safety
       description: Analyze text for safety concerns (toxicity and PII detection).
       operationId: analyze_safety_api_v1_toy_safety_analyze_post
       parameters:
-      - name: text
-        in: query
-        required: true
-        schema:
-          type: string
-          title: Text
+        - name: text
+          in: query
+          required: true
+          schema:
+            type: string
+            title: Text
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -434,21 +441,21 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Analyze Safety Api V1 Toy Safety Analyze Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/safety/status:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Safety Status
       description: Get safety system status and configuration.
       operationId: get_safety_status_api_v1_toy_safety_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -459,21 +466,21 @@ paths:
   /api/v1/toy/auth/register:
     post:
       tags:
-      - toy
+        - toy
       summary: Register Device
       description: Register a new device and get authentication token.
       operationId: register_device_api_v1_toy_auth_register_post
       parameters:
-      - name: device_name
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Device Name
+        - name: device_name
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Device Name
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -481,21 +488,21 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Register Device Api V1 Toy Auth Register Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/toy/auth/me:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Current Device Info
       description: Get current device information.
       operationId: get_current_device_info_api_v1_toy_auth_me_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -504,11 +511,11 @@ paths:
                 type: object
                 title: Response Get Current Device Info Api V1 Toy Auth Me Get
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/toy/auth/token:
     post:
       tags:
-      - toy
+        - toy
       summary: Generate Token
       description: Generate a new JWT token for the authenticated device.
       operationId: generate_token_api_v1_toy_auth_token_post
@@ -517,12 +524,12 @@ paths:
           application/json:
             schema:
               anyOf:
-              - additionalProperties: true
-                type: object
-              - type: 'null'
+                - additionalProperties: true
+                  type: object
+                - type: "null"
               title: Additional Claims
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -530,23 +537,23 @@ paths:
                 additionalProperties: true
                 type: object
                 title: Response Generate Token Api V1 Toy Auth Token Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/toy/auth/public-key:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Public Key
       description: Get the device's public key for signature verification.
       operationId: get_public_key_api_v1_toy_auth_public_key_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -557,12 +564,12 @@ paths:
   /api/v1/toy/performance:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Performance Metrics
       description: Get performance metrics for the toy system.
       operationId: get_performance_metrics_api_v1_toy_performance_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -573,12 +580,12 @@ paths:
   /api/v1/toy/hardware/status:
     get:
       tags:
-      - toy
+        - toy
       summary: Get Hardware Status
       description: Get hardware status and constraints.
       operationId: get_hardware_status_api_v1_toy_hardware_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -589,12 +596,12 @@ paths:
   /api/v1/toy/hardware/optimize:
     post:
       tags:
-      - toy
+        - toy
       summary: Optimize Hardware
       description: Optimize hardware for toy deployment.
       operationId: optimize_hardware_api_v1_toy_hardware_optimize_post
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -605,12 +612,12 @@ paths:
   /metrics/:
     get:
       tags:
-      - metrics
+        - metrics
       summary: Get Metrics
       description: Get Prometheus metrics in text format.
       operationId: get_metrics_metrics__get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -618,12 +625,12 @@ paths:
   /metrics/health:
     get:
       tags:
-      - metrics
+        - metrics
       summary: Metrics Health
       description: Health check for metrics endpoint.
       operationId: metrics_health_metrics_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -634,12 +641,12 @@ paths:
   /health/:
     get:
       tags:
-      - health
+        - health
       summary: Health Check
       description: Basic health check endpoint.
       operationId: health_check_health__get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -650,12 +657,12 @@ paths:
   /health/detailed:
     get:
       tags:
-      - health
+        - health
       summary: Detailed Health Check
       description: Detailed health check with component status and system metrics.
       operationId: detailed_health_check_health_detailed_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -666,12 +673,12 @@ paths:
   /health/components:
     get:
       tags:
-      - health
+        - health
       summary: Component Health
       description: Get health status for all components.
       operationId: component_health_health_components_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -682,12 +689,12 @@ paths:
   /health/system:
     get:
       tags:
-      - health
+        - health
       summary: System Health
       description: Get system health metrics.
       operationId: system_health_health_system_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -698,36 +705,36 @@ paths:
   /health/crashes:
     get:
       tags:
-      - health
+        - health
       summary: Get Crashes
       description: Get crash reports with optional filtering.
       operationId: get_crashes_health_crashes_get
       parameters:
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 10
-          title: Limit
-      - name: component
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Component
-      - name: severity
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Severity
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            title: Limit
+        - name: component
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Component
+        - name: severity
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Severity
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -735,28 +742,28 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Crashes Health Crashes Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /health/crashes/{crash_id}:
     get:
       tags:
-      - health
+        - health
       summary: Get Crash Details
       description: Get detailed information for a specific crash.
       operationId: get_crash_details_health_crashes__crash_id__get
       parameters:
-      - name: crash_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Crash Id
+        - name: crash_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Crash Id
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -764,29 +771,29 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Crash Details Health Crashes  Crash Id  Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /health/crashes/clear:
     post:
       tags:
-      - health
+        - health
       summary: Clear Crashes
       description: Clear old crash reports.
       operationId: clear_crashes_health_crashes_clear_post
       parameters:
-      - name: max_age_seconds
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 86400
-          title: Max Age Seconds
+        - name: max_age_seconds
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 86400
+            title: Max Age Seconds
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -794,21 +801,21 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Clear Crashes Health Crashes Clear Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /health/test-crash:
     post:
       tags:
-      - health
+        - health
       summary: Test Crash Reporting
       description: Test crash reporting system (for testing purposes only).
       operationId: test_crash_reporting_health_test_crash_post
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -819,12 +826,12 @@ paths:
   /health/metrics:
     get:
       tags:
-      - health
+        - health
       summary: Health Metrics
       description: Get health-related metrics for monitoring.
       operationId: health_metrics_health_metrics_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -835,28 +842,28 @@ paths:
   /performance/metrics:
     get:
       tags:
-      - performance
+        - performance
       summary: Get Performance Metrics
       description: Get performance metrics for components.
       operationId: get_performance_metrics_performance_metrics_get
       parameters:
-      - name: component
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Component
-      - name: time_window_seconds
-        in: query
-        required: false
-        schema:
-          type: number
-          default: 3600
-          title: Time Window Seconds
+        - name: component
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Component
+        - name: time_window_seconds
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 3600
+            title: Time Window Seconds
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -864,21 +871,21 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Performance Metrics Performance Metrics Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /performance/budgets:
     get:
       tags:
-      - performance
+        - performance
       summary: Get Latency Budgets
       description: Get latency budgets for all components.
       operationId: get_latency_budgets_performance_budgets_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -889,28 +896,28 @@ paths:
   /performance/compliance:
     get:
       tags:
-      - performance
+        - performance
       summary: Check Budget Compliance
       description: Check budget compliance for components.
       operationId: check_budget_compliance_performance_compliance_get
       parameters:
-      - name: component
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Component
-      - name: time_window_seconds
-        in: query
-        required: false
-        schema:
-          type: number
-          default: 3600
-          title: Time Window Seconds
+        - name: component
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Component
+        - name: time_window_seconds
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 3600
+            title: Time Window Seconds
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -918,16 +925,16 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Check Budget Compliance Performance Compliance Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /performance/test:
     post:
       tags:
-      - performance
+        - performance
       summary: Run Performance Test
       description: Run a performance test for a component.
       operationId: run_performance_test_performance_test_post
@@ -935,10 +942,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PerformanceTestRequest'
+              $ref: "#/components/schemas/PerformanceTestRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -946,16 +953,16 @@ paths:
                 additionalProperties: true
                 type: object
                 title: Response Run Performance Test Performance Test Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /performance/load-test:
     post:
       tags:
-      - performance
+        - performance
       summary: Run Load Test
       description: Run a load test with increasing load.
       operationId: run_load_test_performance_load_test_post
@@ -963,10 +970,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoadTestRequest'
+              $ref: "#/components/schemas/LoadTestRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -974,36 +981,36 @@ paths:
                 additionalProperties: true
                 type: object
                 title: Response Run Load Test Performance Load Test Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /performance/reports:
     get:
       tags:
-      - performance
+        - performance
       summary: Get Performance Reports
       description: Get comprehensive performance reports.
       operationId: get_performance_reports_performance_reports_get
       parameters:
-      - name: time_window_seconds
-        in: query
-        required: false
-        schema:
-          type: number
-          default: 3600
-          title: Time Window Seconds
-      - name: format
-        in: query
-        required: false
-        schema:
-          type: string
-          default: json
-          title: Format
+        - name: time_window_seconds
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 3600
+            title: Time Window Seconds
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            default: json
+            title: Format
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1011,29 +1018,29 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Performance Reports Performance Reports Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /performance/clear-metrics:
     post:
       tags:
-      - performance
+        - performance
       summary: Clear Old Metrics
       description: Clear old performance metrics.
       operationId: clear_old_metrics_performance_clear_metrics_post
       parameters:
-      - name: max_age_seconds
-        in: query
-        required: false
-        schema:
-          type: number
-          default: 86400
-          title: Max Age Seconds
+        - name: max_age_seconds
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 86400
+            title: Max Age Seconds
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1041,21 +1048,21 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Clear Old Metrics Performance Clear Metrics Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /performance/health:
     get:
       tags:
-      - performance
+        - performance
       summary: Performance Health
       description: Get performance system health status.
       operationId: performance_health_performance_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1066,46 +1073,48 @@ paths:
   /api/v1/streaming/audio/websocket:
     get:
       tags:
-      - streaming
+        - streaming
       summary: Audio Websocket Endpoint
       description: Get WebSocket endpoint for audio streaming.
       operationId: audio_websocket_endpoint_api_v1_streaming_audio_websocket_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Audio Websocket Endpoint Api V1 Streaming Audio Websocket
+                title:
+                  Response Audio Websocket Endpoint Api V1 Streaming Audio Websocket
                   Get
   /api/v1/streaming/llm/websocket:
     get:
       tags:
-      - streaming
+        - streaming
       summary: Llm Websocket Endpoint
       description: Get WebSocket endpoint for LLM streaming.
       operationId: llm_websocket_endpoint_api_v1_streaming_llm_websocket_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Llm Websocket Endpoint Api V1 Streaming Llm Websocket
+                title:
+                  Response Llm Websocket Endpoint Api V1 Streaming Llm Websocket
                   Get
   /api/v1/streaming/audio/status:
     get:
       tags:
-      - streaming
+        - streaming
       summary: Get Audio Status
       description: Get audio streaming status.
       operationId: get_audio_status_api_v1_streaming_audio_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1116,12 +1125,12 @@ paths:
   /api/v1/streaming/llm/status:
     get:
       tags:
-      - streaming
+        - streaming
       summary: Get Llm Status
       description: Get LLM streaming status.
       operationId: get_llm_status_api_v1_streaming_llm_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1132,7 +1141,7 @@ paths:
   /api/v1/streaming/audio/configure:
     post:
       tags:
-      - streaming
+        - streaming
       summary: Configure Audio Streaming
       description: Configure audio streaming parameters.
       operationId: configure_audio_streaming_api_v1_streaming_audio_configure_post
@@ -1145,27 +1154,28 @@ paths:
               title: Config
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Configure Audio Streaming Api V1 Streaming Audio Configure
+                title:
+                  Response Configure Audio Streaming Api V1 Streaming Audio Configure
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/streaming/llm/configure:
     post:
       tags:
-      - streaming
+        - streaming
       summary: Configure Llm Streaming
       description: Configure LLM streaming parameters.
       operationId: configure_llm_streaming_api_v1_streaming_llm_configure_post
@@ -1178,32 +1188,33 @@ paths:
               title: Config
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Configure Llm Streaming Api V1 Streaming Llm Configure
+                title:
+                  Response Configure Llm Streaming Api V1 Streaming Llm Configure
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/streaming/test/client:
     get:
       tags:
-      - streaming
+        - streaming
       summary: Get Test Client
       description: Get HTML test client for WebSocket testing.
       operationId: get_test_client_api_v1_streaming_test_client_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1211,12 +1222,12 @@ paths:
   /api/v1/streaming/health:
     get:
       tags:
-      - streaming
+        - streaming
       summary: Streaming Health
       description: Get streaming system health status.
       operationId: streaming_health_api_v1_streaming_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1227,7 +1238,7 @@ paths:
   /api/v1/logs/search:
     post:
       tags:
-      - log-search
+        - log-search
       summary: Search Logs
       description: Search logs with advanced filtering and pagination.
       operationId: search_logs_api_v1_logs_search_post
@@ -1235,138 +1246,138 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LogSearchRequest'
+              $ref: "#/components/schemas/LogSearchRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogSearchResponse'
-        '422':
+                $ref: "#/components/schemas/LogSearchResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/logs/trace/{trace_id}:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Get Trace Logs
       description: Get all logs for a specific trace ID.
       operationId: get_trace_logs_api_v1_logs_trace__trace_id__get
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
       parameters:
-      - name: trace_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Trace Id
+        - name: trace_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Trace Id
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogCorrelationResponse'
-        '422':
+                $ref: "#/components/schemas/LogCorrelationResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/logs/request/{request_id}:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Get Request Logs
       description: Get all logs for a specific request ID.
       operationId: get_request_logs_api_v1_logs_request__request_id__get
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
       parameters:
-      - name: request_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Request Id
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Request Id
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogCorrelationResponse'
-        '422':
+                $ref: "#/components/schemas/LogCorrelationResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/logs/errors/summary:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Get Error Summary
       description: Get error summary for the last N hours.
       operationId: get_error_summary_api_v1_logs_errors_summary_get
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
       parameters:
-      - name: hours
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 168
-          minimum: 1
-          default: 24
-          title: Hours
+        - name: hours
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 168
+            minimum: 1
+            default: 24
+            title: Hours
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorSummaryResponse'
-        '422':
+                $ref: "#/components/schemas/ErrorSummaryResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/logs/stats:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Get Log Stats
       description: Get log aggregation statistics.
       operationId: get_log_stats_api_v1_logs_stats_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogStatsResponse'
+                $ref: "#/components/schemas/LogStatsResponse"
       security:
-      - HTTPBearer: []
+        - HTTPBearer: []
   /api/v1/logs/levels:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Get Available Levels
       description: Get available log levels.
       operationId: get_available_levels_api_v1_logs_levels_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1378,12 +1389,12 @@ paths:
   /api/v1/logs/sources:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Get Available Sources
       description: Get available log sources.
       operationId: get_available_sources_api_v1_logs_sources_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1395,12 +1406,12 @@ paths:
   /api/v1/logs/health:
     get:
       tags:
-      - log-search
+        - log-search
       summary: Log Search Health
       description: Health check for log search system.
       operationId: log_search_health_api_v1_logs_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1411,12 +1422,12 @@ paths:
   /api/v1/monitoring/metrics:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Prometheus Metrics
       description: Get Prometheus metrics in text format.
       operationId: get_prometheus_metrics_api_v1_monitoring_metrics_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1424,37 +1435,38 @@ paths:
   /api/v1/monitoring/grafana/dashboard:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Grafana Dashboard
       description: Get Grafana dashboard configuration.
       operationId: get_grafana_dashboard_api_v1_monitoring_grafana_dashboard_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Get Grafana Dashboard Api V1 Monitoring Grafana Dashboard
+                title:
+                  Response Get Grafana Dashboard Api V1 Monitoring Grafana Dashboard
                   Get
   /api/v1/monitoring/grafana/export:
     post:
       tags:
-      - monitoring
+        - monitoring
       summary: Export Grafana Configuration
       description: Export Grafana configuration files.
       operationId: export_grafana_configuration_api_v1_monitoring_grafana_export_post
       parameters:
-      - name: output_dir
-        in: query
-        required: false
-        schema:
-          type: string
-          default: monitoring/grafana
-          title: Output Dir
+        - name: output_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            default: monitoring/grafana
+            title: Output Dir
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1462,23 +1474,24 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Export Grafana Configuration Api V1 Monitoring Grafana
+                title:
+                  Response Export Grafana Configuration Api V1 Monitoring Grafana
                   Export Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/monitoring/elk/status:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Elk Status
       description: Get ELK stack connection status.
       operationId: get_elk_status_api_v1_monitoring_elk_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1489,20 +1502,20 @@ paths:
   /api/v1/monitoring/elk/export:
     post:
       tags:
-      - monitoring
+        - monitoring
       summary: Export Elk Configuration
       description: Export ELK stack configuration files.
       operationId: export_elk_configuration_api_v1_monitoring_elk_export_post
       parameters:
-      - name: output_dir
-        in: query
-        required: false
-        schema:
-          type: string
-          default: monitoring/elk
-          title: Output Dir
+        - name: output_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            default: monitoring/elk
+            title: Output Dir
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1510,48 +1523,50 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Export Elk Configuration Api V1 Monitoring Elk Export
+                title:
+                  Response Export Elk Configuration Api V1 Monitoring Elk Export
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/monitoring/prometheus/config:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Prometheus Config
       description: Get Prometheus configuration.
       operationId: get_prometheus_config_api_v1_monitoring_prometheus_config_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Get Prometheus Config Api V1 Monitoring Prometheus
+                title:
+                  Response Get Prometheus Config Api V1 Monitoring Prometheus
                   Config Get
   /api/v1/monitoring/prometheus/export:
     post:
       tags:
-      - monitoring
+        - monitoring
       summary: Export Prometheus Configuration
       description: Export Prometheus configuration files.
       operationId: export_prometheus_configuration_api_v1_monitoring_prometheus_export_post
       parameters:
-      - name: output_dir
-        in: query
-        required: false
-        schema:
-          type: string
-          default: monitoring/prometheus
-          title: Output Dir
+        - name: output_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            default: monitoring/prometheus
+            title: Output Dir
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1559,97 +1574,98 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Export Prometheus Configuration Api V1 Monitoring
+                title:
+                  Response Export Prometheus Configuration Api V1 Monitoring
                   Prometheus Export Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/monitoring/logs/search:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Search Logs
       description: Search logs using the log aggregation system.
       operationId: search_logs_api_v1_monitoring_logs_search_get
       parameters:
-      - name: query
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
+        - name: query
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            description: Search query
+            title: Query
           description: Search query
-          title: Query
-        description: Search query
-      - name: level
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/LogLevel'
-          - type: 'null'
+        - name: level
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - $ref: "#/components/schemas/LogLevel"
+              - type: "null"
+            description: Log level filter
+            title: Level
           description: Log level filter
-          title: Level
-        description: Log level filter
-      - name: source
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/LogSource'
-          - type: 'null'
+        - name: source
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - $ref: "#/components/schemas/LogSource"
+              - type: "null"
+            description: Log source filter
+            title: Source
           description: Log source filter
-          title: Source
-        description: Log source filter
-      - name: start_time
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+        - name: start_time
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            description: Start time filter
+            title: Start Time
           description: Start time filter
-          title: Start Time
-        description: Start time filter
-      - name: end_time
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+        - name: end_time
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+                format: date-time
+              - type: "null"
+            description: End time filter
+            title: End Time
           description: End time filter
-          title: End Time
-        description: End time filter
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 1000
-          minimum: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 1000
+            minimum: 1
+            description: Maximum number of results
+            default: 100
+            title: Limit
           description: Maximum number of results
-          default: 100
-          title: Limit
-        description: Maximum number of results
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            description: Number of results to skip
+            default: 0
+            title: Offset
           description: Number of results to skip
-          default: 0
-          title: Offset
-        description: Number of results to skip
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1657,86 +1673,88 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Search Logs Api V1 Monitoring Logs Search Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/monitoring/logs/correlation/{trace_id}:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Correlation Trace
       description: Get log correlation trace by trace ID.
       operationId: get_correlation_trace_api_v1_monitoring_logs_correlation__trace_id__get
       parameters:
-      - name: trace_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Trace Id
+        - name: trace_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Trace Id
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Get Correlation Trace Api V1 Monitoring Logs Correlation  Trace
+                title:
+                  Response Get Correlation Trace Api V1 Monitoring Logs Correlation  Trace
                   Id  Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/monitoring/logs/errors/summary:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Error Summary
       description: Get error summary for the specified time period.
       operationId: get_error_summary_api_v1_monitoring_logs_errors_summary_get
       parameters:
-      - name: hours
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 168
-          minimum: 1
+        - name: hours
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 168
+            minimum: 1
+            description: Hours to look back
+            default: 24
+            title: Hours
           description: Hours to look back
-          default: 24
-          title: Hours
-        description: Hours to look back
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Get Error Summary Api V1 Monitoring Logs Errors Summary
+                title:
+                  Response Get Error Summary Api V1 Monitoring Logs Errors Summary
                   Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/monitoring/logs/stats:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Log Statistics
       description: Get log statistics.
       operationId: get_log_statistics_api_v1_monitoring_logs_stats_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1747,72 +1765,75 @@ paths:
   /api/v1/monitoring/metrics/summary:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Metrics Summary
       description: Get metrics summary.
       operationId: get_metrics_summary_api_v1_monitoring_metrics_summary_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Get Metrics Summary Api V1 Monitoring Metrics Summary
+                title:
+                  Response Get Metrics Summary Api V1 Monitoring Metrics Summary
                   Get
   /api/v1/monitoring/health/detailed:
     get:
       tags:
-      - monitoring
+        - monitoring
       summary: Get Detailed Health
       description: Get detailed health status for monitoring.
       operationId: get_detailed_health_api_v1_monitoring_health_detailed_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Get Detailed Health Api V1 Monitoring Health Detailed
+                title:
+                  Response Get Detailed Health Api V1 Monitoring Health Detailed
                   Get
   /api/v1/monitoring/export/all:
     post:
       tags:
-      - monitoring
+        - monitoring
       summary: Export All Monitoring Configs
       description: Export all monitoring configurations (Grafana, ELK, Prometheus).
       operationId: export_all_monitoring_configs_api_v1_monitoring_export_all_post
       parameters:
-      - name: output_dir
-        in: query
-        required: false
-        schema:
-          type: string
-          default: monitoring/complete
-          title: Output Dir
+        - name: output_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            default: monitoring/complete
+            title: Output Dir
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Export All Monitoring Configs Api V1 Monitoring Export
+                title:
+                  Response Export All Monitoring Configs Api V1 Monitoring Export
                   All Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/detect:
     post:
       tags:
-      - Language Support
+        - Language Support
       summary: Detect Language
       description: Detect the language of input text.
       operationId: detect_language_api_v1_language_detect_post
@@ -1820,53 +1841,53 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LanguageDetectionRequest'
+              $ref: "#/components/schemas/LanguageDetectionRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LanguageDetectionResponse'
-        '422':
+                $ref: "#/components/schemas/LanguageDetectionResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/status:
     get:
       tags:
-      - Language Support
+        - Language Support
       summary: Get Language Status
       description: Get current language status and available languages.
       operationId: get_language_status_api_v1_language_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LanguageStatusResponse'
+                $ref: "#/components/schemas/LanguageStatusResponse"
   /api/v1/language/set:
     post:
       tags:
-      - Language Support
+        - Language Support
       summary: Set Language
       description: Set the current language.
       operationId: set_language_api_v1_language_set_post
       parameters:
-      - name: language_code
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: language_code
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Language code to set
+            title: Language Code
           description: Language code to set
-          title: Language Code
-        description: Language code to set
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1875,87 +1896,87 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Set Language Api V1 Language Set Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/packs:
     get:
       tags:
-      - Language Support
+        - Language Support
       summary: Get Language Packs
       description: Get information about available language packs.
       operationId: get_language_packs_api_v1_language_packs_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/LanguagePackInfo'
+                  $ref: "#/components/schemas/LanguagePackInfo"
                 type: array
                 title: Response Get Language Packs Api V1 Language Packs Get
   /api/v1/language/packs/{language_code}/cultural:
     get:
       tags:
-      - Language Support
+        - Language Support
       summary: Get Cultural Adaptations
       description: Get cultural adaptation information for a specific language.
       operationId: get_cultural_adaptations_api_v1_language_packs__language_code__cultural_get
       parameters:
-      - name: language_code
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Language Code
+        - name: language_code
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Language Code
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CulturalAdaptationInfo'
-        '422':
+                $ref: "#/components/schemas/CulturalAdaptationInfo"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/packs/{language_code}/voice:
     get:
       tags:
-      - Language Support
+        - Language Support
       summary: Get Voice Characteristics
       description: Get voice characteristics for a specific language.
       operationId: get_voice_characteristics_api_v1_language_packs__language_code__voice_get
       parameters:
-      - name: language_code
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Language Code
+        - name: language_code
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Language Code
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VoiceCharacteristicsInfo'
-        '422':
+                $ref: "#/components/schemas/VoiceCharacteristicsInfo"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/safety/analyze:
     post:
       tags:
-      - Language Support
+        - Language Support
       summary: Analyze Safety Multilingual
       description: Analyze text for safety concerns with multi-language support.
       operationId: analyze_safety_multilingual_api_v1_language_safety_analyze_post
@@ -1963,67 +1984,68 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SafetyAnalysisRequest'
+              $ref: "#/components/schemas/SafetyAnalysisRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SafetyAnalysisResponse'
-        '422':
+                $ref: "#/components/schemas/SafetyAnalysisResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/packs/{language_code}/safety-patterns:
     get:
       tags:
-      - Language Support
+        - Language Support
       summary: Get Safety Patterns
       description: Get safety patterns for a specific language.
       operationId: get_safety_patterns_api_v1_language_packs__language_code__safety_patterns_get
       parameters:
-      - name: language_code
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Language Code
+        - name: language_code
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Language Code
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Get Safety Patterns Api V1 Language Packs  Language
+                title:
+                  Response Get Safety Patterns Api V1 Language Packs  Language
                   Code  Safety Patterns Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/packs/{language_code}/is-rtl:
     get:
       tags:
-      - Language Support
+        - Language Support
       summary: Is Rtl Language
       description: Check if a language is right-to-left.
       operationId: is_rtl_language_api_v1_language_packs__language_code__is_rtl_get
       parameters:
-      - name: language_code
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Language Code
+        - name: language_code
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Language Code
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2031,58 +2053,60 @@ paths:
                 type: object
                 additionalProperties:
                   type: boolean
-                title: Response Is Rtl Language Api V1 Language Packs  Language Code  Is
+                title:
+                  Response Is Rtl Language Api V1 Language Packs  Language Code  Is
                   Rtl Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/language/packs/create-template:
     post:
       tags:
-      - Language Support
+        - Language Support
       summary: Create Language Pack Template
       description: Create a template for a new language pack.
       operationId: create_language_pack_template_api_v1_language_packs_create_template_post
       parameters:
-      - name: language_code
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: language_code
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Language code for the template
+            title: Language Code
           description: Language code for the template
-          title: Language Code
-        description: Language code for the template
-      - name: cultural_region
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: cultural_region
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Cultural region for the template
+            title: Cultural Region
           description: Cultural region for the template
-          title: Cultural Region
-        description: Cultural region for the template
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Create Language Pack Template Api V1 Language Packs
+                title:
+                  Response Create Language Pack Template Api V1 Language Packs
                   Create Template Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/audio/tts:
     post:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Synthesize Speech
       description: Synthesize speech with language-specific adaptations.
       operationId: synthesize_speech_api_v1_audio_tts_post
@@ -2090,25 +2114,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TTSRequest'
+              $ref: "#/components/schemas/TTSRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TTSResponse'
-        '422':
+                $ref: "#/components/schemas/TTSResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/audio/stt:
     post:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Transcribe Audio
       description: Transcribe audio with language detection.
       operationId: transcribe_audio_api_v1_audio_stt_post
@@ -2116,108 +2140,108 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Body_transcribe_audio_api_v1_audio_stt_post'
+              $ref: "#/components/schemas/Body_transcribe_audio_api_v1_audio_stt_post"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/STTResponse'
-        '422':
+                $ref: "#/components/schemas/STTResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/audio/languages:
     get:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Get Supported Languages
       description: Get list of supported languages.
       operationId: get_supported_languages_api_v1_audio_languages_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SupportedLanguagesResponse'
+                $ref: "#/components/schemas/SupportedLanguagesResponse"
   /api/v1/audio/languages/{language_code}/capabilities:
     get:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Get Language Capabilities
       description: Get capabilities for a specific language.
       operationId: get_language_capabilities_api_v1_audio_languages__language_code__capabilities_get
       parameters:
-      - name: language_code
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Language Code
+        - name: language_code
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Language Code
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LanguageCapabilitiesResponse'
-        '422':
+                $ref: "#/components/schemas/LanguageCapabilitiesResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/audio/tts/stream/{text}:
     get:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Stream Tts Audio
       description: Stream TTS audio for real-time playback.
       operationId: stream_tts_audio_api_v1_audio_tts_stream__text__get
       parameters:
-      - name: text
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Text
-      - name: language_code
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Language Code
-      - name: voice_style
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Voice Style
+        - name: text
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Text
+        - name: language_code
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Language Code
+        - name: voice_style
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            title: Voice Style
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema: {}
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/audio/tts/batch:
     post:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Batch Tts Synthesis
       description: Batch TTS synthesis for multiple texts.
       operationId: batch_tts_synthesis_api_v1_audio_tts_batch_post
@@ -2226,35 +2250,35 @@ paths:
           application/json:
             schema:
               items:
-                $ref: '#/components/schemas/TTSRequest'
+                $ref: "#/components/schemas/TTSRequest"
               type: array
               title: Requests
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TTSResponse'
+                  $ref: "#/components/schemas/TTSResponse"
                 type: array
                 title: Response Batch Tts Synthesis Api V1 Audio Tts Batch Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/audio/health:
     get:
       tags:
-      - Multi-language Audio
+        - Multi-language Audio
       summary: Audio Health Check
       description: Health check for multi-language audio system.
       operationId: audio_health_check_api_v1_audio_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2265,234 +2289,235 @@ paths:
   /api/v1/personalization/preferences:
     post:
       tags:
-      - Personalization
+        - Personalization
       summary: Update Preference
       description: Update a user preference.
       operationId: update_preference_api_v1_personalization_preferences_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PreferenceUpdateRequest'
+              $ref: "#/components/schemas/PreferenceUpdateRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PreferenceResponse'
-        '422':
+                $ref: "#/components/schemas/PreferenceResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
     get:
       tags:
-      - Personalization
+        - Personalization
       summary: Get User Preferences
       description: Get all user preferences.
       operationId: get_user_preferences_api_v1_personalization_preferences_get
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PreferenceResponse'
-                title: Response Get User Preferences Api V1 Personalization Preferences
+                  $ref: "#/components/schemas/PreferenceResponse"
+                title:
+                  Response Get User Preferences Api V1 Personalization Preferences
                   Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/personalization/recommendations:
     get:
       tags:
-      - Personalization
+        - Personalization
       summary: Get Character Recommendations
       description: Get personalized character recommendations.
       operationId: get_character_recommendations_api_v1_personalization_recommendations_get
       parameters:
-      - name: max_recommendations
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 20
-          minimum: 1
+        - name: max_recommendations
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 20
+            minimum: 1
+            description: Maximum number of recommendations
+            default: 5
+            title: Max Recommendations
           description: Maximum number of recommendations
-          default: 5
-          title: Max Recommendations
-        description: Maximum number of recommendations
-      - name: include_affinities
-        in: query
-        required: false
-        schema:
-          type: boolean
+        - name: include_affinities
+          in: query
+          required: false
+          schema:
+            type: boolean
+            description: Include affinity scores
+            default: true
+            title: Include Affinities
           description: Include affinity scores
-          default: true
-          title: Include Affinities
-        description: Include affinity scores
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CharacterRecommendationResponse'
-        '422':
+                $ref: "#/components/schemas/CharacterRecommendationResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/personalization/conversation-style:
     post:
       tags:
-      - Personalization
+        - Personalization
       summary: Get Adaptive Conversation Style
       description: Get adaptive conversation style for a character.
       operationId: get_adaptive_conversation_style_api_v1_personalization_conversation_style_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConversationStyleRequest'
+              $ref: "#/components/schemas/ConversationStyleRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConversationStyleResponse'
-        '422':
+                $ref: "#/components/schemas/ConversationStyleResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/personalization/insights:
     get:
       tags:
-      - Personalization
+        - Personalization
       summary: Get User Insights
       description: Get user personalization insights.
       operationId: get_user_insights_api_v1_personalization_insights_get
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserInsightsResponse'
-        '422':
+                $ref: "#/components/schemas/UserInsightsResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/personalization/privacy:
     post:
       tags:
-      - Personalization
+        - Personalization
       summary: Handle Privacy Request
       description: Handle privacy-related requests (export, clear, status).
       operationId: handle_privacy_request_api_v1_personalization_privacy_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PrivacyRequest'
+              $ref: "#/components/schemas/PrivacyRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PrivacyResponse'
-        '422':
+                $ref: "#/components/schemas/PrivacyResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/personalization/learn:
     post:
       tags:
-      - Personalization
+        - Personalization
       summary: Learn From Conversation
       description: Learn from conversation data (for internal use).
       operationId: learn_from_conversation_api_v1_personalization_learn_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
@@ -2502,7 +2527,7 @@ paths:
               additionalProperties: true
               title: Conversation Data
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2510,55 +2535,57 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Learn From Conversation Api V1 Personalization Learn
+                title:
+                  Response Learn From Conversation Api V1 Personalization Learn
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/personalization/health:
     get:
       tags:
-      - Personalization
+        - Personalization
       summary: Personalization Health Check
       description: Health check for personalization system.
       operationId: personalization_health_check_api_v1_personalization_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Personalization Health Check Api V1 Personalization
+                title:
+                  Response Personalization Health Check Api V1 Personalization
                   Health Get
   /api/v1/parental-controls/profiles:
     post:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Create Profile
       description: Create a new parental control profile for a child.
       operationId: create_profile_api_v1_parental_controls_profiles_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProfileRequest'
+              $ref: "#/components/schemas/CreateProfileRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2567,79 +2594,80 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Create Profile Api V1 Parental Controls Profiles Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/profiles/{child_id}:
     get:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Get Profile
       description: Get parental control profile for a child.
       operationId: get_profile_api_v1_parental_controls_profiles__child_id__get
       parameters:
-      - name: child_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Child Id
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: child_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Child Id
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Get Profile Api V1 Parental Controls Profiles  Child
+                title:
+                  Response Get Profile Api V1 Parental Controls Profiles  Child
                   Id  Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
     put:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Update Profile
       description: Update parental control profile for a child.
       operationId: update_profile_api_v1_parental_controls_profiles__child_id__put
       parameters:
-      - name: child_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Child Id
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: child_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Child Id
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateProfileRequest'
+              $ref: "#/components/schemas/UpdateProfileRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2647,117 +2675,119 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Update Profile Api V1 Parental Controls Profiles  Child
+                title:
+                  Response Update Profile Api V1 Parental Controls Profiles  Child
                   Id  Put
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/content-safety:
     post:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Check Content Safety
       description: Check if content is safe for a child.
       operationId: check_content_safety_api_v1_parental_controls_content_safety_post
       parameters:
-      - name: child_id
-        in: query
-        required: true
-        schema:
-          type: string
-          title: Child Id
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: child_id
+          in: query
+          required: true
+          schema:
+            type: string
+            title: Child Id
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContentSafetyRequest'
+              $ref: "#/components/schemas/ContentSafetyRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContentSafetyResponse'
-        '422':
+                $ref: "#/components/schemas/ContentSafetyResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/time-limits:
     post:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Check Time Limits
       description: Check if child has exceeded time limits.
       operationId: check_time_limits_api_v1_parental_controls_time_limits_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TimeLimitRequest'
+              $ref: "#/components/schemas/TimeLimitRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Check Time Limits Api V1 Parental Controls Time Limits
+                title:
+                  Response Check Time Limits Api V1 Parental Controls Time Limits
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/sessions/start:
     post:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Start Session
       description: Start a monitoring session for a child.
       operationId: start_session_api_v1_parental_controls_sessions_start_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SessionRequest'
+              $ref: "#/components/schemas/SessionRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2765,38 +2795,39 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Start Session Api V1 Parental Controls Sessions Start
+                title:
+                  Response Start Session Api V1 Parental Controls Sessions Start
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/sessions/end:
     post:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: End Session
       description: End a monitoring session for a child.
       operationId: end_session_api_v1_parental_controls_sessions_end_post
       parameters:
-      - name: child_id
-        in: query
-        required: true
-        schema:
-          type: string
-          title: Child Id
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: child_id
+          in: query
+          required: true
+          schema:
+            type: string
+            title: Child Id
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2804,220 +2835,223 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response End Session Api V1 Parental Controls Sessions End
+                title:
+                  Response End Session Api V1 Parental Controls Sessions End
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/interactions:
     post:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Record Interaction
       description: Record a child's interaction with a character.
       operationId: record_interaction_api_v1_parental_controls_interactions_post
       parameters:
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/character_ai__web__parental_controls_api__InteractionRequest'
+              $ref: "#/components/schemas/character_ai__web__parental_controls_api__InteractionRequest"
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                title: Response Record Interaction Api V1 Parental Controls Interactions
+                title:
+                  Response Record Interaction Api V1 Parental Controls Interactions
                   Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/usage-reports/{child_id}:
     get:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Get Usage Report
       description: Get usage report for a child.
       operationId: get_usage_report_api_v1_parental_controls_usage_reports__child_id__get
       parameters:
-      - name: child_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Child Id
-      - name: days
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 30
-          minimum: 1
+        - name: child_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Child Id
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 30
+            minimum: 1
+            description: Number of days to include
+            default: 7
+            title: Days
           description: Number of days to include
-          default: 7
-          title: Days
-        description: Number of days to include
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsageReportResponse'
-        '422':
+                $ref: "#/components/schemas/UsageReportResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/dashboard/{parent_id}:
     get:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Get Parent Dashboard
       description: Get parent dashboard with all children's data.
       operationId: get_parent_dashboard_api_v1_parental_controls_dashboard__parent_id__get
       parameters:
-      - name: parent_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Parent Id
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: parent_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Parent Id
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParentDashboardResponse'
-        '422':
+                $ref: "#/components/schemas/ParentDashboardResponse"
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/alerts:
     get:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Get Safety Alerts
       description: Get safety alerts with optional filtering.
       operationId: get_safety_alerts_api_v1_parental_controls_alerts_get
       parameters:
-      - name: child_id
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
+        - name: child_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            description: Filter by child ID
+            title: Child Id
           description: Filter by child ID
-          title: Child Id
-        description: Filter by child ID
-      - name: severity
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
+        - name: severity
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: string
+              - type: "null"
+            description: Filter by severity
+            title: Severity
           description: Filter by severity
-          title: Severity
-        description: Filter by severity
-      - name: resolved
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: boolean
-          - type: 'null'
+        - name: resolved
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: boolean
+              - type: "null"
+            description: Filter by resolved status
+            title: Resolved
           description: Filter by resolved status
-          title: Resolved
-        description: Filter by resolved status
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SafetyAlertResponse'
-                title: Response Get Safety Alerts Api V1 Parental Controls Alerts
+                  $ref: "#/components/schemas/SafetyAlertResponse"
+                title:
+                  Response Get Safety Alerts Api V1 Parental Controls Alerts
                   Get
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/alerts/{alert_id}/resolve:
     put:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Resolve Alert
       description: Mark a safety alert as resolved.
       operationId: resolve_alert_api_v1_parental_controls_alerts__alert_id__resolve_put
       parameters:
-      - name: alert_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Alert Id
-      - name: current_device
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: alert_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Alert Id
+        - name: current_device
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Device ID
+            title: Current Device
           description: Device ID
-          title: Current Device
-        description: Device ID
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3025,37 +3059,39 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
-                title: Response Resolve Alert Api V1 Parental Controls Alerts  Alert
+                title:
+                  Response Resolve Alert Api V1 Parental Controls Alerts  Alert
                   Id  Resolve Put
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/parental-controls/health:
     get:
       tags:
-      - Parental Controls
+        - Parental Controls
       summary: Parental Controls Health Check
       description: Health check for parental controls system.
       operationId: parental_controls_health_check_api_v1_parental_controls_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Parental Controls Health Check Api V1 Parental Controls
+                title:
+                  Response Parental Controls Health Check Api V1 Parental Controls
                   Health Get
   /health:
     get:
       summary: Root Health
       operationId: root_health_health_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3067,7 +3103,7 @@ paths:
       summary: Root Options Health
       operationId: root_options_health_health_options
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3077,7 +3113,7 @@ paths:
       summary: Root Characters
       operationId: root_characters_characters_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3090,7 +3126,7 @@ paths:
       summary: Root Active Character
       operationId: root_active_character_characters_active_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3110,23 +3146,23 @@ paths:
               title: Request
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
               schema: {}
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /hardware/status:
     get:
       summary: Root Hardware Status
       operationId: root_hardware_status_hardware_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3139,7 +3175,7 @@ paths:
       summary: Root Hardware Sensors
       operationId: root_hardware_sensors_hardware_sensors_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3152,7 +3188,7 @@ paths:
       summary: Root Hardware Power
       operationId: root_hardware_power_hardware_power_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3173,7 +3209,7 @@ paths:
               title: Payload
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3181,18 +3217,18 @@ paths:
                 additionalProperties: true
                 type: object
                 title: Response Root Interact Interact Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /metrics:
     get:
       summary: Root Metrics
       operationId: root_metrics_metrics_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3205,7 +3241,7 @@ paths:
       summary: Root Models Info
       operationId: root_models_info_models_info_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3218,7 +3254,7 @@ paths:
       summary: Root Models Status
       operationId: root_models_status_models_status_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3239,7 +3275,7 @@ paths:
               title: Data
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3248,18 +3284,18 @@ paths:
                   type: string
                 type: object
                 title: Response Root Voices Inject Voices Inject Post
-        '422':
+        "422":
           description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: "#/components/schemas/HTTPValidationError"
   /voices:
     get:
       summary: Root Voices
       operationId: root_voices_voices_get
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -3277,7 +3313,7 @@ components:
           title: Audio File
       type: object
       required:
-      - audio_file
+        - audio_file
       title: Body_interact_with_audio_file_api_v1_toy_interact_audio_post
     Body_transcribe_audio_api_v1_audio_stt_post:
       properties:
@@ -3288,8 +3324,8 @@ components:
           description: Audio file to transcribe
         language_code:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Language Code
           description: Specific language code (auto-detect if not provided)
         auto_detect:
@@ -3299,7 +3335,7 @@ components:
           default: true
       type: object
       required:
-      - audio_file
+        - audio_file
       title: Body_transcribe_audio_api_v1_audio_stt_post
     Body_upload_profile_archive_api_v1_toy_profiles_upload_post:
       properties:
@@ -3309,7 +3345,7 @@ components:
           title: Archive
       type: object
       required:
-      - archive
+        - archive
       title: Body_upload_profile_archive_api_v1_toy_profiles_upload_post
     CharacterCreateRequest:
       properties:
@@ -3321,14 +3357,14 @@ components:
           title: Character Type
         custom_topics:
           anyOf:
-          - items: {}
-            type: array
-          - type: 'null'
+            - items: {}
+              type: array
+            - type: "null"
           title: Custom Topics
       type: object
       required:
-      - name
-      - character_type
+        - name
+        - character_type
       title: CharacterCreateRequest
     CharacterRecommendationResponse:
       properties:
@@ -3351,9 +3387,9 @@ components:
           description: User character affinities
       type: object
       required:
-      - recommendations
-      - total_available
-      - user_affinities
+        - recommendations
+        - total_available
+        - user_affinities
       title: CharacterRecommendationResponse
       description: Response model for character recommendations.
     CharacterSetRequest:
@@ -3363,7 +3399,7 @@ components:
           title: Character Name
       type: object
       required:
-      - character_name
+        - character_name
       title: CharacterSetRequest
     ContentSafetyRequest:
       properties:
@@ -3373,13 +3409,13 @@ components:
           description: Content to check for safety
         character_id:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Character Id
           description: Character ID if applicable
       type: object
       required:
-      - content
+        - content
       title: ContentSafetyRequest
       description: Request model for content safety checking.
     ContentSafetyResponse:
@@ -3408,11 +3444,11 @@ components:
           description: Whether a safety alert was created
       type: object
       required:
-      - is_safe
-      - safety_level
-      - confidence
-      - blocked_categories
-      - alert_created
+        - is_safe
+        - safety_level
+        - confidence
+        - blocked_categories
+        - alert_created
       title: ContentSafetyResponse
       description: Response model for content safety checking.
     ConversationStyleRequest:
@@ -3423,7 +3459,7 @@ components:
           description: Character ID for style adaptation
       type: object
       required:
-      - character_id
+        - character_id
       title: ConversationStyleRequest
       description: Request model for adaptive conversation style.
     ConversationStyleResponse:
@@ -3444,9 +3480,9 @@ components:
           description: Applied user preferences
       type: object
       required:
-      - character_id
-      - style_adaptations
-      - user_preferences
+        - character_id
+        - style_adaptations
+        - user_preferences
       title: ConversationStyleResponse
       description: Response model for adaptive conversation style.
     CreateProfileRequest:
@@ -3462,17 +3498,17 @@ components:
         age_group:
           type: string
           title: Age Group
-          description: 'Age group: toddler, preschool, elementary, teen'
+          description: "Age group: toddler, preschool, elementary, teen"
         parent_id:
           type: string
           title: Parent Id
           description: Parent/guardian identifier
       type: object
       required:
-      - child_id
-      - child_name
-      - age_group
-      - parent_id
+        - child_id
+        - child_name
+        - age_group
+        - parent_id
       title: CreateProfileRequest
       description: Request model for creating a parental control profile.
     CulturalAdaptationInfo:
@@ -3501,12 +3537,12 @@ components:
           title: Cultural Taboos
       type: object
       required:
-      - greeting_style
-      - conversation_style
-      - formality_level
-      - emotional_expression
-      - preferred_topics
-      - cultural_taboos
+        - greeting_style
+        - conversation_style
+        - formality_level
+        - emotional_expression
+        - preferred_topics
+        - cultural_taboos
       title: CulturalAdaptationInfo
       description: Cultural adaptation information.
     ErrorSummaryResponse:
@@ -3540,19 +3576,19 @@ components:
           title: Time Range Hours
       type: object
       required:
-      - total_errors
-      - by_component
-      - by_error_type
-      - by_device
-      - recent_errors
-      - time_range_hours
+        - total_errors
+        - by_component
+        - by_error_type
+        - by_device
+        - recent_errors
+        - time_range_hours
       title: ErrorSummaryResponse
       description: Response model for error summary.
     HTTPValidationError:
       properties:
         detail:
           items:
-            $ref: '#/components/schemas/ValidationError'
+            $ref: "#/components/schemas/ValidationError"
           type: array
           title: Detail
       type: object
@@ -3573,10 +3609,10 @@ components:
           title: Latency Ms
       type: object
       required:
-      - response_audio
-      - response_text
-      - character_name
-      - latency_ms
+        - response_audio
+        - response_text
+        - character_name
+        - latency_ms
       title: InteractionResponse
     LanguageCapabilitiesResponse:
       properties:
@@ -3609,12 +3645,12 @@ components:
           description: Voice characteristics
       type: object
       required:
-      - language_code
-      - tts_supported
-      - stt_supported
-      - tts_capabilities
-      - cultural_adaptations
-      - voice_characteristics
+        - language_code
+        - tts_supported
+        - stt_supported
+        - tts_capabilities
+        - cultural_adaptations
+        - voice_characteristics
       title: LanguageCapabilitiesResponse
       description: Response model for language capabilities.
     LanguageDetectionRequest:
@@ -3630,7 +3666,7 @@ components:
           default: true
       type: object
       required:
-      - text
+        - text
       title: LanguageDetectionRequest
       description: Request model for language detection.
     LanguageDetectionResponse:
@@ -3656,11 +3692,11 @@ components:
           title: Current Language
       type: object
       required:
-      - detected_language
-      - confidence
-      - alternative_languages
-      - processing_time_ms
-      - current_language
+        - detected_language
+        - confidence
+        - alternative_languages
+        - processing_time_ms
+        - current_language
       title: LanguageDetectionResponse
       description: Response model for language detection.
     LanguagePackInfo:
@@ -3694,15 +3730,15 @@ components:
           title: Age Appropriate Content
       type: object
       required:
-      - language_code
-      - cultural_region
-      - display_name
-      - native_name
-      - text_direction
-      - character_encoding
-      - date_format
-      - time_format
-      - age_appropriate_content
+        - language_code
+        - cultural_region
+        - display_name
+        - native_name
+        - text_direction
+        - character_encoding
+        - date_format
+        - time_format
+        - age_appropriate_content
       title: LanguagePackInfo
       description: Information about a language pack.
     LanguageStatusResponse:
@@ -3723,10 +3759,10 @@ components:
           title: Auto Detection Enabled
       type: object
       required:
-      - current_language
-      - available_languages
-      - fallback_language
-      - auto_detection_enabled
+        - current_language
+        - available_languages
+        - fallback_language
+        - auto_detection_enabled
       title: LanguageStatusResponse
       description: Current language status.
     LoadTestRequest:
@@ -3755,14 +3791,14 @@ components:
           default: 5.0
         metadata:
           anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
+            - additionalProperties: true
+              type: object
+            - type: "null"
           title: Metadata
       type: object
       required:
-      - component
-      - operation
+        - component
+        - operation
       title: LoadTestRequest
       description: Request model for load testing.
     LogCorrelationResponse:
@@ -3784,87 +3820,87 @@ components:
           title: Execution Time Ms
       type: object
       required:
-      - trace_id
-      - entries
-      - total_count
-      - execution_time_ms
+        - trace_id
+        - entries
+        - total_count
+        - execution_time_ms
       title: LogCorrelationResponse
       description: Response model for log correlation.
     LogLevel:
       type: string
       enum:
-      - DEBUG
-      - INFO
-      - WARNING
-      - ERROR
-      - CRITICAL
+        - DEBUG
+        - INFO
+        - WARNING
+        - ERROR
+        - CRITICAL
       title: LogLevel
       description: Log levels for filtering and analysis.
     LogSearchRequest:
       properties:
         start_time:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+            - type: string
+              format: date-time
+            - type: "null"
           title: Start Time
         end_time:
           anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
+            - type: string
+              format: date-time
+            - type: "null"
           title: End Time
         levels:
           anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Levels
         sources:
           anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Sources
         request_ids:
           anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Request Ids
         trace_ids:
           anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Trace Ids
         device_ids:
           anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Device Ids
         character_ids:
           anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Character Ids
         message_pattern:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Message Pattern
         component_pattern:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Component Pattern
         limit:
           type: integer
@@ -3910,24 +3946,24 @@ components:
           title: Query
       type: object
       required:
-      - entries
-      - total_count
-      - execution_time_ms
-      - query
+        - entries
+        - total_count
+        - execution_time_ms
+        - query
       title: LogSearchResponse
       description: Response model for log search.
     LogSource:
       type: string
       enum:
-      - application
-      - api
-      - security
-      - performance
-      - safety
-      - character
-      - audio
-      - llm
-      - system
+        - application
+        - api
+        - security
+        - performance
+        - safety
+        - character
+        - audio
+        - llm
+        - system
       title: LogSource
       description: Sources of log entries.
     LogStatsResponse:
@@ -3945,9 +3981,9 @@ components:
           title: Index Sizes
       type: object
       required:
-      - stats
-      - memory_logs_count
-      - index_sizes
+        - stats
+        - memory_logs_count
+        - index_sizes
       title: LogStatsResponse
       description: Response model for log statistics.
     ParentDashboardResponse:
@@ -3958,7 +3994,7 @@ components:
           description: Parent identifier
         children:
           items:
-            $ref: '#/components/schemas/UsageReportResponse'
+            $ref: "#/components/schemas/UsageReportResponse"
           type: array
           title: Children
           description: Children's data
@@ -3972,10 +4008,10 @@ components:
           description: Active monitoring sessions
       type: object
       required:
-      - parent_id
-      - children
-      - total_alerts
-      - active_sessions
+        - parent_id
+        - children
+        - total_alerts
+        - active_sessions
       title: ParentDashboardResponse
       description: Response model for parent dashboard.
     PerformanceTestRequest:
@@ -3996,14 +4032,14 @@ components:
           default: 10.0
         metadata:
           anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
+            - additionalProperties: true
+              type: object
+            - type: "null"
           title: Metadata
       type: object
       required:
-      - component
-      - operation
+        - component
+        - operation
       title: PerformanceTestRequest
       description: Request model for performance testing.
     PreferenceResponse:
@@ -4033,12 +4069,12 @@ components:
           description: Number of interactions
       type: object
       required:
-      - preference_type
-      - value
-      - confidence
-      - source
-      - last_updated
-      - interaction_count
+        - preference_type
+        - value
+        - confidence
+        - source
+        - last_updated
+        - interaction_count
       title: PreferenceResponse
       description: Response model for user preferences.
     PreferenceUpdateRequest:
@@ -4064,8 +4100,8 @@ components:
           default: explicit_feedback
       type: object
       required:
-      - preference_type
-      - value
+        - preference_type
+        - value
       title: PreferenceUpdateRequest
       description: Request model for updating user preferences.
     PrivacyRequest:
@@ -4073,10 +4109,10 @@ components:
         action:
           type: string
           title: Action
-          description: 'Privacy action: ''export'', ''clear'', or ''status'''
+          description: "Privacy action: 'export', 'clear', or 'status'"
       type: object
       required:
-      - action
+        - action
       title: PrivacyRequest
       description: Request model for privacy operations.
     PrivacyResponse:
@@ -4091,9 +4127,9 @@ components:
           description: Success status
         data:
           anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
+            - additionalProperties: true
+              type: object
+            - type: "null"
           title: Data
           description: Exported data (if applicable)
         message:
@@ -4102,17 +4138,17 @@ components:
           description: Status message
       type: object
       required:
-      - action
-      - success
-      - message
+        - action
+        - success
+        - message
       title: PrivacyResponse
       description: Response model for privacy operations.
     RecomputeEmbeddingsRequest:
       properties:
         character:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Character
         force:
           type: boolean
@@ -4154,13 +4190,13 @@ components:
           description: Number of audio segments processed
       type: object
       required:
-      - text
-      - detected_language
-      - confidence
-      - cultural_adaptations
-      - voice_characteristics
-      - processing_time_ms
-      - segments
+        - text
+        - detected_language
+        - confidence
+        - cultural_adaptations
+        - voice_characteristics
+        - processing_time_ms
+        - segments
       title: STTResponse
       description: Response model for STT transcription.
     SafetyAlertResponse:
@@ -4191,8 +4227,8 @@ components:
           description: Child identifier
         character_id:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Character Id
           description: Character identifier
         resolved:
@@ -4201,13 +4237,13 @@ components:
           description: Whether alert is resolved
       type: object
       required:
-      - alert_id
-      - alert_type
-      - severity
-      - message
-      - timestamp
-      - child_id
-      - resolved
+        - alert_id
+        - alert_type
+        - severity
+        - message
+        - timestamp
+        - child_id
+        - resolved
       title: SafetyAlertResponse
       description: Response model for safety alerts.
     SafetyAnalysisRequest:
@@ -4218,13 +4254,13 @@ components:
           description: Text to analyze for safety concerns
         language_code:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Language Code
           description: Specific language code to use (auto-detect if not provided)
       type: object
       required:
-      - text
+        - text
       title: SafetyAnalysisRequest
       description: Request model for safety analysis.
     SafetyAnalysisResponse:
@@ -4259,14 +4295,14 @@ components:
           title: Details
       type: object
       required:
-      - safe
-      - level
-      - confidence
-      - categories
-      - processing_time_ms
-      - language
-      - cultural_adaptations
-      - details
+        - safe
+        - level
+        - confidence
+        - categories
+        - processing_time_ms
+        - language
+        - cultural_adaptations
+        - details
       title: SafetyAnalysisResponse
       description: Response model for safety analysis.
     SessionRequest:
@@ -4281,8 +4317,8 @@ components:
           description: Device identifier
       type: object
       required:
-      - child_id
-      - device_id
+        - child_id
+        - device_id
       title: SessionRequest
       description: Request model for session management.
     SupportedLanguagesResponse:
@@ -4299,8 +4335,8 @@ components:
           description: Total number of supported languages
       type: object
       required:
-      - supported_languages
-      - total_count
+        - supported_languages
+        - total_count
       title: SupportedLanguagesResponse
       description: Response model for supported languages.
     TTSRequest:
@@ -4311,26 +4347,26 @@ components:
           description: Text to synthesize
         language_code:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Language Code
           description: Specific language code (auto-detect if not provided)
         voice_style:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Voice Style
           description: Voice style preference
         cultural_adaptations:
           anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
+            - additionalProperties: true
+              type: object
+            - type: "null"
           title: Cultural Adaptations
           description: Custom cultural adaptations
       type: object
       required:
-      - text
+        - text
       title: TTSRequest
       description: Request model for TTS synthesis.
     TTSResponse:
@@ -4371,14 +4407,14 @@ components:
           description: Audio duration in seconds
       type: object
       required:
-      - audio_data
-      - detected_language
-      - confidence
-      - cultural_adaptations
-      - voice_characteristics
-      - processing_time_ms
-      - sample_rate
-      - duration
+        - audio_data
+        - detected_language
+        - confidence
+        - cultural_adaptations
+        - voice_characteristics
+        - processing_time_ms
+        - sample_rate
+        - duration
       title: TTSResponse
       description: Response model for TTS synthesis.
     TimeLimitRequest:
@@ -4389,42 +4425,42 @@ components:
           description: Child identifier
       type: object
       required:
-      - child_id
+        - child_id
       title: TimeLimitRequest
       description: Request model for time limit checking.
     UpdateProfileRequest:
       properties:
         content_filter_level:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Content Filter Level
           description: Content filter level
         safety_level:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Safety Level
           description: Safety level
         monitoring_enabled:
           anyOf:
-          - type: boolean
-          - type: 'null'
+            - type: boolean
+            - type: "null"
           title: Monitoring Enabled
           description: Enable monitoring
         alert_parents:
           anyOf:
-          - type: boolean
-          - type: 'null'
+            - type: boolean
+            - type: "null"
           title: Alert Parents
           description: Alert parents on violations
         time_limits:
           anyOf:
-          - items:
-              additionalProperties: true
-              type: object
-            type: array
-          - type: 'null'
+            - items:
+                additionalProperties: true
+                type: object
+              type: array
+            - type: "null"
           title: Time Limits
           description: Time limit configurations
       type: object
@@ -4463,12 +4499,12 @@ components:
           description: Profile settings
       type: object
       required:
-      - child_id
-      - child_name
-      - age_group
-      - usage_stats
-      - recent_alerts
-      - profile_settings
+        - child_id
+        - child_name
+        - age_group
+        - usage_stats
+        - recent_alerts
+        - profile_settings
       title: UsageReportResponse
       description: Response model for usage reports.
     UserInsightsResponse:
@@ -4514,14 +4550,14 @@ components:
           description: Privacy compliance status
       type: object
       required:
-      - user_id
-      - profile_age_days
-      - total_preferences
-      - interaction_patterns
-      - character_affinities
-      - preferences_summary
-      - learning_sources
-      - privacy_compliance
+        - user_id
+        - profile_age_days
+        - total_preferences
+        - interaction_patterns
+        - character_affinities
+        - preferences_summary
+        - learning_sources
+        - privacy_compliance
       title: UserInsightsResponse
       description: Response model for user insights.
     ValidationError:
@@ -4529,8 +4565,8 @@ components:
         loc:
           items:
             anyOf:
-            - type: string
-            - type: integer
+              - type: string
+              - type: integer
           type: array
           title: Location
         msg:
@@ -4541,9 +4577,9 @@ components:
           title: Error Type
       type: object
       required:
-      - loc
-      - msg
-      - type
+        - loc
+        - msg
+        - type
       title: ValidationError
     VoiceCharacteristicsInfo:
       properties:
@@ -4569,12 +4605,12 @@ components:
           title: Intonation Patterns
       type: object
       required:
-      - preferred_pitch
-      - speaking_rate
-      - emotional_range
-      - formality_level
-      - accent_preference
-      - intonation_patterns
+        - preferred_pitch
+        - speaking_rate
+        - emotional_range
+        - formality_level
+        - accent_preference
+        - intonation_patterns
       title: VoiceCharacteristicsInfo
       description: Voice characteristics for a language.
     character_ai__web__parental_controls_api__InteractionRequest:
@@ -4593,9 +4629,9 @@ components:
           description: Interaction content
       type: object
       required:
-      - child_id
-      - character_id
-      - content
+        - child_id
+        - character_id
+        - content
       title: InteractionRequest
       description: Request model for recording interactions.
     character_ai__web__toy_api__InteractionRequest:
@@ -4605,12 +4641,12 @@ components:
           title: Audio Data
         character_name:
           anyOf:
-          - type: string
-          - type: 'null'
+            - type: string
+            - type: "null"
           title: Character Name
       type: object
       required:
-      - audio_data
+        - audio_data
       title: InteractionRequest
   securitySchemes:
     BearerAuth:
@@ -4630,9 +4666,9 @@ components:
         name: Sparkle the Unicorn
         character_type: pony
         custom_topics:
-        - friendship
-        - magic
-        - adventure
+          - friendship
+          - magic
+          - adventure
     AudioProcessing:
       summary: Process audio input
       value:
@@ -4644,20 +4680,20 @@ components:
       value:
         text: Hello, how are you today?
 security:
-- BearerAuth: []
-- AdminToken: []
+  - BearerAuth: []
+  - AdminToken: []
 tags:
-- name: Authentication
-  description: Device registration and authentication endpoints
-- name: Characters
-  description: Character management and configuration
-- name: Interaction
-  description: Real-time interaction and audio processing
-- name: Memory
-  description: Session memory management
-- name: Safety
-  description: Content safety and analysis
-- name: Voice
-  description: Voice artifact management
-- name: System
-  description: System status and performance metrics
+  - name: Authentication
+    description: Device registration and authentication endpoints
+  - name: Characters
+    description: Character management and configuration
+  - name: Interaction
+    description: Real-time interaction and audio processing
+  - name: Memory
+    description: Session memory management
+  - name: Safety
+    description: Content safety and analysis
+  - name: Voice
+    description: Voice artifact management
+  - name: System
+    description: System status and performance metrics

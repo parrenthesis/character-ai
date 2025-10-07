@@ -26,7 +26,7 @@ diskcache = "^5.6.0"
 # SECURE ARCHITECTURE: PyTorch 2.8.0 + Wav2Vec2 + Coqui TTS + 1092 tests passing
 torch = ">=2.8.0"  # SECURE VERSION: All PyTorch vulnerabilities resolved (CVE-2025-32434, CVE-2025-3730, CVE-2025-2953)
                    # Architecture: Wav2Vec2 (STT) + Coqui TTS (TTS + Voice Cloning)
-transformers = "^4.52.0"  # Compatible with secure PyTorch 2.8.0
+transformers = "4.45.0"  # Pinned for XTTS v2 compatibility (known working version)
 accelerate = "^0.20.0"
 datasets = "^2.15.0"
 fsspec = ">=2023.1.0,<=2024.6.1"  # Compatible with datasets requirements

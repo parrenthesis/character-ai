@@ -3,7 +3,7 @@
   "info": {
     "title": "Character AI API",
     "description": "\n# Character AI API\n\nA comprehensive API for managing interactive AI characters in toys and devices.\n\n## Features\n\n- **Character Management**: Create, configure, and manage AI characters\n- **Real-time Interaction**: Process audio input and generate character responses\n- **Session Memory**: Maintain conversation context with configurable limits\n- **Safety & Security**: Content filtering and safety analysis\n- **Voice Management**: Handle voice artifacts and embeddings\n- **Authentication**: Device identity and JWT-based authentication\n\n## Authentication\n\nThe API supports multiple authentication methods:\n\n1. **Device Registration**: Register a new device and receive authentication tokens\n2. **JWT Tokens**: Use Bearer tokens for authenticated requests\n3. **Admin Tokens**: Special tokens for administrative operations\n\n## Rate Limiting\n\n- Default: 60 requests per minute per device\n- Burst allowance: 10 requests\n- Rate limit headers are included in responses\n\n## Safety & Privacy\n\n- All content is analyzed for toxicity and PII\n- Child-safe content filtering\n- Configurable safety thresholds\n- Privacy-first design with on-device processing\n\n## Character Profiles\n\nCharacters are defined using YAML profiles with:\n- Personality traits and conversation topics\n- Voice characteristics and TTS settings\n- Safety rules and content guidelines\n- Custom prompt templates\n\n## Session Memory\n\n- Rolling conversation windows\n- Configurable limits (turns, tokens, age)\n- Character-specific memory policies\n- Privacy-focused (in-memory only)\n        ",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "servers": [
     {

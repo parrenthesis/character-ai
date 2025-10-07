@@ -100,13 +100,44 @@ class LocalLLMProvider(LLMInterface):
             await self._load_model()
 
         if self.provider == "llama_cpp" and self._model is not None:
+            # Compose stop sequences: built-ins + caller-provided + generic role labels
+            caller_stop = kwargs.get("stop", []) or []
+            stop_sequences = [
+                "</s>",
+                "\n\n",
+                "\n",
+                "user:",
+                "User:",
+                "assistant:",
+                "Assistant:",
+                "system:",
+                "System:",
+            ]
+            if isinstance(caller_stop, list):
+                stop_sequences = stop_sequences + caller_stop
+
             response = self._model(
                 prompt,
                 max_tokens=kwargs.get("max_tokens", 150),
                 temperature=kwargs.get("temperature", 0.7),
-                stop=["</s>", "\n\n"],
+                stop=stop_sequences,
             )
-            return response["choices"][0]["text"]  # type: ignore
+            text = response["choices"][0]["text"]
+
+            # Enforce single-line, no role labels, no leading stage directions
+            try:
+                import re
+
+                line = (text or "").strip().splitlines()[0] if text else ""
+                # remove leading role labels like "user:" or "assistant:" (case-insensitive)
+                line = re.sub(
+                    r"^(user|assistant|system)\s*:\s*", "", line, flags=re.IGNORECASE
+                )
+                # remove leading parenthetical stage directions e.g., "(smiling) "
+                line = re.sub(r"^\([^)]*\)\s*", "", line)
+                return line
+            except Exception:
+                return (text or "").strip()
         elif (
             self.provider == "transformers"
             and self._model is not None

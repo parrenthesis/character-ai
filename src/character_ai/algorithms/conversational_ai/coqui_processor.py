@@ -37,7 +37,30 @@ class CoquiProcessor(BaseAudioProcessor):
 
         logger.info(f"Initializing Coqui TTS model: {self.model_name} on {self.device}")
         try:
+            # Suppress GPT2InferenceModel warning
+            import warnings
+
+            warnings.filterwarnings("ignore", message=".*GPT2InferenceModel.*")
+
+            import torch.serialization
             from TTS.api import TTS
+
+            # Configure PyTorch to allow XTTS model loading (PyTorch 2.6+ security)
+            if "xtts" in self.model_name.lower():
+                # For XTTS models, we need to disable weights_only due to complex TTS class dependencies
+                # This is safe since we trust the Coqui TTS source
+                import torch
+
+                original_load = torch.load
+
+                def patched_load(*args: Any, **kwargs: Any) -> Any:
+                    kwargs["weights_only"] = False
+                    return original_load(*args, **kwargs)
+
+                torch.load = patched_load
+                logger.info(
+                    "Patched torch.load to disable weights_only for XTTS model loading"
+                )
 
             # Initialize TTS with the specified model
             self.tts = TTS(model_name=self.model_name, progress_bar=False)
@@ -106,27 +129,83 @@ class CoquiProcessor(BaseAudioProcessor):
         try:
             logger.info(f"Coqui TTS synthesizing: '{text[:50]}...'")
 
-            # Synthesize speech
-            if voice_path and self.tts.is_multi_speaker:
-                # Use cloned voice if available and model supports multi-speaker
-                audio_array = self.tts.tts(
-                    text=text, speaker_wav=voice_path, language=language
-                )
-            else:
-                # Use default voice
-                audio_array = self.tts.tts(text=text, language=language)
+            # Determine multilingual capability safely
+            is_multilingual = False
+            try:
+                # Some models expose `is_multi_lingual` or `is_multilingual`
+                if hasattr(self.tts, "is_multi_lingual"):
+                    is_multilingual = bool(getattr(self.tts, "is_multi_lingual"))
+                elif hasattr(self.tts, "is_multilingual"):
+                    is_multilingual = bool(getattr(self.tts, "is_multilingual"))
+            except Exception:
+                is_multilingual = False
 
-            # Convert to bytes
-            audio_bytes = (audio_array * 32767).astype(np.int16).tobytes()
+            try:
+                bool(getattr(self.tts, "is_multi_speaker", False))
+            except Exception:
+                pass
+
+            # Build kwargs conditionally to avoid passing unsupported parameters
+            tts_kwargs: Dict[str, Any] = {"text": text}
+
+            # XTTS v2 models require speaker_wav parameter for voice cloning
+            if voice_path:
+                tts_kwargs["speaker_wav"] = voice_path
+
+            # XTTS v2 models always require a language parameter
+            if is_multilingual:
+                tts_kwargs["language"] = (
+                    language or "en"
+                )  # Default to English if not specified
+
+            # Synthesize speech
+            audio_array = self.tts.tts(**tts_kwargs)
+
+            # Coqui may return a list of chunks; normalize to a single numpy array
+            if isinstance(audio_array, list):
+                try:
+                    import numpy as _np
+
+                    audio_array = _np.concatenate(
+                        [
+                            _np.asarray(chunk, dtype=_np.float32).reshape(-1)
+                            for chunk in audio_array
+                        ]
+                    )
+                except Exception:
+                    # Fallback: take first chunk
+                    audio_array = _np.asarray(
+                        audio_array[0], dtype=_np.float32
+                    ).reshape(-1)
+
+            # Convert to proper WAV format using soundfile
+            import io
+
+            import soundfile as sf
+
+            # Convert to float32 for soundfile
+            audio_float = audio_array.astype(np.float32)
+
+            # Create WAV data in memory
+            wav_buffer = io.BytesIO()
+            sf.write(wav_buffer, audio_float, 22050, format="WAV", subtype="PCM_16")
+            wav_bytes = wav_buffer.getvalue()
+            wav_buffer.close()
 
             end_time = time.time()
             processing_time = end_time - start_time
 
             logger.info(f"Coqui TTS synthesis completed in {processing_time:.2f}s")
 
+            from ...core.protocols import AudioData
+
             return AudioResult(
                 text=text,
-                audio_data=audio_bytes,
+                audio_data=AudioData(
+                    data=wav_bytes,
+                    sample_rate=22050,  # Coqui TTS default
+                    channels=1,  # Mono
+                ),
                 metadata={
                     "model": "Coqui TTS",
                     "language": language,

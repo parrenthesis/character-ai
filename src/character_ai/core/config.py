@@ -4,6 +4,7 @@ Configuration management for Character AI Platform.
 Handles environment-specific configurations, GPU settings, and model parameters.
 """
 
+import logging
 import os
 from dataclasses import dataclass, field
 from enum import Enum
@@ -11,6 +12,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import yaml
+
+logger = logging.getLogger(__name__)
+
+# Default model constants
+DEFAULT_COQUI_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
 
 
 class Environment(Enum):
@@ -399,6 +405,9 @@ class Config:
 
     def __post_init__(self) -> None:
         """Initialize configuration and create directories."""
+        # Load from runtime.yaml if available
+        self._load_from_runtime_yaml()
+
         # Don't create directories during instantiation - create when actually needed
 
         # Set environment-specific defaults
@@ -426,6 +435,29 @@ class Config:
         # Apply CPU limiting if enabled
         if self.enable_cpu_limiting and self.max_cpu_threads is not None:
             self._apply_cpu_limiting()
+
+    def _load_from_runtime_yaml(self) -> None:
+        """Load configuration from runtime.yaml if available."""
+        try:
+            from pathlib import Path
+
+            import yaml
+
+            runtime_path = Path("configs/runtime.yaml")
+            if not runtime_path.exists():
+                return
+
+            with open(runtime_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+
+            # Load TTS model from runtime.yaml
+            tts_section = data.get("tts", {}) or {}
+            if tts_section.get("model_name"):
+                self.models.coqui_model = str(tts_section["model_name"])
+
+        except Exception as e:
+            # Non-fatal - just log and continue with defaults
+            logger.debug(f"Could not load runtime.yaml: {e}")
 
     def _apply_cpu_limiting(self) -> None:
         """Apply CPU limiting for development/testing."""
@@ -561,7 +593,7 @@ class Config:
             ),
             coqui_model=getenv_str(
                 "CAI_MODELS__COQUI_MODEL",
-                "tts_models/en/ljspeech/tacotron2-DDC",
+                DEFAULT_COQUI_MODEL,
             ),
             llama_model=getenv_str(
                 "CAI_MODELS__LLAMA_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"

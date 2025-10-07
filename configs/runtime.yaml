@@ -39,7 +39,7 @@ tts:
   language: en # Coqui TTS language for synthesis
   default_voice_style: neutral # Fallback style if no injected voice
   voice_cloning: true # Native voice cloning support (replaces XTTS container)
-  model_name: "tts_models/en/ljspeech/tacotron2-DDC" # Default Coqui TTS model
+  model_name: "tts_models/multilingual/multi-dataset/xtts_v2" # Multilingual Coqui TTS model
   voice_cloning_sample_rate: 22050 # Sample rate for voice cloning processing
   voice_cloning_max_duration: 30.0 # Maximum duration for voice samples (seconds)
 
@@ -53,7 +53,7 @@ paths:
 
 models:
   llama_backend: llama_cpp # Default backend (CPU-only friendly)
-  llama_gguf_path: models/llm/tinyllama-1.1b-q4_k_m.gguf # GGUF path
+  llama_gguf_path: models/llm/llama-3.2-3b-instruct-Q4_K_M.gguf # GGUF path
 
 # Multi-language support configuration
 language_support:
@@ -104,3 +104,15 @@ streaming:
   connection_timeout_ms: 30000 # Connection timeout (milliseconds)
   max_response_time_ms: 30000 # Maximum response time (milliseconds)
   simulation_delays: false # Enable simulation delays in performance API
+
+# LLM configuration (canonical defaults; env can override)
+llm:
+  runtime:
+    provider: local # local | ollama | openai | anthropic
+    model: llama-3.2-3b-instruct # GGUF name used by llama.cpp loader
+  character_creation:
+    provider: local
+    model: llama-3.2-3b-instruct
+  providers:
+    ollama_base_url: http://localhost:11434
+    local_model_path: models/llm

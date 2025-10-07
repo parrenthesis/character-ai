@@ -61,6 +61,190 @@ def test_commands() -> None:
 
 
 @test_commands.command()
+@click.option(
+    "--input",
+    "-i",
+    help="Input audio file path (defaults to tests_dev/audio_samples/{franchise}/{character}/input/test_interaction_voice_sample.wav)",
+)
+@click.option("--character", "-c", required=True, help="Character name")
+@click.option(
+    "--franchise",
+    "-f",
+    required=True,
+    help="Franchise name (e.g., star_trek, transformers)",
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    help="Output directory (defaults to tests_dev/audio_samples/{franchise}/{character}/output/)",
+)
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
+@click.option("--test-stt-only", is_flag=True, help="Test STT component only")
+@click.option("--test-llm-only", is_flag=True, help="Test LLM component only")
+@click.option("--test-tts-only", is_flag=True, help="Test TTS component only")
+@click.option(
+    "--list-inputs", is_flag=True, help="List available input files for the character"
+)
+@click.option(
+    "--test-all", is_flag=True, help="Test all available input files for the character"
+)
+def voice_pipeline(
+    input: Optional[str],
+    character: str,
+    franchise: str,
+    output_dir: Optional[str],
+    verbose: bool,
+    test_stt_only: bool,
+    test_llm_only: bool,
+    test_tts_only: bool,
+    list_inputs: bool,
+    test_all: bool,
+) -> None:
+    """Test the complete voice pipeline: STT → LLM → TTS"""
+    try:
+        # Configure logging
+        if verbose:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            )
+        else:
+            logging.basicConfig(level=logging.WARNING)
+
+        # Import VoicePipelineTester
+        import sys
+        from pathlib import Path
+
+        sys.path.append(
+            str(Path(__file__).parent.parent.parent / "tests_dev" / "testing_utilities")
+        )
+        try:
+            from voice_pipeline_tester import VoicePipelineTester
+        except ImportError:
+            # Fallback to absolute import
+            import sys
+
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+            from tests_dev.testing_utilities.voice_pipeline_tester import (
+                VoicePipelineTester,
+            )
+
+        # Initialize tester
+        tester = VoicePipelineTester()
+
+        # Handle list inputs option
+        if list_inputs:
+            input_files = tester.list_available_inputs(character, franchise)
+            if input_files:
+                click.echo(f"Available input files for {character} ({franchise}):")
+                for i, file in enumerate(input_files, 1):
+                    click.echo(f"  {i}. {file}")
+            else:
+                click.echo(
+                    f"No input files found for {character} in franchise {franchise}"
+                )
+                click.echo(
+                    f"Expected location: tests_dev/audio_samples/{franchise}/{character}/input/"
+                )
+            return
+
+        # Handle test all option
+        if test_all:
+            click.echo(
+                f"Testing all available input files for {character} ({franchise})..."
+            )
+            result = asyncio.run(tester.test_all_inputs(character, franchise))
+
+            # Display results
+            if result.get("success"):
+                click.echo(
+                    f"✅ Test completed: {result['successful_tests']}/{result['total_tests']} tests passed"
+                )
+                if verbose:
+                    for input_file, test_result in result.get("results", {}).items():
+                        status = "✅" if test_result.get("success") else "❌"
+                        click.echo(f"  {status} {input_file}")
+            else:
+                click.echo(f"❌ Test failed: {result.get('error', 'Unknown error')}")
+                if verbose:
+                    click.echo(f"Details: {result}")
+            return
+
+        # Provide sensible defaults if not specified
+        if input is None:
+            # Default input file path
+            input = f"tests_dev/audio_samples/{franchise}/{character}/input/test_interaction_voice_sample.wav"
+            if verbose:
+                click.echo(f"Using default input file: {input}")
+
+        # Resolve bare filenames (no path separators) to the character's input directory
+        if (
+            input is not None
+            and not Path(input).is_absolute()
+            and "/" not in input
+            and "\\" not in input
+        ):
+            candidate = Path(
+                f"tests_dev/audio_samples/{franchise}/{character}/input/{input}"
+            )
+            if candidate.exists():
+                input = str(candidate)
+                if verbose:
+                    click.echo(f"Resolved input filename to: {input}")
+
+        if output_dir is None:
+            # Default output directory
+            output_dir = f"tests_dev/audio_samples/{franchise}/{character}/output"
+            if verbose:
+                click.echo(f"Using default output directory: {output_dir}")
+
+        # Run async test
+        if test_stt_only:
+            result = asyncio.run(
+                tester.test_stt_only(input, character, franchise, output_dir)
+            )
+        elif test_llm_only:
+            # For LLM-only test, we need input text instead of audio file
+            with open(input, "r") as f:
+                input_text = f.read()
+            result = asyncio.run(
+                tester.test_llm_only(input_text, character, franchise, output_dir)
+            )
+        elif test_tts_only:
+            # For TTS-only test, we need input text instead of audio file
+            with open(input, "r") as f:
+                input_text = f.read()
+            result = asyncio.run(
+                tester.test_tts_only(input_text, character, franchise, output_dir)
+            )
+        else:
+            # Full pipeline test
+            result = asyncio.run(
+                tester.test_full_pipeline(input, character, franchise, output_dir)
+            )
+
+        # Display results
+        if result.get("success"):
+            click.echo("✅ Test completed successfully!")
+            if "output_paths" in result:
+                click.echo("📁 Output files:")
+                for key, path in result["output_paths"].items():
+                    click.echo(f"  {key}: {path}")
+        else:
+            click.echo(f"❌ Test failed: {result.get('error', 'Unknown error')}")
+            if verbose:
+                click.echo(f"Details: {result}")
+
+    except Exception as e:
+        click.echo(f"Error running voice pipeline test: {e}", err=True)
+        if verbose:
+            import traceback
+
+            click.echo(traceback.format_exc())
+        raise click.Abort()
+
+
+@test_commands.command()
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--output", "-o", help="Save test results to file")
 def interactive(verbose: bool, output: Optional[str]) -> None:

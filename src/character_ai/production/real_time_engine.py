@@ -332,12 +332,24 @@ class RealTimeInteractionEngine:
             # Initialize Coqui TTS with edge optimizations
             if self.edge_optimizer is not None:
                 tts_config = await self.edge_optimizer.optimize_coqui_for_toy()
+                # Get model from optimized config
+                from ..core.config import DEFAULT_COQUI_MODEL
+
+                tts_model = getattr(
+                    tts_config.models, "coqui_model", DEFAULT_COQUI_MODEL
+                )
             else:
                 # Fallback configuration
                 from ..core.config import Config
 
                 tts_config = Config()
-            tts = CoquiProcessor(tts_config)
+                # Use multilingual model from config
+                from ..core.config import DEFAULT_COQUI_MODEL
+
+                tts_model = getattr(
+                    tts_config.models, "coqui_model", DEFAULT_COQUI_MODEL
+                )
+            tts = CoquiProcessor(tts_config, model_name=tts_model)
 
             # Check if character has injected voice
             character_name = character.name.lower()
@@ -509,11 +521,23 @@ Response:"""
             # Initialize Coqui TTS processor
             if self.edge_optimizer is not None:
                 tts_config = await self.edge_optimizer.optimize_coqui_for_toy()
+                # Get model from optimized config
+                from ..core.config import DEFAULT_COQUI_MODEL
+
+                tts_model = getattr(
+                    tts_config.models, "coqui_model", DEFAULT_COQUI_MODEL
+                )
             else:
                 from ..core.config import Config
 
                 tts_config = Config()
-            tts = CoquiProcessor(tts_config)
+                # Use multilingual model from config
+                from ..core.config import DEFAULT_COQUI_MODEL
+
+                tts_model = getattr(
+                    tts_config.models, "coqui_model", DEFAULT_COQUI_MODEL
+                )
+            tts = CoquiProcessor(tts_config, model_name=tts_model)
             await tts.initialize()
 
             # Inject the voice
