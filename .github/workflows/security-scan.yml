@@ -39,7 +39,7 @@ jobs:
 
       - name: Run Safety dependency scan
         run: |
-          poetry run safety check --short-report --continue-on-error \
+          poetry run safety check --continue-on-error \
             --json > safety-report.json
 
       - name: Run Trivy vulnerability scanner
