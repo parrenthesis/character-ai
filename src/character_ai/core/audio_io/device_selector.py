@@ -7,12 +7,22 @@ hardcoded device selection from test.py and other components.
 import logging
 from typing import List, Optional
 
-import sounddevice as sd
-
 from .interfaces import AudioDevice
-from .real_audio import RealAudioDevice
 
 logger = logging.getLogger(__name__)
+
+# Lazy import to avoid sounddevice dependency in CI/test environments
+try:
+    import sounddevice as sd
+
+    from .real_audio import RealAudioDevice
+
+    _SOUNDDEVICE_AVAILABLE = True
+except (ImportError, OSError):
+    # PortAudio library not found or sounddevice not installed
+    _SOUNDDEVICE_AVAILABLE = False
+    sd = None
+    RealAudioDevice = None  # type: ignore[assignment,misc]
 
 
 class AudioDeviceSelector:
@@ -21,9 +31,16 @@ class AudioDeviceSelector:
     def __init__(self) -> None:
         """Initialize the device selector."""
         self._device_cache: Optional[List[dict]] = None
+        if not _SOUNDDEVICE_AVAILABLE:
+            logger.warning(
+                "sounddevice not available, AudioDeviceSelector will return empty results"
+            )
 
     def _get_devices(self) -> List[dict]:
         """Get cached device list or query from sounddevice."""
+        if not _SOUNDDEVICE_AVAILABLE:
+            return []
+
         if self._device_cache is None:
             try:
                 self._device_cache = sd.query_devices()
@@ -62,6 +79,9 @@ class AudioDeviceSelector:
         self, alsa_id: str, is_input: bool = True
     ) -> Optional[AudioDevice]:
         """Find device by ALSA identifier (e.g., 'hw:3,0')."""
+        if not _SOUNDDEVICE_AVAILABLE:
+            return None
+
         try:
             device_info = sd.query_devices(alsa_id)
             return RealAudioDevice(device_info, is_input=is_input)
@@ -73,6 +93,9 @@ class AudioDeviceSelector:
         self, index: int, is_input: bool = True
     ) -> Optional[AudioDevice]:
         """Find device by index."""
+        if not _SOUNDDEVICE_AVAILABLE:
+            return None
+
         try:
             device_info = sd.query_devices(index)
             return RealAudioDevice(device_info, is_input=is_input)
@@ -106,7 +129,7 @@ class AudioDeviceSelector:
             return device
 
         # Fallback to default device
-        if fallback_to_default:
+        if fallback_to_default and _SOUNDDEVICE_AVAILABLE:
             try:
                 default_device = sd.query_devices(kind="input")
                 if default_device and default_device.get("max_input_channels", 0) > 0:
@@ -129,6 +152,9 @@ class AudioDeviceSelector:
         Returns:
             First compatible sample rate or None if none work
         """
+        if not _SOUNDDEVICE_AVAILABLE:
+            return None
+
         for rate in rates:
             try:
                 # Test by querying device capabilities
@@ -166,6 +192,9 @@ class AudioDeviceSelector:
 
     def get_device_info(self, device: AudioDevice) -> dict:
         """Get detailed information about a device."""
+        if not _SOUNDDEVICE_AVAILABLE:
+            return {}
+
         try:
             device_info = sd.query_devices(device.index)
             return {
