@@ -326,7 +326,7 @@ For issues or questions, please refer to the Character AI documentation.
         # Create Dockerfile
         dockerfile = bundle_dir / "Dockerfile"
 
-        # Dockerfile template - not SQL, bandit false positive  # nosec B608
+        # Dockerfile template - not SQL, bandit false positive
         dockerfile_content = f"""FROM python:3.11-slim
 
 # Install system dependencies
@@ -361,7 +361,7 @@ ENV CHARACTER_AI_MODEL_DIR=/app/models
 
 # Default command
 CMD ["python", "-m", "character_ai.cli.main"]
-"""
+"""  # nosec B608
 
         dockerfile.write_text(dockerfile_content)
 
