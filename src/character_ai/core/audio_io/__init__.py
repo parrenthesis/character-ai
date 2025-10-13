@@ -17,7 +17,18 @@ from .audio_utils import (
 from .factory import AudioComponentFactory
 from .interfaces import AudioCapture, AudioDevice, AudioDeviceManager, AudioOutput
 from .mock_audio import FileAudioCapture, FileAudioOutput, MockAudioDeviceManager
-from .real_audio import RealAudioCapture, RealAudioDeviceManager, RealAudioOutput
+
+# Conditionally import real audio implementations
+try:
+    from .real_audio import RealAudioCapture, RealAudioDeviceManager, RealAudioOutput
+
+    _REAL_AUDIO_AVAILABLE = True
+except (ImportError, OSError):
+    # PortAudio not available, use mocks only
+    RealAudioCapture = None  # type: ignore
+    RealAudioDeviceManager = None  # type: ignore
+    RealAudioOutput = None  # type: ignore
+    _REAL_AUDIO_AVAILABLE = False
 
 __all__ = [
     # Configuration
