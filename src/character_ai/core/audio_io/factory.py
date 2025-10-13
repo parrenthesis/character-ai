@@ -10,7 +10,18 @@ from typing import Optional
 
 from .interfaces import AudioCapture, AudioDeviceManager, AudioOutput
 from .mock_audio import FileAudioCapture, FileAudioOutput, MockAudioDeviceManager
-from .real_audio import RealAudioCapture, RealAudioDeviceManager, RealAudioOutput
+
+# Lazy import real audio to avoid sounddevice dependency in CI/test environments
+try:
+    from .real_audio import RealAudioCapture, RealAudioDeviceManager, RealAudioOutput
+
+    REAL_AUDIO_AVAILABLE = True
+except (ImportError, OSError):
+    # PortAudio library not found or sounddevice not installed
+    REAL_AUDIO_AVAILABLE = False
+    RealAudioCapture = None  # type: ignore
+    RealAudioDeviceManager = None  # type: ignore
+    RealAudioOutput = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +38,10 @@ class AudioComponentFactory:
         """
         if use_mocks is None:
             use_mocks = os.getenv("USE_MOCK_AUDIO", "false").lower() == "true"
+
+        # Force mocks if real audio not available
+        if not REAL_AUDIO_AVAILABLE:
+            use_mocks = True
 
         if use_mocks:
             logger.info("Using mock audio device manager")
@@ -48,6 +63,10 @@ class AudioComponentFactory:
         if use_mocks is None:
             use_mocks = os.getenv("USE_MOCK_AUDIO", "false").lower() == "true"
 
+        # Force mocks if real audio not available
+        if not REAL_AUDIO_AVAILABLE:
+            use_mocks = True
+
         if use_mocks:
             logger.info(f"Using mock audio capture with input file: {input_file}")
             return FileAudioCapture(input_file)
@@ -67,6 +86,10 @@ class AudioComponentFactory:
         """
         if use_mocks is None:
             use_mocks = os.getenv("USE_MOCK_AUDIO", "false").lower() == "true"
+
+        # Force mocks if real audio not available
+        if not REAL_AUDIO_AVAILABLE:
+            use_mocks = True
 
         if use_mocks:
             logger.info(f"Using mock audio output with output file: {output_file}")

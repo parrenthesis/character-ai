@@ -237,9 +237,9 @@ class RealAudioCapture(AudioCapture):
             logger.error(f"Error reading audio chunk: {e}")
             return None
 
-    async def capture_stream(
+    async def capture_stream(  # type: ignore[override]
         self, sample_rate: int = 22050, channels: int = 1
-    ) -> AsyncGenerator[np.ndarray, None]:  # type: ignore
+    ) -> AsyncGenerator[np.ndarray, None]:
         """Stream audio chunks in real-time."""
         while self._is_capturing:
             chunk = await self.read_audio_chunk()
