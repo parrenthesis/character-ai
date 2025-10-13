@@ -326,6 +326,7 @@ For issues or questions, please refer to the Character AI documentation.
         # Create Dockerfile
         dockerfile = bundle_dir / "Dockerfile"
 
+        # Dockerfile template - not SQL, bandit false positive  # nosec B608
         dockerfile_content = f"""FROM python:3.11-slim
 
 # Install system dependencies

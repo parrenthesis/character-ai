@@ -50,7 +50,10 @@ class ResponseCache:
         # Normalize text for better cache hits
         normalized = text.lower().strip()
         combined = f"{character}:{normalized}"
-        return hashlib.md5(combined.encode()).hexdigest()
+        # MD5 is used for non-security cache key generation only
+        return hashlib.md5(  # nosec B324
+            combined.encode(), usedforsecurity=False
+        ).hexdigest()
 
     def get_stats(self) -> Dict[str, int | float]:
         """Get cache statistics."""
