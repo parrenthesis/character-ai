@@ -1,0 +1,53 @@
+name: "Raspberry Pi 4/5"
+constraints:
+  max_memory_gb: 4
+  cpu_cores: 4
+  gpu_available: false
+  cpu_only: true
+
+models:
+  stt: "wav2vec2-base"
+  llm: "tinyllama-1.1b"
+  tts: "coqui-xtts-v2" # Voice cloning required - CPU performance will be slower (~20-30s)
+
+runtime:
+  target_latency_s: 2.0
+  streaming_enabled: false
+  predictive_loading: false
+
+audio:
+  sample_rate: 16000
+  chunk_size: 512
+  channels: 1
+
+vad:
+  threshold: 0.5
+  min_speech_duration_s: 0.3
+  max_silence_duration_s: 0.6 # Reduced from 1.0 for better responsiveness
+  wake_word:
+    enabled: true # Enabled for production toy deployment
+    method: "energy" # Energy-based for low power consumption
+    # Note: Wake word phrases come from character config (configs/characters/*/wake_words.yaml)
+
+power:
+  default_mode: "battery_saver" # performance | balanced | battery_saver
+  sleep_after_idle_s: 60
+  aggressive_model_unloading: true
+  cpu_governor: "ondemand" # performance | ondemand | powersave
+
+optimizations:
+  # Reduce precision for battery life
+  use_int8_quantization: true
+  reduce_sample_rate: false # Keep audio quality
+  batch_size: 1
+  memory_mapped_models: true
+
+  # Model-specific power optimizations
+  llm:
+    n_threads: 2 # Reduce from 4 for power saving
+    use_mlock: false # Don't lock memory for flexibility
+    max_batch_size: 1
+
+  tts:
+    use_half_precision: false # CPU mode - FP32
+    chunk_size: 512 # Larger chunks for efficiency on slower CPU

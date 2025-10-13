@@ -24,11 +24,14 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Minimal setup
+      - name: Setup CI environment
         run: |
-          poetry install --only main
+          make setup-ci
 
-      - name: Basic check
+      - name: Run tests
         run: |
-          echo "✅ CI check passed"
-          echo "All systems operational"
+          make test
+
+      - name: Run linting
+        run: |
+          make lint

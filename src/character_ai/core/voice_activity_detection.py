@@ -56,6 +56,39 @@ class VADConfig:
     adaptation_rate: float = 0.1
     noise_floor_samples: int = 100  # Samples to estimate noise floor
 
+    @classmethod
+    def for_toy_interaction(cls) -> "VADConfig":
+        """Optimized for toy real-time interaction - values from test.py lines 566-571"""
+        config = cls()
+        config.sample_rate = 16000
+        config.energy_threshold = 0.0005  # Moderate threshold from test.py
+        config.min_speech_duration_ms = 500  # min_speech_duration * 1000
+        config.min_silence_duration_ms = 400  # silence_threshold * 1000
+        config.speech_pause_threshold_ms = 400
+        return config
+
+    @classmethod
+    def for_quiet_environment(cls) -> "VADConfig":
+        """Lower thresholds for quiet environments"""
+        config = cls()
+        config.sample_rate = 16000
+        config.energy_threshold = 0.0003
+        config.min_speech_duration_ms = 300
+        config.min_silence_duration_ms = 300
+        config.speech_pause_threshold_ms = 300
+        return config
+
+    @classmethod
+    def for_noisy_environment(cls) -> "VADConfig":
+        """Higher thresholds for noisy environments"""
+        config = cls()
+        config.sample_rate = 16000
+        config.energy_threshold = 0.001
+        config.min_speech_duration_ms = 800
+        config.min_silence_duration_ms = 600
+        config.speech_pause_threshold_ms = 600
+        return config
+
 
 @dataclass
 class VADResult:

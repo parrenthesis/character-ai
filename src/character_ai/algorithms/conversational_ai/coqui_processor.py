@@ -1,9 +1,22 @@
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ...core import torch_init  # noqa: F401
+
+# isort: on
+
+import io
 import logging
 import time
+import warnings
+from contextlib import redirect_stderr, redirect_stdout
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+import soundfile as sf
 import torch
+import torch.serialization
+from pydub import AudioSegment
+from TTS.api import TTS
 
 from ...core.config import Config
 from ...core.exceptions import ModelError
@@ -21,12 +34,26 @@ class CoquiProcessor(BaseAudioProcessor):
     """
 
     def __init__(
-        self, config: Config, model_name: str = "tts_models/en/ljspeech/tacotron2-DDC"
+        self,
+        config: Config,
+        model_name: str = "tts_models/en/ljspeech/tacotron2-DDC",
+        gpu_device: Optional[str] = None,
+        use_half_precision: Optional[bool] = None,
     ):
         self.config = config
         self.model_name = model_name
         self.tts: Any = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        # Store GPU device preference - actual detection happens in initialize()
+        self.gpu_device = gpu_device
+        self.device = "cpu"  # Default to CPU, will be updated in initialize()
+        self.use_gpu = False
+        self._use_half_precision_override = use_half_precision  # Store config override
+        self.use_half_precision = False
+
+        logger.info(
+            "CoquiProcessor initialized (GPU detection deferred to initialize())"
+        )
         self._initialized = False
 
     async def initialize(self) -> None:
@@ -35,16 +62,71 @@ class CoquiProcessor(BaseAudioProcessor):
             logger.info("CoquiProcessor already initialized.")
             return
 
-        logger.info(f"Initializing Coqui TTS model: {self.model_name} on {self.device}")
+        # GPU device detection and configuration (moved from __init__)
+        if self.gpu_device:
+            self.device = self.gpu_device
+            self.use_gpu = self.gpu_device == "cuda"
+        else:
+            # If gpu_device is None, it means hardware config disabled GPU
+            # Use CPU to avoid CUDA conflicts
+            self.device = "cpu"
+            self.use_gpu = False
+
+        # Enable half-precision for GPU acceleration
+        # Respect explicit override from hardware config, otherwise default to GPU state
+        if self._use_half_precision_override is not None:
+            self.use_half_precision = self._use_half_precision_override and self.use_gpu
+        else:
+            self.use_half_precision = self.use_gpu
+
+        logger.info(
+            f"Initializing Coqui TTS model: {self.model_name} on {self.device} (GPU: {self.use_gpu}, Half-precision: {self.use_half_precision})"
+        )
         try:
-            from TTS.api import TTS
+            # Suppress GPT2InferenceModel warning
+            warnings.filterwarnings("ignore", message=".*GPT2InferenceModel.*")
 
-            # Initialize TTS with the specified model
-            self.tts = TTS(model_name=self.model_name, progress_bar=False)
+            # Configure PyTorch to allow XTTS model loading (PyTorch 2.6+ security)
+            # Note: TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 environment variable handles
+            # PyTorch 2.8 compatibility with XTTS v2 models
 
-            # Move to device if CUDA is available
-            if self.device == "cuda":
-                self.tts.to(self.device)
+            # Suppress verbose TTS library print statements
+            import logging as stdlib_logging
+
+            tts_logger = stdlib_logging.getLogger("TTS")
+            tts_logger.setLevel(stdlib_logging.ERROR)
+
+            # Initialize TTS with GPU fallback
+            tts_kwargs = {"model_name": self.model_name, "progress_bar": False}
+
+            # Initialize TTS model with output suppression
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                self.tts = TTS(**tts_kwargs)
+
+            # Explicitly move to the configured device to avoid auto-detection conflicts
+            if self.device == "cpu":
+                self.tts.to("cpu")
+                logger.info("TTS model explicitly moved to CPU")
+            elif self.device == "cuda":
+                try:
+                    self.tts.to(self.device)
+                    logger.info(f"TTS model explicitly moved to {self.device}")
+                except Exception as e:
+                    if "CUDA error" in str(e) or "device-side assert" in str(e):
+                        import traceback
+
+                        logger.error(f"CRITICAL: CUDA error during .to(cuda): {e}")
+                        logger.error(f"Stack trace: {traceback.format_exc()}")
+                        logger.warning("Falling back to CPU for TTS model")
+                        self.tts.to("cpu")
+                        self.device = "cpu"
+                        self.use_gpu = False
+                        self.use_half_precision = False
+                        logger.info("TTS model moved to CPU as fallback")
+                    else:
+                        raise e
+
+            logger.info(f"TTS model initialized: {self.model_name}")
 
             self._initialized = True
             logger.info("CoquiProcessor initialized successfully.")
@@ -94,7 +176,11 @@ class CoquiProcessor(BaseAudioProcessor):
             return await self._create_error_result(f"Coqui TTS processing failed: {e}")
 
     async def synthesize_speech(
-        self, text: str, voice_path: Optional[str] = None, language: str = "en"
+        self,
+        text: str,
+        voice_path: Optional[str] = None,
+        language: str = "en",
+        speed: float = 1.0,
     ) -> AudioResult:
         """Synthesize speech from text using Coqui TTS."""
         if not self._initialized:
@@ -106,18 +192,333 @@ class CoquiProcessor(BaseAudioProcessor):
         try:
             logger.info(f"Coqui TTS synthesizing: '{text[:50]}...'")
 
-            # Synthesize speech
-            if voice_path and self.tts.is_multi_speaker:
-                # Use cloned voice if available and model supports multi-speaker
-                audio_array = self.tts.tts(
-                    text=text, speaker_wav=voice_path, language=language
-                )
-            else:
-                # Use default voice
-                audio_array = self.tts.tts(text=text, language=language)
+            # Determine multilingual capability safely
+            is_multilingual = False
+            try:
+                # Some models expose `is_multi_lingual` or `is_multilingual`
+                if hasattr(self.tts, "is_multi_lingual"):
+                    is_multilingual = bool(getattr(self.tts, "is_multi_lingual"))
+                elif hasattr(self.tts, "is_multilingual"):
+                    is_multilingual = bool(getattr(self.tts, "is_multilingual"))
+            except Exception:
+                is_multilingual = False
 
-            # Convert to bytes
-            audio_bytes = (audio_array * 32767).astype(np.int16).tobytes()
+            try:
+                bool(getattr(self.tts, "is_multi_speaker", False))
+            except Exception:
+                pass
+
+            # Build kwargs conditionally to avoid passing unsupported parameters
+            tts_kwargs: Dict[str, Any] = {"text": text}
+
+            # XTTS v2 models require speaker_wav parameter for voice cloning
+            if voice_path:
+                tts_kwargs["speaker_wav"] = voice_path
+            else:
+                logger.warning("No voice_path provided for XTTS v2 model")
+
+            # XTTS v2 models always require a language parameter
+            if is_multilingual:
+                tts_kwargs["language"] = (
+                    language or "en"
+                )  # Default to English if not specified
+
+            # Try to add speed control if supported by the model
+            native_speed_control = False
+            if speed != 1.0:
+                # Try different speed parameter names that might be supported
+                for speed_param in ["speed", "rate", "speaking_rate", "duration"]:
+                    try:
+                        # Test if the parameter is accepted by trying a small synthesis
+                        test_kwargs = tts_kwargs.copy()
+                        test_kwargs[speed_param] = speed
+                        test_kwargs["text"] = "test"  # Short text for testing
+
+                        # Try to synthesize with speed parameter (suppress verbose output in quiet mode)
+                        import builtins
+                        import os
+
+                        quiet_mode = os.getenv("CAI_QUIET_MODE") == "1"
+                        original_print = builtins.print
+
+                        if quiet_mode:
+                            builtins.print = lambda *args, **kwargs: None
+
+                        try:
+                            if quiet_mode:
+                                with redirect_stdout(io.StringIO()), redirect_stderr(
+                                    io.StringIO()
+                                ):
+                                    test_audio = self.tts.tts(**test_kwargs)
+                            else:
+                                test_audio = self.tts.tts(**test_kwargs)
+                        finally:
+                            if quiet_mode:
+                                builtins.print = original_print
+
+                        logger.info(
+                            f"✅ Native speed control works with {speed_param}={speed}"
+                        )
+                        tts_kwargs[speed_param] = speed
+                        native_speed_control = True
+                        break
+                    except Exception as e:
+                        logger.debug(f"Parameter {speed_param} not supported: {e}")
+                        continue
+
+                if not native_speed_control:
+                    logger.info(
+                        "Native speed control not supported, will use post-processing"
+                    )
+
+            # Synthesize speech with robust GPU fallback handling
+            if self.use_gpu:
+                try:
+                    # Try GPU synthesis first
+                    # Add explicit synchronization for stability with XTTS v2
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
+
+                    # Suppress verbose TTS library output in quiet mode
+                    import builtins
+                    import os
+
+                    quiet_mode = os.getenv("CAI_QUIET_MODE") == "1"
+                    original_print = builtins.print
+
+                    if quiet_mode:
+                        builtins.print = lambda *args, **kwargs: None
+
+                    try:
+                        if quiet_mode:
+                            with redirect_stdout(io.StringIO()), redirect_stderr(
+                                io.StringIO()
+                            ):
+                                if self.use_half_precision:
+                                    # Enable half-precision for GPU acceleration (updated API)
+                                    with torch.amp.autocast("cuda"):
+                                        audio_array = self.tts.tts(**tts_kwargs)
+                                    logger.info(
+                                        "Used half-precision (FP16) for GPU acceleration"
+                                    )
+                                else:
+                                    audio_array = self.tts.tts(**tts_kwargs)
+                                    logger.info(
+                                        "Used GPU acceleration (full precision)"
+                                    )
+                        else:
+                            if self.use_half_precision:
+                                # Enable half-precision for GPU acceleration (updated API)
+                                with torch.amp.autocast("cuda"):
+                                    audio_array = self.tts.tts(**tts_kwargs)
+                                logger.info(
+                                    "Used half-precision (FP16) for GPU acceleration"
+                                )
+                            else:
+                                audio_array = self.tts.tts(**tts_kwargs)
+                                logger.info("Used GPU acceleration (full precision)")
+                    finally:
+                        if quiet_mode:
+                            builtins.print = original_print
+
+                    # Synchronize after synthesis for stability
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
+                        # Clear CUDA cache after each synthesis to prevent state corruption
+                        torch.cuda.empty_cache()
+                except Exception as e:
+                    error_msg = str(e)
+                    if any(
+                        cuda_error in error_msg.lower()
+                        for cuda_error in [
+                            "cuda error",
+                            "device-side assert",
+                            "assertion",
+                            "inf",
+                            "nan",
+                            "element < 0",
+                        ]
+                    ):
+                        logger.warning(f"GPU synthesis failed with CUDA error: {e}")
+                        logger.info("Falling back to CPU synthesis")
+
+                        # Move model to CPU and update state
+                        self.tts.to("cpu")
+                        self.device = "cpu"
+                        self.use_gpu = False
+                        self.use_half_precision = False
+
+                        # Clear CUDA cache to prevent further issues
+                        if torch.cuda.is_available():
+                            torch.cuda.empty_cache()
+                            logger.info("Cleared CUDA cache after fallback")
+
+                        # Retry synthesis on CPU
+                        import builtins
+                        import os
+
+                        quiet_mode = os.getenv("CAI_QUIET_MODE") == "1"
+                        original_print = builtins.print
+
+                        if quiet_mode:
+                            builtins.print = lambda *args, **kwargs: None
+
+                        try:
+                            if quiet_mode:
+                                with redirect_stdout(io.StringIO()), redirect_stderr(
+                                    io.StringIO()
+                                ):
+                                    audio_array = self.tts.tts(**tts_kwargs)
+                            else:
+                                audio_array = self.tts.tts(**tts_kwargs)
+                        finally:
+                            if quiet_mode:
+                                builtins.print = original_print
+                        logger.info("Successfully synthesized with CPU fallback")
+                    else:
+                        # Re-raise non-CUDA errors
+                        raise e
+            else:
+                # CPU-only synthesis
+                if "xtts" in self.model_name.lower():
+                    logger.info(
+                        "Using CPU synthesis for XTTS v2 (CUDA compatibility workaround)"
+                    )
+                else:
+                    logger.info("Using CPU synthesis")
+                # Suppress verbose TTS library output in quiet mode
+                import builtins
+                import os
+
+                quiet_mode = os.getenv("CAI_QUIET_MODE") == "1"
+                original_print = builtins.print
+
+                if quiet_mode:
+                    builtins.print = lambda *args, **kwargs: None
+
+                try:
+                    if quiet_mode:
+                        with redirect_stdout(io.StringIO()), redirect_stderr(
+                            io.StringIO()
+                        ):
+                            audio_array = self.tts.tts(**tts_kwargs)
+                    else:
+                        audio_array = self.tts.tts(**tts_kwargs)
+                finally:
+                    if quiet_mode:
+                        builtins.print = original_print
+            logger.info(
+                f"Raw TTS output type: {type(audio_array)}, shape: {getattr(audio_array, 'shape', 'no shape')}"
+            )
+
+            # Coqui may return a list of chunks; normalize to a single numpy array
+            if isinstance(audio_array, list):
+                try:
+                    audio_array = np.concatenate(
+                        [
+                            np.asarray(chunk, dtype=np.float32).reshape(-1)
+                            for chunk in audio_array
+                        ]
+                    )
+                    logger.info(
+                        f"After list concatenation: shape={audio_array.shape}, dtype={audio_array.dtype}, range=[{np.min(audio_array):.6f}, {np.max(audio_array):.6f}]"
+                    )
+                except Exception:
+                    # Fallback: take first chunk
+                    audio_array = np.asarray(audio_array[0], dtype=np.float32).reshape(
+                        -1
+                    )
+                    logger.info(
+                        f"After fallback: shape={audio_array.shape}, dtype={audio_array.dtype}, range=[{np.min(audio_array):.6f}, {np.max(audio_array):.6f}]"
+                    )
+            else:
+                logger.info(
+                    f"Single array: shape={audio_array.shape}, dtype={audio_array.dtype}, range=[{np.min(audio_array):.6f}, {np.max(audio_array):.6f}]"
+                )
+
+            # Apply post-processing speed control only if native control wasn't used
+            if speed != 1.0 and not native_speed_control:
+                logger.info(f"Applying post-processing speed control: {speed}x")
+                # Convert to float32 first
+                audio_float = audio_array.astype(np.float32)
+                # Use pydub for speed control (simpler, fewer dependencies)
+                try:
+                    # Convert numpy array to AudioSegment
+                    # First, convert to int16 for pydub
+                    audio_int16 = (audio_float * 32767).astype(np.int16)
+
+                    # Create AudioSegment from numpy array
+                    audio_segment = AudioSegment(
+                        audio_int16.tobytes(),
+                        frame_rate=22050,
+                        sample_width=2,  # 16-bit = 2 bytes
+                        channels=1,
+                    )
+
+                    # Apply speed change
+                    if speed > 1.0:
+                        # Speed up
+                        new_audio = audio_segment.speedup(playback_speed=speed)
+                    else:
+                        # Slow down (pydub doesn't have direct slowdown, so we use frame rate manipulation)
+                        new_frame_rate = int(22050 * speed)
+                        new_audio = audio_segment._spawn(
+                            audio_segment.raw_data,
+                            overrides={"frame_rate": new_frame_rate},
+                        )
+                        # Set frame rate back to original for playback
+                        new_audio = new_audio.set_frame_rate(22050)
+
+                    # Convert back to numpy array
+                    audio_float = (
+                        np.frombuffer(new_audio.raw_data, dtype=np.int16).astype(
+                            np.float32
+                        )
+                        / 32767.0
+                    )
+                    logger.info(
+                        f"Successfully applied pydub speed control with rate={speed}"
+                    )
+
+                except ImportError:
+                    logger.warning("pydub not available, speed control disabled")
+                    audio_float = audio_array.astype(np.float32)
+                except Exception as e:
+                    logger.warning(
+                        f"pydub speed control failed: {e}, using original audio"
+                    )
+                    audio_float = audio_array.astype(np.float32)
+            else:
+                # Convert to float32 for soundfile
+                audio_float = audio_array.astype(np.float32)
+                logger.info(
+                    f"After speed control (none): shape={audio_float.shape}, dtype={audio_float.dtype}, range=[{np.min(audio_float):.6f}, {np.max(audio_float):.6f}]"
+                )
+
+            effective_sample_rate = 22050  # Standard Coqui TTS sample rate
+
+            # Convert to proper WAV format using soundfile
+
+            # Create WAV data in memory
+            wav_buffer = io.BytesIO()
+            logger.info(
+                f"Writing to soundfile: shape={audio_float.shape}, dtype={audio_float.dtype}, range=[{np.min(audio_float):.6f}, {np.max(audio_float):.6f}]"
+            )
+            sf.write(
+                wav_buffer,
+                audio_float,
+                effective_sample_rate,
+                format="WAV",
+                subtype="PCM_16",
+            )
+            wav_bytes = wav_buffer.getvalue()
+            wav_buffer.close()
+            logger.info(f"WAV bytes created: {len(wav_bytes)} bytes")
+
+            # Test reading back the WAV bytes to see if they're valid
+            test_buffer = io.BytesIO(wav_bytes)
+            test_audio, test_sr = sf.read(test_buffer)
+            test_buffer.close()
 
             end_time = time.time()
             processing_time = end_time - start_time
@@ -126,13 +527,18 @@ class CoquiProcessor(BaseAudioProcessor):
 
             return AudioResult(
                 text=text,
-                audio_data=audio_bytes,
+                audio_data=AudioData(
+                    data=wav_bytes,
+                    sample_rate=effective_sample_rate,  # Use effective sample rate for speed control
+                    channels=1,  # Mono
+                ),
                 metadata={
                     "model": "Coqui TTS",
                     "language": language,
                     "voice_path": voice_path,
                     "processing_time": processing_time,
                     "sample_rate": 22050,  # Coqui TTS default
+                    "speed": speed,
                 },
                 processing_time=processing_time,
             )
@@ -160,7 +566,6 @@ class CoquiProcessor(BaseAudioProcessor):
             audio_array = self.tts.tts(text=text, speaker_wav=reference_audio_path)
 
             # Save to output path
-            import soundfile as sf
 
             sf.write(output_path, audio_array, 22050)
 

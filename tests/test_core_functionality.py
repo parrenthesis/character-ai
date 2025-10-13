@@ -126,7 +126,7 @@ class TestCoreFunctionality:
             audio_data=audio_data,
             text="transcribed text",
             embeddings=[0.1, 0.2, 0.3],
-            metadata={"model": "wav2vec2"},
+            metadata={"model": "whisper"},
             processing_time=0.5,
             error=None,
         )
@@ -134,7 +134,7 @@ class TestCoreFunctionality:
         assert result.audio_data == audio_data
         assert result.text == "transcribed text"
         assert result.embeddings == [0.1, 0.2, 0.3]
-        assert result.metadata == {"model": "wav2vec2"}
+        assert result.metadata == {"model": "whisper"}
         assert result.processing_time == 0.5
         assert result.error is None
 
@@ -280,8 +280,8 @@ class TestCoreFunctionality:
         assert hasattr(config, "models")
 
     @pytest.mark.asyncio
-    async def test_edge_optimizer_coqui_optimization(self) -> None:
-        """Test Coqui TTS optimization."""
+    async def test_edge_optimizer_xtts_optimization(self) -> None:
+        """Test XTTS optimization."""
         constraints = MagicMock()
         constraints.max_memory_gb = 2.0
         constraints.max_cpu_cores = 4
@@ -322,25 +322,7 @@ class TestCoreFunctionality:
         assert manager is not None
         assert manager.constraints == constraints
 
-    def test_mock_hardware_manager_basic(self) -> None:
-        """Test MockHardwareManager basic functionality."""
-        from tests.testing_utilities.mock_hardware import MockHardwareManager
-
-        manager = MockHardwareManager()
-        assert manager is not None
-        assert hasattr(manager, "mock_microphone_data")
-        assert hasattr(manager, "mock_button_states")
-        assert hasattr(manager, "mock_led_states")
-        assert hasattr(manager, "mock_battery_level")
-
-    def test_audio_tester_basic(self) -> None:
-        """Test AudioTester basic functionality."""
-        from tests.testing_utilities.audio_tester import AudioTester
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tester = AudioTester(test_audio_dir=temp_dir)
-            assert tester is not None
-            assert tester.test_audio_dir == Path(temp_dir)
+    # Note: MockHardwareManager and AudioTester tests removed - utilities were deleted
 
     def test_toy_setup_basic(self) -> None:
         """Test ToySetup basic functionality."""
@@ -350,17 +332,14 @@ class TestCoreFunctionality:
         assert setup is not None
         assert hasattr(setup, "constraints")
         assert hasattr(setup, "hardware_manager")
-        # Engine is a property that may return None if not initialized
         assert hasattr(setup, "engine")
-        # Test that we can access the engine property (even if it returns None)
-        # Engine can be None if not initialized, which is fine for this test
 
     def test_voice_manager_basic(self) -> None:
         """Test VoiceManager basic functionality."""
         from character_ai.characters.voice_manager import VoiceManager
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = VoiceManager(voice_storage_dir=temp_dir)
+            manager = VoiceManager(voice_storage_dir=str(temp_dir))
             assert manager is not None
             assert manager.voice_storage_dir == Path(temp_dir)
 

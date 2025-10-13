@@ -193,8 +193,11 @@ class MultiLanguageTTSManager:
         try:
             logger.info("Initializing multi-language TTS manager")
 
-            # Initialize Coqui processor
-            self.tts_processor = CoquiProcessor(self.config)
+            # Initialize Coqui processor with multilingual model
+            from .config import DEFAULT_COQUI_MODEL
+
+            tts_model = getattr(self.config.models, "coqui_model", DEFAULT_COQUI_MODEL)
+            self.tts_processor = CoquiProcessor(self.config, model_name=tts_model)
             await self.tts_processor.initialize()
 
             self._initialized = True

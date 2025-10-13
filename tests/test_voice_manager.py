@@ -17,7 +17,7 @@ class TestVoiceManager:
     def test_voice_manager_init(self) -> None:
         """Test VoiceManager initialization."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = VoiceManager(voice_storage_dir=temp_dir)
+            manager = VoiceManager(voice_storage_dir=str(temp_dir))
 
         assert manager.voice_storage_dir is not None
         assert manager.character_voices == {}
@@ -36,7 +36,7 @@ class TestVoiceManager:
     async def test_voice_manager_inject_character_voice(self) -> None:
         """Test VoiceManager character voice injection."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = VoiceManager(voice_storage_dir=temp_dir)
+            manager = VoiceManager(voice_storage_dir=str(temp_dir))
 
         # Create temporary voice file
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
@@ -46,10 +46,10 @@ class TestVoiceManager:
         try:
             from unittest.mock import AsyncMock
 
-            mock_tts = MagicMock()
-            mock_tts.inject_character_voice = AsyncMock(return_value=MagicMock())
+            mock_xtts = MagicMock()
+            mock_xtts.inject_character_voice = AsyncMock(return_value=MagicMock())
             result = await manager.inject_character_voice(
-                "test_character", voice_file, mock_tts
+                "test_character", voice_file, mock_xtts
             )
 
             assert result is True
@@ -61,7 +61,7 @@ class TestVoiceManager:
     async def test_voice_manager_get_character_voice_path(self) -> None:
         """Test VoiceManager get character voice path."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = VoiceManager(voice_storage_dir=temp_dir)
+            manager = VoiceManager(voice_storage_dir=str(temp_dir))
 
         # Create a mock processed voice file
         processed_voice_path = (
@@ -85,7 +85,7 @@ class TestVoiceManager:
     def test_voice_manager_list_character_voices(self) -> None:
         """Test VoiceManager list character voices."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            manager = VoiceManager(voice_storage_dir=temp_dir)
+            manager = VoiceManager(voice_storage_dir=str(temp_dir))
         manager.character_voices = {"char1": "/path1", "char2": "/path2"}
 
         voices = list(manager.character_voices.keys())

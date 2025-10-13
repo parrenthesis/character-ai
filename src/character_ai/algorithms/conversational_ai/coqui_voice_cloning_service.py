@@ -1,3 +1,9 @@
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ...core import torch_init  # noqa: F401
+
+# isort: on
+
 import logging
 import os
 import time

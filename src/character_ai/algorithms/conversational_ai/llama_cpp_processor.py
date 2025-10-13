@@ -4,6 +4,12 @@ Llama.cpp backend processor for CPU-only, low-RAM deployments using GGUF.
 
 from __future__ import annotations
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ...core import torch_init  # noqa: F401
+
+# isort: on
+
 import logging
 import time
 from pathlib import Path
@@ -17,9 +23,16 @@ logger = logging.getLogger(__name__)
 
 
 class LlamaCppProcessor(BaseTextProcessor):
-    def __init__(self, config: Config):
+    def __init__(
+        self,
+        config: Config,
+        use_cpu: bool = False,
+        hardware_config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__("llama_cpp")
         self.config: Config = config
+        self.use_cpu = use_cpu
+        self.hardware_config = hardware_config
         self.model: Optional[Any] = None
 
     async def initialize(self) -> None:
@@ -30,12 +43,51 @@ class LlamaCppProcessor(BaseTextProcessor):
             if not Path(gguf_path).exists():
                 raise FileNotFoundError(f"GGUF model not found: {gguf_path}")
 
+            # Get context size from config
+            n_ctx = getattr(self.config.models, "llama_n_ctx", 2048)
+
+            # Get optimization parameters from config
+            n_threads = getattr(self.config, "max_cpu_threads", 2)
+            n_batch = 128
+
+            # Check for GPU availability and enable offloading if possible
+            n_gpu_layers = 0
+            if self.use_cpu:
+                logger.info(
+                    "Using CPU-only mode (forced by hardware config to avoid CUDA conflicts)"
+                )
+            else:
+                try:
+                    import torch
+
+                    if torch.cuda.is_available():
+                        # Get GPU layers from hardware config, fallback to default
+                        if self.hardware_config:
+                            llm_hw_config = self.hardware_config.get(
+                                "optimizations", {}
+                            ).get("llm", {})
+                            n_gpu_layers = llm_hw_config.get("n_gpu_layers", 20)
+                        else:
+                            n_gpu_layers = 20  # Default fallback
+
+                        if n_gpu_layers > 0:
+                            logger.info(
+                                f"Enabling GPU offloading with {n_gpu_layers} layers"
+                            )
+                        else:
+                            logger.info("GPU offloading disabled by hardware config")
+                    else:
+                        logger.info("CUDA not available, using CPU-only mode")
+                except ImportError:
+                    logger.info("PyTorch not available, using CPU-only mode")
+
             self.model = Llama(
                 model_path=gguf_path,
-                n_threads=getattr(self.config, "max_cpu_threads", 2),
-                n_ctx=2048,
+                n_threads=n_threads,
+                n_ctx=n_ctx,
+                n_gpu_layers=n_gpu_layers,
                 logits_all=False,
-                n_batch=128,
+                n_batch=n_batch,
                 verbose=False,
             )
 
@@ -71,11 +123,21 @@ class LlamaCppProcessor(BaseTextProcessor):
         try:
             start = time.time()
             prompt = await self._prepare_prompt(text, context)
+            # Use configured max_tokens for complete responses
+            max_tokens = (
+                self.config.interaction.max_new_tokens
+            )  # Use config value (no artificial cap)
+
             out = self.model(
                 prompt=prompt,
-                max_tokens=self.config.interaction.max_new_tokens,
+                max_tokens=max_tokens,
                 temperature=self.config.interaction.temperature,
-                stop=["</s>"],
+                stop=[
+                    "</s>",
+                    "\n",
+                    "User:",
+                    "Assistant:",
+                ],  # More stop tokens for shorter responses
             )
             resp = out["choices"][0]["text"].strip()
             dt = time.time() - start

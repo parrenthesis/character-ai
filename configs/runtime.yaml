@@ -29,7 +29,7 @@ interaction:
   stt_language: en # Wav2Vec2 transcription language (secure PyTorch 2.8.0)
   min_audio_s: 0.2 # Minimum accepted audio length (seconds)
   max_audio_s: 30.0 # Maximum accepted audio length (seconds)
-  max_new_tokens: 64 # LLM max new tokens for responses
+  max_new_tokens: 80 # Allow ~60 words for complete responses (up from 32)
   temperature: 0.6 # LLM sampling temperature
   sample_rate: 16000 # Audio sample rate used across the system
   channels: 1 # Audio channels (1 = mono)
@@ -39,7 +39,7 @@ tts:
   language: en # Coqui TTS language for synthesis
   default_voice_style: neutral # Fallback style if no injected voice
   voice_cloning: true # Native voice cloning support (replaces XTTS container)
-  model_name: "tts_models/en/ljspeech/tacotron2-DDC" # Default Coqui TTS model
+  model_name: "tts_models/multilingual/multi-dataset/xtts_v2" # Multilingual Coqui TTS model
   voice_cloning_sample_rate: 22050 # Sample rate for voice cloning processing
   voice_cloning_max_duration: 30.0 # Maximum duration for voice samples (seconds)
 
@@ -53,7 +53,8 @@ paths:
 
 models:
   llama_backend: llama_cpp # Default backend (CPU-only friendly)
-  llama_gguf_path: models/llm/tinyllama-1.1b-q4_k_m.gguf # GGUF path
+  llama_model_name: llama-3.2-3b-instruct # Model name for auto-discovery
+  llama_n_ctx: 4096 # Context window size (default: 2048, max depends on model)
 
 # Multi-language support configuration
 language_support:
@@ -72,6 +73,27 @@ multilingual_audio:
   cultural_voice_characteristics: true # Enable cultural voice characteristics
   auto_language_detection: true # Enable automatic language detection in audio
   language_confidence_threshold: 0.7 # Minimum confidence for language detection
+
+# Audio device configuration
+audio_devices:
+  preferred_input: "audiobox" # audiobox | default | auto
+  preferred_output: "audiobox" # audiobox | default | auto
+  fallback_to_default: true # Fall back to default if preferred device fails
+
+  # AudioBox specific configuration
+  audiobox:
+    device_name_pattern: "AudioBox USB"
+    input_channels: 2
+    output_channels: 2
+    supported_sample_rates: [44100, 48000, 96000] # AudioBox supported rates
+    preferred_sample_rate: 48000
+    input_channel: 1 # Use channel 1 for mono input
+
+  # Default device configuration
+  default:
+    sample_rate: 22050
+    channels: 1
+    chunk_size: 1024
 
 # Personalization configuration
 personalization:
@@ -104,3 +126,137 @@ streaming:
   connection_timeout_ms: 30000 # Connection timeout (milliseconds)
   max_response_time_ms: 30000 # Maximum response time (milliseconds)
   simulation_delays: false # Enable simulation delays in performance API
+
+# LLM configuration (canonical defaults; env can override)
+llm:
+  runtime:
+    provider: local # local | ollama | openai | anthropic
+    model: llama-3.2-3b-instruct # GGUF name used by llama.cpp loader
+  character_creation:
+    provider: local
+    model: llama-3.2-3b-instruct
+  providers:
+    ollama_base_url: http://localhost:11434
+    local_model_path: models/llm
+
+# Model registry - available models with metadata
+model_registry:
+  stt:
+    wav2vec2-base:
+      class: "Wav2Vec2Processor"
+      model_name: "facebook/wav2vec2-base-960h"
+      requirements:
+        min_memory_gb: 0.5
+        cpu_only: true
+      metrics:
+        quality_score: 0.85
+        latency_ms: 150
+      languages: ["en"]
+    wav2vec2-large:
+      class: "Wav2Vec2Processor"
+      model_name: "facebook/wav2vec2-large-960h"
+      requirements:
+        min_memory_gb: 1.5
+        cpu_only: false
+      metrics:
+        quality_score: 0.92
+        latency_ms: 300
+      languages: ["en"]
+
+  llm:
+    llama-3.2-3b-instruct:
+      class: "LlamaCppProcessor"
+      model_path: "models/llm/llama-3.2-3b-instruct-q4_k_m.gguf"
+      requirements:
+        min_memory_gb: 4
+        cpu_only: true
+      metrics:
+        quality_score: 0.88
+        latency_ms: 800
+      optimizations:
+        n_threads: 6
+        use_mlock: false
+        use_mmap: true
+        max_new_tokens: 50
+        stop_tokens: ["\n", "User:", "Character:"]
+      context_window: 4096
+    llama-3.2-1b-instruct:
+      class: "LlamaCppProcessor"
+      model_path: "models/llm/llama-3.2-1b-instruct-q4_k_m.gguf"
+      requirements:
+        min_memory_gb: 2
+        cpu_only: true
+      metrics:
+        quality_score: 0.75
+        latency_ms: 400
+      optimizations:
+        n_threads: 4
+        use_mlock: false
+        use_mmap: true
+        max_new_tokens: 50
+        stop_tokens: ["\n", "User:", "Character:"]
+      context_window: 4096
+    tinyllama-1.1b:
+      class: "LlamaCppProcessor"
+      model_path: "models/llm/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+      requirements:
+        min_memory_gb: 1
+        cpu_only: true
+      metrics:
+        quality_score: 0.70
+        latency_ms: 200
+      optimizations:
+        n_threads: 4
+        use_mlock: false
+        use_mmap: true
+        max_new_tokens: 50
+        stop_tokens: ["\n", "User:", "Character:"]
+      context_window: 2048
+
+  tts:
+    coqui-xtts-v2:
+      class: "CoquiProcessor"
+      model_name: "tts_models/multilingual/multi-dataset/xtts_v2"
+      requirements:
+        min_memory_gb: 2
+        cpu_only: false
+      metrics:
+        quality_score: 0.90
+        latency_ms: 500
+      optimizations:
+        enable_caching: true
+        chunk_size: 256
+        use_half_precision: true
+      languages: ["en", "es", "fr", "de", "zh", "ja", "ar"]
+      voice_cloning: true
+    coqui-tacotron2:
+      class: "CoquiProcessor"
+      model_name: "tts_models/en/ljspeech/tacotron2-DDC"
+      requirements:
+        min_memory_gb: 1
+        cpu_only: true
+      metrics:
+        quality_score: 0.80
+        latency_ms: 300
+      optimizations:
+        enable_caching: true
+      languages: ["en"]
+      voice_cloning: false
+
+# Wake word configuration
+wake_words:
+  enabled: true
+  engine: "energy_based" # energy_based | openwakeword
+  engines:
+    energy_based:
+      threshold: 0.6
+      min_duration_s: 0.3
+      enabled: true
+    openwakeword:
+      model_path: "models/wake_words/openwakeword.onnx"
+      threshold: 0.5
+      enabled: false
+  global_settings:
+    timeout_after_wake_s: 5.0
+    cooldown_period_s: 2.0
+    confirmation_beep: false

@@ -4,13 +4,75 @@ Configuration management for Character AI Platform.
 Handles environment-specific configurations, GPU settings, and model parameters.
 """
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from . import torch_init  # noqa: F401
+
+# isort: on
+
+import logging
 import os
+import warnings
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import yaml
+
+# Suppress safe-to-ignore warnings from ML libraries early in import chain
+warnings.filterwarnings(
+    "ignore", category=FutureWarning, message=".*clean_up_tokenization_spaces.*"
+)
+warnings.filterwarnings(
+    "ignore", category=UserWarning, message=".*pkg_resources is deprecated.*"
+)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*GPT2InferenceModel has generative capabilities.*",
+)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*this function's implementation will be changed.*",
+)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*Some weights of Wav2Vec2ForCTC were not initialized.*",
+)
+warnings.filterwarnings(
+    "ignore", category=UserWarning, message=".*The attention mask is not set.*"
+)
+
+# Set specific environment variables to suppress only the identified safe warnings
+os.environ.setdefault(
+    "TOKENIZERS_PARALLELISM", "false"
+)  # Suppress tokenizer parallelism warning
+
+logger = logging.getLogger(__name__)
+
+# CPU limiting for development
+if os.environ.get("CAI_ENABLE_CPU_LIMITING", "false").lower() == "true":
+    max_threads = int(os.environ.get("CAI_MAX_CPU_THREADS", "2"))
+    os.environ["OPENBLAS_NUM_THREADS"] = str(max_threads)
+    os.environ["MKL_NUM_THREADS"] = str(max_threads)
+    os.environ["OMP_NUM_THREADS"] = str(max_threads)
+    os.environ["NUMEXPR_NUM_THREADS"] = str(max_threads)
+
+    # Also limit PyTorch threads
+    try:
+        import torch
+
+        torch.set_num_threads(max_threads)
+    except ImportError:
+        pass
+
+    logger.info(f"CPU limiting enabled: {max_threads} threads")
+
+# Default model constants
+DEFAULT_COQUI_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
 
 
 class Environment(Enum):
@@ -109,6 +171,7 @@ class ModelConfig:
     llama_quantization: str = "4bit"  # 4bit, 8bit, fp16
     llama_backend: str = "transformers"  # transformers | llama_cpp
     llama_gguf_path: str = "models/llm/tinyllama-1.1b-q4_k_m.gguf"
+    llama_n_ctx: int = 2048  # Context window size
 
     # Representation Learning
     clap_model: str = "laion/larger_clap_music_and_speech"
@@ -399,6 +462,9 @@ class Config:
 
     def __post_init__(self) -> None:
         """Initialize configuration and create directories."""
+        # Load from runtime.yaml if available
+        self._load_from_runtime_yaml()
+
         # Don't create directories during instantiation - create when actually needed
 
         # Set environment-specific defaults
@@ -426,6 +492,82 @@ class Config:
         # Apply CPU limiting if enabled
         if self.enable_cpu_limiting and self.max_cpu_threads is not None:
             self._apply_cpu_limiting()
+
+    def _load_from_runtime_yaml(self) -> None:
+        """Load configuration from runtime.yaml if available."""
+        try:
+            from pathlib import Path
+
+            import yaml
+
+            runtime_path = Path("configs/runtime.yaml")
+            if not runtime_path.exists():
+                return
+
+            with open(runtime_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+
+            # Load TTS model from runtime.yaml
+            tts_section = data.get("tts", {}) or {}
+            if tts_section.get("model_name"):
+                self.models.coqui_model = str(tts_section["model_name"])
+
+            # Load LLM model from runtime.yaml
+            models_section = data.get("models", {}) or {}
+            if models_section.get("llama_model_name"):
+                # Auto-discover the GGUF file based on model name
+                model_name = models_section["llama_model_name"]
+                gguf_path = self._find_gguf_file(model_name)
+                if gguf_path:
+                    self.models.llama_gguf_path = str(gguf_path)
+                    logger.info(f"Auto-discovered GGUF file: {gguf_path}")
+                else:
+                    logger.warning(f"Could not find GGUF file for model: {model_name}")
+
+            # Load LLM context window size
+            if models_section.get("llama_n_ctx"):
+                self.models.llama_n_ctx = int(models_section["llama_n_ctx"])
+                logger.info(
+                    f"Loaded llama_n_ctx from runtime.yaml: {self.models.llama_n_ctx}"
+                )
+
+        except Exception as e:
+            # Non-fatal - just log and continue with defaults
+            logger.debug(f"Could not load runtime.yaml: {e}")
+
+    def _find_gguf_file(self, model_name: str) -> Optional[Path]:
+        """Find the GGUF file for a given model name."""
+        try:
+            from pathlib import Path
+
+            # Look in the models directory
+            models_dir = Path("models/llm")
+            if not models_dir.exists():
+                return None
+
+            # Try different naming patterns
+            patterns = [
+                f"{model_name}-Q4_K_M.gguf",
+                f"{model_name}-q4_k_m.gguf",
+                f"{model_name}.gguf",
+                f"{model_name.lower()}-q4_k_m.gguf",
+                f"{model_name.lower()}-Q4_K_M.gguf",
+            ]
+
+            for pattern in patterns:
+                gguf_file = models_dir / pattern
+                if gguf_file.exists():
+                    return gguf_file
+
+            # If no exact match, look for files containing the model name
+            for gguf_file in models_dir.glob("*.gguf"):
+                if model_name.lower() in gguf_file.name.lower():
+                    return gguf_file
+
+            return None
+        except Exception as e:
+            logger.debug(f"Error finding GGUF file for {model_name}: {e}")
+            return None
 
     def _apply_cpu_limiting(self) -> None:
         """Apply CPU limiting for development/testing."""
@@ -561,7 +703,7 @@ class Config:
             ),
             coqui_model=getenv_str(
                 "CAI_MODELS__COQUI_MODEL",
-                "tts_models/en/ljspeech/tacotron2-DDC",
+                DEFAULT_COQUI_MODEL,
             ),
             llama_model=getenv_str(
                 "CAI_MODELS__LLAMA_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
@@ -571,6 +713,7 @@ class Config:
             llama_gguf_path=getenv_str(
                 "CAI_MODELS__LLAMA_GGUF_PATH", "models/llm/tinyllama-1.1b-q4_k_m.gguf"
             ),
+            llama_n_ctx=getenv_int("CAI_MODELS__LLAMA_N_CTX", 2048),
         )
 
         monitoring = MonitoringConfig()

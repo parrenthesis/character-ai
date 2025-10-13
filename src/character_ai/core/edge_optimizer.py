@@ -59,6 +59,7 @@ class EdgeModelOptimizer:
         require gated access or tokens.
         """
         cfg = deepcopy(self.base_config)
+        cfg.models.llama_backend = "llama_cpp"  # Use llama.cpp for edge deployment
         cfg.models.llama_model = (
             cfg.models.llama_model or "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
         )

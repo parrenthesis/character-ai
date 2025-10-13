@@ -7,7 +7,7 @@ Tests device identity, JWT authentication, RBAC, and rate limiting.
 import tempfile
 import time
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -21,7 +21,20 @@ from character_ai.core.security import (
     SecurityMiddleware,
 )
 from character_ai.web.security_deps import require_authentication
-from character_ai.web.toy_api import app
+
+
+@pytest.fixture
+def toy_api_app() -> Any:
+    """Import toy_api app lazily to avoid module-level torch imports."""
+    # CRITICAL: Import torch_init FIRST
+    # isort: off
+    from character_ai.core import torch_init  # noqa: F401
+
+    # isort: on
+
+    from character_ai.web.toy_api import app
+
+    return app
 
 
 class TestDeviceIdentity:
@@ -81,14 +94,12 @@ class TestDeviceIdentityManager:
             yield config
 
     @pytest.fixture
-    def device_manager(self, temp_config: SecurityConfig) -> DeviceIdentityManager:
+    def device_manager(self, temp_config: Any) -> DeviceIdentityManager:
         """Create a device manager for testing."""
         return DeviceIdentityManager(temp_config)
 
     @pytest.mark.asyncio
-    async def test_initialize_new_device(
-        self, device_manager: DeviceIdentityManager
-    ) -> None:
+    async def test_initialize_new_device(self, device_manager: Any) -> None:
         """Test initializing a new device."""
         await device_manager.initialize()
 
@@ -101,9 +112,7 @@ class TestDeviceIdentityManager:
         assert "write" in device.capabilities
 
     @pytest.mark.asyncio
-    async def test_jwt_token_generation(
-        self, device_manager: DeviceIdentityManager
-    ) -> None:
+    async def test_jwt_token_generation(self, device_manager: Any) -> None:
         """Test JWT token generation and verification."""
         await device_manager.initialize()
 
@@ -115,17 +124,13 @@ class TestDeviceIdentityManager:
         # Verify token
         payload = device_manager.verify_jwt_token(token)
         assert payload is not None
-        device_identity = device_manager.get_device_identity()
-        assert device_identity is not None
-        assert payload["device_id"] == device_identity.device_id
+        assert payload["device_id"] == device_manager.get_device_identity().device_id
         assert payload["role"] == "user"
         assert "iat" in payload
         assert "exp" in payload
 
     @pytest.mark.asyncio
-    async def test_jwt_token_expiry(
-        self, device_manager: DeviceIdentityManager
-    ) -> None:
+    async def test_jwt_token_expiry(self, device_manager: Any) -> None:
         """Test JWT token expiry."""
         await device_manager.initialize()
 
@@ -145,7 +150,7 @@ class TestDeviceIdentityManager:
         assert payload is None
 
     @pytest.mark.asyncio
-    async def test_rate_limiting(self, device_manager: DeviceIdentityManager) -> None:
+    async def test_rate_limiting(self, device_manager: Any) -> None:
         """Test rate limiting functionality."""
         await device_manager.initialize()
 
@@ -166,9 +171,7 @@ class TestDeviceIdentityManager:
         assert device_manager.check_rate_limit(client_id) is False
 
     @pytest.mark.asyncio
-    async def test_cryptographic_keys(
-        self, device_manager: DeviceIdentityManager
-    ) -> None:
+    async def test_cryptographic_keys(self, device_manager: Any) -> None:
         """Test cryptographic key generation and usage."""
         await device_manager.initialize()
 
@@ -212,7 +215,7 @@ class TestSecurityMiddleware:
         return manager
 
     @pytest.fixture
-    def security_middleware(self, mock_device_manager: Mock) -> SecurityMiddleware:
+    def security_middleware(self, mock_device_manager: Any) -> SecurityMiddleware:
         """Create security middleware with mock device manager."""
         return SecurityMiddleware(mock_device_manager)
 
@@ -238,7 +241,7 @@ class TestSecurityMiddleware:
         assert device is None
         mock_device_manager.verify_jwt_token.assert_called_once_with("invalid-token")
 
-    def test_check_permission(self, security_middleware: SecurityMiddleware) -> None:
+    def test_check_permission(self, security_middleware: Any) -> None:
         """Test permission checking."""
         device = DeviceIdentity(
             device_id="test-device",
@@ -254,7 +257,7 @@ class TestSecurityMiddleware:
         # Should not have required capability
         assert security_middleware.check_permission(device, "admin") is False
 
-    def test_check_role(self, security_middleware: SecurityMiddleware) -> None:
+    def test_check_role(self, security_middleware: Any) -> None:
         """Test role checking."""
         user_device = DeviceIdentity(
             device_id="user-device",
@@ -282,6 +285,7 @@ class TestSecurityMiddleware:
         assert security_middleware.check_role(admin_device, DeviceRole.ADMIN) is True
 
 
+@pytest.mark.integration
 class TestSecurityAPI:
     """Test security-related API endpoints."""
 
@@ -305,13 +309,15 @@ class TestSecurityAPI:
         )
         return manager
 
-    def test_register_device(self, mock_security_manager: AsyncMock) -> None:
+    def test_register_device(
+        self, mock_security_manager: Any, toy_api_app: Any
+    ) -> None:
         """Test device registration endpoint."""
         with patch(
             "character_ai.web.toy_api.get_security_manager",
             return_value=mock_security_manager,
         ):
-            with TestClient(app) as client:
+            with TestClient(toy_api_app) as client:
                 response = client.post("/api/v1/toy/auth/register")
 
                 assert response.status_code == 200
@@ -323,7 +329,7 @@ class TestSecurityAPI:
                 assert data["role"] == "user"
 
     def test_get_current_device_info_authenticated(
-        self, mock_security_manager: AsyncMock
+        self, mock_security_manager: Any, toy_api_app: Any
     ) -> None:
         """Test getting current device info when authenticated."""
         # Mock the authentication dependency
@@ -338,10 +344,12 @@ class TestSecurityAPI:
         async def mock_require_authentication() -> DeviceIdentity:
             return mock_device
 
-        app.dependency_overrides[require_authentication] = mock_require_authentication
+        toy_api_app.dependency_overrides[
+            require_authentication
+        ] = mock_require_authentication
 
         try:
-            with TestClient(app) as client:
+            with TestClient(toy_api_app) as client:
                 response = client.get("/api/v1/toy/auth/me")
 
                 assert response.status_code == 200
@@ -350,9 +358,9 @@ class TestSecurityAPI:
                 assert data["role"] == "user"
                 assert "read" in data["capabilities"]
         finally:
-            app.dependency_overrides.clear()
+            toy_api_app.dependency_overrides.clear()
 
-    def test_get_current_device_info_unauthenticated(self) -> None:
+    def test_get_current_device_info_unauthenticated(self, toy_api_app: Any) -> None:
         """Test getting current device info when not authenticated."""
 
         # Override the dependency to raise an authentication error
@@ -365,17 +373,19 @@ class TestSecurityAPI:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        app.dependency_overrides[require_authentication] = mock_require_authentication
+        toy_api_app.dependency_overrides[
+            require_authentication
+        ] = mock_require_authentication
 
         try:
-            with TestClient(app) as client:
+            with TestClient(toy_api_app) as client:
                 response = client.get("/api/v1/toy/auth/me")
 
                 assert response.status_code == 401  # Unauthorized
         finally:
-            app.dependency_overrides.clear()
+            toy_api_app.dependency_overrides.clear()
 
-    def test_generate_token(self, mock_security_manager: AsyncMock) -> None:
+    def test_generate_token(self, mock_security_manager: Any, toy_api_app: Any) -> None:
         """Test token generation endpoint."""
         mock_device = DeviceIdentity(
             device_id="test-device-123",
@@ -388,14 +398,16 @@ class TestSecurityAPI:
         async def mock_require_authentication() -> DeviceIdentity:
             return mock_device
 
-        app.dependency_overrides[require_authentication] = mock_require_authentication
+        toy_api_app.dependency_overrides[
+            require_authentication
+        ] = mock_require_authentication
 
         try:
             with patch(
                 "character_ai.web.toy_api.get_security_manager",
                 return_value=mock_security_manager,
             ):
-                with TestClient(app) as client:
+                with TestClient(toy_api_app) as client:
                     response = client.post("/api/v1/toy/auth/token")
 
                     assert response.status_code == 200
@@ -404,15 +416,15 @@ class TestSecurityAPI:
                     assert data["token_type"] == "bearer"
                     assert data["device_id"] == "test-device-123"
         finally:
-            app.dependency_overrides.clear()
+            toy_api_app.dependency_overrides.clear()
 
-    def test_get_public_key(self, mock_security_manager: AsyncMock) -> None:
+    def test_get_public_key(self, mock_security_manager: Any, toy_api_app: Any) -> None:
         """Test getting public key endpoint."""
         with patch(
             "character_ai.web.toy_api.get_security_manager",
             return_value=mock_security_manager,
         ):
-            with TestClient(app) as client:
+            with TestClient(toy_api_app) as client:
                 response = client.get("/api/v1/toy/auth/public-key")
 
                 assert response.status_code == 200

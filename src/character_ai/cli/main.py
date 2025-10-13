@@ -4,16 +4,23 @@ Main CLI entry point for the Character AI platform.
 Provides unified command-line interface with subcommands for different functionality.
 """
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ..core import torch_init  # noqa: F401
+
+# isort: on
+
 import logging
+import os
 import warnings
 
-import click
+import click  # noqa: E402
 
-from .character import character_commands
-from .config import config_commands
-from .deploy import deploy_commands
-from .llm import llm_commands
-from .test import test_commands
+from .character import character_commands  # noqa: E402
+from .config import config_commands  # noqa: E402
+from .deploy import deploy_commands  # noqa: E402
+from .llm import llm_commands  # noqa: E402
+from .test import test_commands  # noqa: E402
 
 # Configure logging
 logging.basicConfig(
@@ -21,7 +28,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Suppress expected warnings
+# Suppress expected warnings that are safe to ignore
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="character_ai.cli")
 warnings.filterwarnings("ignore", category=UserWarning, message="CUDA.*unknown error")
 warnings.filterwarnings(
@@ -37,6 +44,37 @@ warnings.filterwarnings(
 )
 warnings.filterwarnings("ignore", category=UserWarning, message=".*CUDA.*")
 warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*coroutine.*")
+
+# Suppress safe-to-ignore warnings from ML libraries
+warnings.filterwarnings(
+    "ignore", category=FutureWarning, message=".*clean_up_tokenization_spaces.*"
+)
+warnings.filterwarnings(
+    "ignore", category=UserWarning, message=".*pkg_resources is deprecated.*"
+)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*GPT2InferenceModel has generative capabilities.*",
+)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*this function's implementation will be changed.*",
+)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*Some weights of Wav2Vec2ForCTC were not initialized.*",
+)
+warnings.filterwarnings(
+    "ignore", category=UserWarning, message=".*The attention mask is not set.*"
+)
+
+# Set specific environment variables to suppress only the identified safe warnings
+os.environ.setdefault(
+    "TOKENIZERS_PARALLELISM", "false"
+)  # Suppress tokenizer parallelism warning
 
 
 def detect_cuda_availability() -> bool:

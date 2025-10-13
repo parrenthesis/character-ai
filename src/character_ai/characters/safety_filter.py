@@ -34,9 +34,10 @@ class ChildSafetyFilter:
         # Apply basic text filtering
         filtered_text = self._apply_basic_filtering(text)
 
-        # Add positive reinforcement if needed
-        if not any(word in filtered_text.lower() for word in self.SAFE_WORDS):
-            filtered_text += " Be kind and have fun!"
+        # Only add positive reinforcement for completely empty or blocked responses
+        # Don't break character immersion by appending generic messages to valid responses
+        if not filtered_text or filtered_text.strip() == "*":
+            filtered_text = "I'm here to help! Let's have a positive conversation."
 
         return filtered_text
 

@@ -4,15 +4,34 @@ Real-time interaction engine for character.ai.
 Optimized for real-time toy interaction with sub-500ms latency.
 """
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ..core import torch_init  # noqa: F401
+
+# isort: on
+
+import asyncio
 import time
+import traceback
 from typing import Any, Dict, List, Optional
 
 from ..algorithms.conversational_ai.session_memory import SessionMemory
-from ..characters import CharacterManager, ChildSafetyFilter, VoiceManager
+from ..algorithms.conversational_ai.text_normalizer import TextNormalizer
+from ..characters import CharacterManager, ChildSafetyFilter
+from ..characters.schema_voice_manager import SchemaVoiceManager
 from ..characters.types import Character
+from ..core.audio_io.device_selector import AudioDeviceSelector
+from ..core.audio_io.factory import AudioComponentFactory
+from ..core.audio_io.vad_session import VADSessionManager
+from ..core.config import Config
 from ..core.edge_optimizer import EdgeModelOptimizer
+from ..core.hardware_profile import HardwareProfileManager
+from ..core.llm.prompt_builder import LLMPromptBuilder
 from ..core.logging import ProcessingTimer, get_logger
 from ..core.protocols import AudioData, AudioResult
+from ..core.resource_manager import ResourceManager
+from ..core.response_cache import ResponseCache
+from ..core.voice_activity_detection import VADConfig
 from ..hardware.toy_hardware_manager import ToyHardwareManager
 
 logger = get_logger(__name__)
@@ -21,9 +40,52 @@ logger = get_logger(__name__)
 class RealTimeInteractionEngine:
     """Optimized for real-time toy interaction."""
 
-    def __init__(self, hardware_manager: ToyHardwareManager):
+    def __init__(
+        self,
+        hardware_manager: ToyHardwareManager,
+        # Optional dependency injection for new services
+        text_normalizer: Optional[Any] = None,
+        prompt_builder: Optional[Any] = None,
+        resource_manager: Optional[Any] = None,
+        hardware_profile: Optional[str] = None,
+    ):
         self.hardware_manager: Optional[ToyHardwareManager] = hardware_manager
         self.character_manager: Optional[CharacterManager] = CharacterManager()
+
+        # Load hardware profile if specified, otherwise auto-detect
+        self.hardware_profile = hardware_profile
+        self.hardware_config: Optional[Dict[str, Any]] = None
+        if hardware_profile:
+            profile_manager = HardwareProfileManager()
+            self.hardware_config = profile_manager.load_profile(hardware_profile)
+            logger.info(f"Loaded hardware profile: {hardware_profile}")
+        else:
+            # Auto-detect hardware profile
+            profile_manager = HardwareProfileManager()
+            detected_profile = profile_manager.detect_hardware()
+            self.hardware_profile = detected_profile
+            self.hardware_config = profile_manager.load_profile(detected_profile)
+            logger.info(f"Auto-detected hardware profile: {detected_profile}")
+
+        # Create or inject services
+        if text_normalizer is None:
+            self.text_normalizer = TextNormalizer()
+        else:
+            self.text_normalizer = text_normalizer
+
+        if prompt_builder is None:
+            self.prompt_builder = LLMPromptBuilder()
+        else:
+            self.prompt_builder = prompt_builder
+
+        if resource_manager is None:
+            # edge_optimizer will be set later, so pass None for now
+            # Pass hardware config to ResourceManager for proper device selection
+            self.resource_manager = ResourceManager(
+                Config(), None, self.hardware_config
+            )
+        else:
+            self.resource_manager = resource_manager
 
         # Adapter to provide an initialize hook for safety filter to satisfy tests
         class _SafetyFilterFacade:
@@ -52,7 +114,7 @@ class RealTimeInteractionEngine:
                 return getattr(self._inner, name)
 
         self.voice_manager: Optional[_VoiceManagerFacade] = _VoiceManagerFacade(
-            VoiceManager()
+            SchemaVoiceManager()
         )  # Voice injection system
         self.edge_optimizer: Optional[EdgeModelOptimizer] = (
             EdgeModelOptimizer(hardware_manager.constraints)
@@ -60,8 +122,15 @@ class RealTimeInteractionEngine:
             else None
         )
 
+        # Update ResourceManager with edge_optimizer if it was created
+        if self.resource_manager and self.edge_optimizer:
+            self.resource_manager.edge_optimizer = self.edge_optimizer
+
         # Session memory management
         self.session_memory = SessionMemory()
+
+        # Response caching for frequent interactions
+        self.response_cache = ResponseCache()
 
         # Runtime behavior defaults (will be finalized during initialize())
         self.target_latency = 0.5
@@ -96,11 +165,44 @@ class RealTimeInteractionEngine:
             # Optimize for toy deployment
             await self.optimize_for_toy()
 
+            # Pre-load models for real-time performance
+            logger.info("Pre-loading models for real-time interaction...")
+
+            # Preload all models including TTS for optimal performance
+            # Try loading TTS first to avoid CUDA context conflicts
+            preload_results = await self.resource_manager.preload_models(
+                ["tts", "stt", "llm"]
+            )
+            loaded_count = sum(1 for success in preload_results.values() if success)
+            logger.info(
+                f"Pre-loaded {loaded_count}/{len(preload_results)} models: {preload_results}"
+            )
+
+            # Warm up models with dummy inference
+            logger.info("Warming up models...")
+            warmup_results = await self.resource_manager.warmup_all_models()
+            warmup_count = sum(1 for success in warmup_results.values() if success)
+            logger.info(f"✅ Warmed up {warmup_count}/{len(warmup_results)} models")
+
+            # Pin models during realtime sessions to keep them hot
+            self.resource_manager.pin_models(True)
+
             logger.info("RealTimeInteractionEngine initialized successfully")
 
         except Exception as e:
             logger.error(f"Failed to initialize RealTimeInteractionEngine: {e}")
             raise
+
+    async def preload_models(self) -> Dict[str, bool]:
+        """Pre-load all models for real-time interaction."""
+        # Delegate to ResourceManager
+        results = await self.resource_manager.preload_models(["stt", "llm", "tts"])
+
+        # Log results
+        loaded_count = sum(1 for success in results.values() if success)
+        logger.info(f"Pre-loaded {loaded_count}/{len(results)} models: {results}")
+
+        return results
 
     async def process_realtime_audio(self, audio_stream: AudioData) -> AudioResult:
         """Process audio in real-time for natural interaction."""
@@ -136,11 +238,11 @@ class RealTimeInteractionEngine:
                 character_name=active_character.name,
             )
 
-            # Process audio with character personality
+            # Process audio with character personality (optimized version)
             with ProcessingTimer(
                 logger, "character_processing", "real_time_engine"
             ) as timer:
-                result = await self._process_with_character_personality(
+                result = await self._process_with_character_personality_optimized(
                     audio_stream, active_character
                 )
 
@@ -198,29 +300,167 @@ class RealTimeInteractionEngine:
                 metadata={"component": "real_time_engine"},
             )
 
+    async def process_audio_file(
+        self, input_file: str, character_name: str, output_file: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Process an audio file through the full pipeline.
+
+        Args:
+            input_file: Path to input audio file
+            character_name: Name of character to use
+            output_file: Optional path to save output audio
+
+        Returns:
+            Dict with transcription, response, and success status
+        """
+        try:
+            # Load audio file using soundfile (avoids scipy conflicts)
+            try:
+                import soundfile as sf
+
+                audio_data, sample_rate = sf.read(input_file)
+            except Exception as e:
+                error_details = f"{type(e).__name__}: {str(e)}"
+                logger.error(f"Failed to load audio file {input_file}: {error_details}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                return {
+                    "success": False,
+                    "error": f"Failed to load audio file: {error_details}",
+                    "transcription": None,
+                    "response": None,
+                    "output_file": None,
+                }
+
+            # Create AudioData object
+            audio_obj = AudioData(
+                data=audio_data,
+                sample_rate=sample_rate,
+                duration=len(audio_data) / sample_rate,
+                channels=1 if len(audio_data.shape) == 1 else audio_data.shape[1],
+            )
+
+            # Get character
+            character = None
+            if self.character_manager is not None:
+                character = self.character_manager.get_active_character()
+                if not character or character.name.lower() != character_name.lower():
+                    # Try to get character by name
+                    characters = self.character_manager.characters
+                    for char in characters.values():
+                        if char.name.lower() == character_name.lower():
+                            character = char
+                            break
+
+            if not character:
+                return {
+                    "success": False,
+                    "error": f"Character '{character_name}' not found",
+                    "transcription": None,
+                    "response": None,
+                }
+
+            # Debug: Check character metadata
+            logger.info(f"Loaded character: {character.name}")
+            logger.info(f"Character metadata: {character.metadata}")
+
+            # Process through pipeline
+            result = await self._process_with_character_personality(
+                audio_obj, character
+            )
+
+            # Save outputs if requested
+            output_files = {}
+            if output_file and result.audio_data:
+                # Save TTS audio output
+                with open(output_file, "wb") as f:
+                    f.write(result.audio_data.data)
+                output_files["audio"] = output_file
+
+                # Save STT transcription
+                transcription = (
+                    result.metadata.get("transcribed_text", "")
+                    if result.metadata
+                    else ""
+                )
+                if transcription:
+                    stt_file = output_file.replace("_response.wav", "_stt_output.txt")
+                    with open(stt_file, "w", encoding="utf-8") as f:
+                        f.write(transcription)
+                    output_files["stt"] = stt_file
+
+                # Save LLM response
+                if result.text:
+                    llm_file = output_file.replace("_response.wav", "_llm_response.txt")
+                    with open(llm_file, "w", encoding="utf-8") as f:
+                        f.write(result.text)
+                    output_files["llm"] = llm_file
+
+            return {
+                "success": bool(result.text) and bool(result.audio_data),
+                "transcription": result.metadata.get("transcribed_text", "")
+                if result.metadata
+                else "",
+                "response": result.text,
+                "output_file": output_file if result.audio_data else None,
+                "output_files": output_files,
+            }
+
+        except Exception as e:
+            logger.error(f"Error processing audio file: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "transcription": None,
+                "response": None,
+            }
+
     async def _process_with_character_personality(
         self, audio: AudioData, character: Character
     ) -> AudioResult:
         """Process audio with character personality."""
         try:
-            # Step 1: Speech-to-Text using Wav2Vec2
+            pipeline_start = time.time()
+
+            # Step 1: Speech-to-Text
+            stt_start = time.time()
             transcribed_text = await self._transcribe_audio(audio)
+            stt_time = time.time() - stt_start
+            logger.info(f"⏱️  STT: {stt_time:.2f}s - '{transcribed_text[:50]}...'")
 
-            # Step 2: Generate response using LLM with character personality and context
-
+            # Step 2: Generate response
+            llm_start = time.time()
             response_text = await self._generate_character_response(
                 transcribed_text, character
             )
+            llm_time = time.time() - llm_start
+            logger.info(f"⏱️  LLM: {llm_time:.2f}s - '{response_text[:50]}...'")
 
-            # Step 3: Apply safety filter
+            # Step 3: Safety filter
+            safety_start = time.time()
             safe_response = response_text
-            if self.safety_filter is not None:
+            if self.safety_filter:
                 safe_response = await self.safety_filter.filter_response(response_text)
+            safety_time = time.time() - safety_start
+            if safety_time > 0.1:  # Only log if significant
+                logger.info(f"⏱️  Safety: {safety_time:.2f}s")
 
-            # Step 4: Generate audio response using Coqui TTS with character voice
+            # Step 4: Generate audio response
+            tts_start = time.time()
             response_audio = await self._synthesize_character_voice(
                 safe_response, character
             )
+            tts_time = time.time() - tts_start
+            logger.info(f"⏱️  TTS: {tts_time:.2f}s - {len(response_audio)} bytes")
+
+            # Total pipeline time
+            total_time = time.time() - pipeline_start
+            logger.info(f"⏱️  TOTAL PIPELINE: {total_time:.2f}s (target: <5s)")
+
+            if total_time > 5.0:
+                logger.warning(f"⚠️  Pipeline exceeded 5s target: {total_time:.2f}s")
+                logger.warning(
+                    f"   Breakdown: STT={stt_time:.2f}s, LLM={llm_time:.2f}s, TTS={tts_time:.2f}s"
+                )
 
             # Step 5: Store conversation turn in session memory
             self.session_memory.add_turn(
@@ -229,15 +469,32 @@ class RealTimeInteractionEngine:
                 character_response=safe_response,
             )
 
+            # Create AudioData object from TTS response
+            audio_data_obj = None
+            if response_audio:
+                audio_data_obj = AudioData(
+                    data=response_audio,
+                    sample_rate=22050,  # Default TTS sample rate
+                    duration=len(response_audio)
+                    / (22050 * 2),  # 2 bytes per sample for int16
+                    channels=1,
+                )
+
             return AudioResult(
                 text=safe_response,
-                audio_data=response_audio if hasattr(response_audio, "data") else None,  # type: ignore
+                audio_data=audio_data_obj,
                 metadata={
                     "character": character.name,
                     "character_type": character.dimensions.species.value,
                     "voice_style": character.voice_style,
                     "transcribed_text": transcribed_text,
                     "component": "real_time_engine",
+                    "timing": {
+                        "stt_time": stt_time,
+                        "llm_time": llm_time,
+                        "tts_time": tts_time,
+                        "total_time": total_time,
+                    },
                 },
             )
 
@@ -248,32 +505,132 @@ class RealTimeInteractionEngine:
                 metadata={"component": "real_time_engine"},
             )
 
-    async def _transcribe_audio(self, audio: AudioData) -> str:
-        """Transcribe audio using Wav2Vec2."""
+    async def _process_with_character_personality_optimized(
+        self, audio: AudioData, character: Character
+    ) -> AudioResult:
+        """Optimized pipeline with parallel processing and caching."""
         try:
-            # Import Wav2Vec2 processor
-            from ..algorithms.conversational_ai.wav2vec2_processor import (
-                Wav2Vec2Processor,
+            pipeline_start = time.time()
+
+            # Step 1: STT
+            stt_start = time.time()
+            transcribed_text = await self._transcribe_audio(audio)
+            stt_time = time.time() - stt_start
+            logger.info(f"⏱️  STT: {stt_time:.2f}s - '{transcribed_text[:50]}...'")
+
+            # Check cache
+            cached_response = self.response_cache.get(transcribed_text, character.name)
+            if cached_response:
+                logger.info("💾 Cache hit! Skipping LLM generation")
+                safe_response = cached_response
+                llm_time = 0.0
+            else:
+                # Step 2: LLM with TTS warm-start (parallel)
+                tts_warmup_task = asyncio.create_task(self._warmup_tts())
+
+                llm_start = time.time()
+                response_text = await self._generate_character_response(
+                    transcribed_text, character
+                )
+                llm_time = time.time() - llm_start
+                logger.info(f"⏱️  LLM: {llm_time:.2f}s - '{response_text[:50]}...'")
+                logger.debug(f"Full LLM response for TTS: '{response_text}'")
+
+                # Safety filter
+                safe_response = response_text
+                if self.safety_filter:
+                    safe_response = await self.safety_filter.filter_response(
+                        response_text
+                    )
+
+                # Cache the response
+                self.response_cache.set(transcribed_text, character.name, safe_response)
+
+                # Wait for TTS warmup
+                await tts_warmup_task
+
+            # Step 3: TTS (warmed up)
+            tts_start = time.time()
+            response_audio = await self._synthesize_character_voice(
+                safe_response, character
+            )
+            tts_time = time.time() - tts_start
+            logger.info(f"⏱️  TTS: {tts_time:.2f}s")
+
+            total_time = time.time() - pipeline_start
+            logger.info(f"⏱️  TOTAL: {total_time:.2f}s (target: <5s)")
+
+            if total_time > 5.0:
+                logger.warning(f"⚠️  Exceeded 5s target: {total_time:.2f}s")
+
+            # Store in session memory
+            self.session_memory.add_turn(
+                character.name, transcribed_text, safe_response
             )
 
-            # Initialize Wav2Vec2 with edge optimizations
-            if self.edge_optimizer is not None:
-                stt_config = await self.edge_optimizer.optimize_wav2vec2_for_toy()
-            else:
-                # Fallback configuration
-                from ..core.config import Config
+            # Create AudioData object from TTS response
+            audio_data_obj = None
+            if response_audio:
+                audio_data_obj = AudioData(
+                    data=response_audio,
+                    sample_rate=22050,  # Default TTS sample rate
+                    duration=len(response_audio)
+                    / (22050 * 2),  # 2 bytes per sample for int16
+                    channels=1,
+                )
 
-                stt_config = Config()
-            wav2vec2 = Wav2Vec2Processor(stt_config)
+            return AudioResult(
+                text=safe_response,
+                audio_data=audio_data_obj,
+                metadata={
+                    "character": character.name,
+                    "transcribed_text": transcribed_text,
+                    "timing": {
+                        "stt_time": stt_time,
+                        "llm_time": llm_time,
+                        "tts_time": tts_time,
+                        "total_time": total_time,
+                    },
+                    "cache_hit": llm_time == 0.0,
+                },
+            )
 
-            # Transcribe audio
-            result = await wav2vec2.process_audio(audio)
-            return (
+        except Exception as e:
+            logger.error(f"Error in optimized character processing: {e}")
+            return AudioResult(
+                error=f"Optimized character processing failed: {e}",
+                metadata={"component": "real_time_engine"},
+            )
+
+    async def _warmup_tts(self) -> None:
+        """Pre-warm TTS model for faster synthesis."""
+        if not self.resource_manager.get_tts_processor():
+            await self.resource_manager.preload_models(["tts"])
+
+    async def _transcribe_audio(self, audio: AudioData) -> str:
+        """Transcribe audio using ResourceManager's STT processor."""
+        try:
+            # Get processor from ResourceManager
+            stt_processor = self.resource_manager.get_stt_processor()
+            if stt_processor is None:
+                # Use ResourceManager's preload_models to create processor
+                await self.resource_manager.preload_models(["stt"])
+                stt_processor = self.resource_manager.get_stt_processor()
+
+            if stt_processor is None:
+                raise RuntimeError("Failed to initialize STT processor")
+
+            # Use processor
+            result = await stt_processor.process_audio(audio)
+            transcribed_text = (
                 result.text
                 if result.text
                 else "I didn't catch that. Could you please repeat?"
             )
 
+            # Mark model as used
+            self.resource_manager.mark_model_used("stt")
+            return transcribed_text
         except Exception as e:
             logger.error(f"Wav2Vec2 transcription failed: {e}")
             return "I'm having trouble hearing you right now."
@@ -281,175 +638,135 @@ class RealTimeInteractionEngine:
     async def _generate_character_response(
         self, text: str, character: Character
     ) -> str:
-        """Generate response using LLM with character personality."""
+        """Generate response using ResourceManager's LLM processor."""
         try:
-            # Import LLM processor selected by backend
-            if self.hardware_manager and hasattr(self.hardware_manager, "constraints"):
-                pass  # reserved for future hardware-based selection
-            from ..algorithms.conversational_ai.llama_cpp_processor import (
-                LlamaCppProcessor,
+            # Get processor from ResourceManager
+            llm_processor = self.resource_manager.get_llm_processor()
+            if llm_processor is None:
+                # Use ResourceManager's preload_models to create processor
+                await self.resource_manager.preload_models(["llm"])
+                llm_processor = self.resource_manager.get_llm_processor()
+
+            if llm_processor is None:
+                raise RuntimeError("Failed to initialize LLM processor")
+
+            # Use prompt builder instead of _create_character_prompt
+            character_name = (
+                character.name if hasattr(character, "name") else str(character)
             )
-            from ..algorithms.conversational_ai.llama_processor import LlamaProcessor
-
-            # Initialize LLM with edge optimizations
-            if self.edge_optimizer is not None:
-                llm_config = await self.edge_optimizer.optimize_llm_for_toy()
-            else:
-                # Fallback configuration
-                from ..core.config import Config
-
-                llm_config = Config()
-            if llm_config.models.llama_backend == "llama_cpp":
-                llm: Any = LlamaCppProcessor(llm_config)
-            else:
-                llm = LlamaProcessor(llm_config)
-
-            # Create character-specific prompt with conversation context
-            character_prompt = self._create_character_prompt_with_context(
-                text, character
+            character_prompt = self.prompt_builder.build_prompt(
+                user_input=text,
+                character=character,
+                conversation_context=self.session_memory.format_context_for_llm(
+                    character_name=character_name, current_user_input=text, max_turns=5
+                ),
             )
 
-            # Generate response
-            result = await llm.process_text(character_prompt)
-            return (
-                result.text
-                if result.text
-                else f"Hi! I'm {character.name}. What would you like to talk about?"
+            # Use processor
+            result = await llm_processor.process_text(character_prompt)
+            response_text = (
+                result.text if result.text else f"Hi! I'm {character_name}..."
             )
 
+            # Debug logging to see raw LLM output before cleaning
+            logger.debug(f"Raw LLM output before normalization: '{response_text}'")
+
+            # Use text normalizer instead of _clean_llm_response
+            response_text = self.text_normalizer.clean_llm_response(response_text)
+
+            logger.debug(f"After text normalization: '{response_text}'")
+
+            # Mark model as used
+            self.resource_manager.mark_model_used("llm")
+            return response_text
         except Exception as e:
             logger.error(f"LLM response generation failed: {e}")
-            return f"Hello! I'm {character.name}, a {character.dimensions.species.value}. I love talking about {', '.join([trait.value for trait in character.dimensions.personality_traits[:2]])}!"
+            char_name = character.name if hasattr(character, "name") else str(character)
+            return f"Hello! I'm {char_name}..."
 
     async def _synthesize_character_voice(
         self, text: str, character: Character
     ) -> bytes:
-        """Synthesize character voice using injected character voice."""
+        """Synthesize voice using ResourceManager's TTS processor."""
         try:
-            # Import Coqui TTS processor
-            from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
+            # Get TTS config from character metadata
+            speed = 1.0  # Default speed
+            tts_model_name = None
+            if hasattr(character.metadata, "get") and character.metadata:
+                tts_config = character.metadata.get("tts_config", {})
+                speed = (
+                    tts_config.get("speed", 1.0)
+                    if isinstance(tts_config, dict)
+                    else 1.0
+                )
+                tts_model_name = (
+                    tts_config.get("model") if isinstance(tts_config, dict) else None
+                )
 
-            # Initialize Coqui TTS with edge optimizations
-            if self.edge_optimizer is not None:
-                tts_config = await self.edge_optimizer.optimize_coqui_for_toy()
-            else:
-                # Fallback configuration
-                from ..core.config import Config
+            # Load character-specific TTS model if specified
+            if tts_model_name:
+                logger.info(f"Loading character-specific TTS model: {tts_model_name}")
+                await self.resource_manager.preload_models_with_config(
+                    {"tts": tts_model_name}
+                )
 
-                tts_config = Config()
-            tts = CoquiProcessor(tts_config)
+            # Get processor from ResourceManager
+            tts_processor = self.resource_manager.get_tts_processor()
+            if tts_processor is None:
+                # Fallback to default TTS model
+                await self.resource_manager.preload_models(["tts"])
+                tts_processor = self.resource_manager.get_tts_processor()
 
-            # Check if character has injected voice
-            character_name = character.name.lower()
+            if tts_processor is None:
+                raise RuntimeError("Failed to initialize TTS processor")
+
+            # Get voice configuration
+            character_name = (
+                character.name.lower()
+                if hasattr(character, "name")
+                else str(character).lower()
+            )
             voice_path = None
-            if self.voice_manager is not None:
-                voice_path = await self.voice_manager.get_character_voice_path(
-                    character_name
+            if self.voice_manager:
+                # Get franchise from character metadata or use character name as fallback
+                franchise = (
+                    getattr(character, "franchise", None)
+                    or (
+                        character.metadata.get("franchise")
+                        if hasattr(character, "metadata") and character.metadata
+                        else None
+                    )
+                    or character_name
                 )
+                voice_info = await self.voice_manager.get_character_voice_path(
+                    character_name, franchise
+                )
+                voice_path = voice_info.get("voice_file_path") if voice_info else None
 
-            if voice_path:
-                # Use injected character voice
-                logger.info(f"Using injected voice for {character_name}")
-                result = await tts.synthesize_speech(
-                    text=text, voice_path=voice_path, language="en"
-                )
-                return result.audio_data.data if result.audio_data else b""
+            # Use text normalizer to prepare for TTS
+            tts_text = self.text_normalizer.prepare_for_tts(text)
+
+            # Use processor
+            logger.info(
+                f"TTS synthesis: text='{tts_text}', voice_path='{voice_path}', speed={speed}"
+            )
+            result = await tts_processor.synthesize_speech(
+                text=tts_text, voice_path=voice_path, language="en", speed=speed
+            )
+            logger.info(
+                f"TTS result: audio_data={result.audio_data is not None}, error={result.error}"
+            )
+            if result.audio_data:
+                logger.info(f"TTS audio data size: {len(result.audio_data.data)} bytes")
             else:
-                # Fallback to default voice synthesis
-                logger.info(f"No injected voice for {character_name}, using default")
-                character.get_voice_characteristics()
-                result = await tts.synthesize_speech(
-                    text=text, voice_path=None, language="en"
-                )
-                return result.audio_data.data if result.audio_data else b""
+                logger.warning("TTS result has no audio_data!")
 
+            # Mark model as used
+            self.resource_manager.mark_model_used("tts")
+            return result.audio_data.data if result.audio_data else b""
         except Exception as e:
             logger.error(f"Voice synthesis failed: {e}")
             return b""
-
-    def _create_character_prompt(self, user_input: str, character: Character) -> str:
-        """Create a character-specific prompt for the LLM using profile traits and optio
-        nal prompt.md."""
-        character_name = character.name
-        character_type = character.dimensions.species.value
-        voice_style = character.voice_style
-        topics = ", ".join([topic.value for topic in character.dimensions.topics[:5]])
-
-        # Check for custom prompt template in character metadata
-        custom_prompt = None
-        if hasattr(character, "metadata") and character.metadata:
-            prompt_template_path = character.metadata.get("prompt_template")
-            if prompt_template_path:
-                try:
-                    from pathlib import Path
-
-                    from ..core.config import Config
-
-                    cfg = Config()
-                    characters_dir = Path(cfg.paths.characters_dir)
-                    character_dir = characters_dir / character_name.lower()
-                    prompt_file = character_dir / prompt_template_path
-                    if prompt_file.exists():
-                        custom_prompt = prompt_file.read_text(encoding="utf-8")
-                        logger.info(
-                            f"Using custom prompt template for {character_name}: {prompt_file}"
-                        )
-                except Exception as e:
-                    logger.warning(
-                        f"Failed to load custom prompt for {character_name}: {e}"
-                    )
-
-        # Use custom prompt if available, otherwise fall back to default
-        prompt: str
-        if custom_prompt:
-            # Replace placeholders in custom prompt
-            prompt = custom_prompt.replace("{character_name}", character_name)
-            prompt = prompt.replace("{character_type}", character_type)
-            prompt = prompt.replace("{voice_style}", voice_style)
-            prompt = prompt.replace("{topics}", topics)
-            prompt = prompt.replace("{user_input}", user_input)
-
-            # Add traits from metadata if available
-            if hasattr(character, "metadata") and character.metadata:
-                traits = character.metadata.get("traits", {})
-                for key, value in traits.items():
-                    prompt = prompt.replace(f"{{{key}}}", str(value))
-        else:
-            # Default prompt template
-            prompt = f"""You are {character_name}, a {character_type} with a {voice_style} voice.
-You love talking about: {topics}.
-
-User said: "{user_input}"
-
-Respond as {character_name} would, keeping your response:
-- Under 50 words
-- Positive and child-friendly
-- Related to your interests: {topics}
-- In character as a {character_type}
-
-Response:"""
-
-        return prompt
-
-    def _create_character_prompt_with_context(
-        self, user_input: str, character: Character
-    ) -> str:
-        """Create a character-specific prompt with conversation context."""
-        # Get conversation context
-        context = self.session_memory.format_context_for_llm(
-            character_name=character.name,
-            current_user_input=user_input,
-            max_turns=5,  # Limit context to last 5 turns to manage token usage
-        )
-
-        # Create base prompt
-        base_prompt = self._create_character_prompt(user_input, character)
-
-        # If we have context, prepend it
-        if context:
-            return f"{context}\n\n{base_prompt}"
-
-        return base_prompt
 
     async def optimize_for_toy(self) -> None:
         """Optimize entire system for toy deployment."""
@@ -504,23 +821,23 @@ Response:"""
     ) -> bool:
         """Inject a voice for a character (used during toy manufacturing/setup)."""
         try:
-            from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
+            # Get TTS processor from ResourceManager
+            tts_processor = self.resource_manager.get_tts_processor()
+            if tts_processor is None:
+                await self.resource_manager.preload_models(["tts"])
+                tts_processor = self.resource_manager.get_tts_processor()
 
-            # Initialize Coqui TTS processor
-            if self.edge_optimizer is not None:
-                tts_config = await self.edge_optimizer.optimize_coqui_for_toy()
-            else:
-                from ..core.config import Config
-
-                tts_config = Config()
-            tts = CoquiProcessor(tts_config)
-            await tts.initialize()
+            if tts_processor is None:
+                raise RuntimeError(
+                    "Failed to initialize TTS processor for voice injection"
+                )
 
             # Inject the voice
             success = False
             if self.voice_manager is not None:
-                success = await self.voice_manager.inject_character_voice(
-                    character_name, voice_file_path, tts
+                # Use the correct method name from SchemaVoiceManager
+                success = await self.voice_manager.clone_character_voice(
+                    character_name, voice_file_path, tts_processor=tts_processor
                 )
             success = bool(success)
 
@@ -539,12 +856,215 @@ Response:"""
         """List all characters that have injected voices."""
         try:
             if self.voice_manager is not None:
-                voices = await self.voice_manager.list_available_voices()
-                return list(voices) if voices else []
+                # Use the correct method name from SchemaVoiceManager
+                voices_data = await self.voice_manager.list_characters_with_voice()
+                # Extract character names from the returned data
+                voices = [
+                    voice.get("name", "") for voice in voices_data if voice.get("name")
+                ]
+                return voices
             return []
         except Exception as e:
             logger.error(f"Failed to list character voices: {e}")
             return []
+
+    async def start_realtime_session(
+        self,
+        character: Character,
+        duration: int,
+        device_pattern: Optional[str] = None,
+        vad_config: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Start real-time voice interaction session."""
+
+        logger.info(f"Starting real-time session with {character.name} for {duration}s")
+
+        # Get wake word config from hardware profile
+        wake_word_config = None
+        hardware_vad_settings = {}
+        if self.hardware_config and "vad" in self.hardware_config:
+            hardware_vad_settings = self.hardware_config["vad"]
+            wake_word_config = hardware_vad_settings.get("wake_word")
+
+        # Load character wake words if wake word is enabled
+        character_wake_words = None
+        if wake_word_config and wake_word_config.get("enabled"):
+            # Character wake words come from character config
+            # In production, these should be loaded from character.wake_words or similar
+            # For now, just pass None and let VADSessionManager handle defaults
+            pass
+
+        # Initialize services
+        device_selector = AudioDeviceSelector()
+        vad_manager = VADSessionManager(
+            vad_config=vad_config or VADConfig.for_toy_interaction(),
+            hardware_vad_settings=hardware_vad_settings,
+            wake_word_config=wake_word_config,
+            character_wake_words=character_wake_words,
+        )
+        audio_factory = AudioComponentFactory()
+
+        # Find compatible audio device
+        device_pattern = device_pattern or "audiobox"
+        audio_device = device_selector.get_compatible_device(
+            device_pattern, fallback_to_default=True
+        )
+        if not audio_device:
+            raise RuntimeError(
+                f"No compatible audio device found for pattern: {device_pattern}"
+            )
+
+        logger.info(f"Using audio device: {audio_device.name}")
+
+        # Initialize audio capture
+        audio_capture = audio_factory.create_audio_capture()
+
+        # Test sample rates and start capture
+        sample_rates = [44100, 48000, 16000]
+        compatible_rate = device_selector.test_sample_rates(audio_device, sample_rates)
+        if not compatible_rate:
+            compatible_rate = 44100  # Default fallback
+
+        try:
+            await audio_capture.start_capture(
+                audio_device, sample_rate=compatible_rate, channels=1, chunk_size=512
+            )
+        except Exception:
+            logger.warning(f"Failed with {compatible_rate}Hz, trying fallback rates")
+            for rate in [48000, 16000]:
+                try:
+                    await audio_capture.start_capture(
+                        audio_device, sample_rate=rate, channels=1, chunk_size=512
+                    )
+                    compatible_rate = rate
+                    break
+                except Exception:
+                    continue
+            else:
+                raise RuntimeError("No compatible sample rates found for audio device")
+
+        logger.info(f"Audio capture started at {compatible_rate}Hz")
+
+        # Session state
+        interaction_count = 0
+        start_time = time.time()
+        end_time = start_time + duration
+        is_processing = False
+        total_processing_time = 0.0
+
+        logger.info("🎙️  Listening for speech... (speak naturally)")
+
+        try:
+            while time.time() < end_time:
+                # Skip processing if already processing to prevent overflow
+                if is_processing:
+                    await asyncio.sleep(0.1)
+                    continue
+
+                # Read audio chunk
+                audio_chunk = await audio_capture.read_audio_chunk()
+                if audio_chunk is None:
+                    await asyncio.sleep(0.01)
+                    continue
+
+                # Process audio chunk through VAD
+                vad_manager.process_audio_chunk(audio_chunk)
+
+                # Handle speech end
+                if vad_manager.should_end_speech():
+                    is_processing = True
+                    vad_manager.set_processing_state()
+
+                    # Get combined speech audio
+                    speech_audio = vad_manager.get_combined_speech_audio()
+                    if speech_audio is not None:
+                        # Process the speech segment
+                        process_start = time.time()
+                        await self.process_speech_segment(speech_audio, character)
+                        process_time = time.time() - process_start
+
+                        total_processing_time += process_time
+                        interaction_count += 1
+
+                        logger.info(
+                            f"Processed interaction {interaction_count} in {process_time:.2f}s"
+                        )
+
+                    # Reset VAD session
+                    vad_manager.reset_session()
+                    is_processing = False
+                    logger.info("🎙️  Listening for speech... (speak naturally)")
+
+        except Exception as e:
+            logger.error(f"Error during real-time session: {e}")
+            raise
+        finally:
+            # Cleanup
+            try:
+                await audio_capture.stop_capture()
+            except Exception as e:
+                logger.warning(f"Error stopping audio capture: {e}")
+
+        # Calculate statistics
+        session_duration = time.time() - start_time
+        average_processing_time = total_processing_time / max(interaction_count, 1)
+
+        logger.info(
+            f"Session completed: {interaction_count} interactions in {session_duration:.1f}s"
+        )
+
+        return {
+            "interaction_count": interaction_count,
+            "session_duration": session_duration,
+            "average_processing_time": average_processing_time,
+            "total_processing_time": total_processing_time,
+            "device_used": audio_device.name,
+            "sample_rate": compatible_rate,
+            "vad_statistics": vad_manager.get_session_statistics(),
+            "status": "completed",
+        }
+
+    async def process_speech_segment(
+        self, audio_array: Any, character: Character
+    ) -> AudioResult:
+        """Process a detected speech segment."""
+
+        logger.info(f"Processing speech segment for {character.name}")
+
+        # Convert audio array to numpy if needed
+        import numpy as np
+
+        if not isinstance(audio_array, np.ndarray):
+            audio_array = np.array(audio_array, dtype=np.float32)
+
+        # Ensure audio is in the right format
+        if audio_array.ndim > 1:
+            audio_array = audio_array.flatten()
+
+        # Check audio quality
+        audio_level = np.max(np.abs(audio_array))
+        if audio_level < 1e-6:
+            logger.warning("Audio level too low, skipping processing")
+            return AudioResult(text="Audio too quiet to process", audio_data=None)
+
+        # Process through the character personality pipeline
+        try:
+            result = await self._process_with_character_personality(
+                audio_array, character
+            )
+
+            # Log processing statistics
+            if result.metadata:
+                processing_time = result.metadata.get("processing_time", 0.0)
+                logger.info(f"Processed speech in {processing_time:.2f}s")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error processing speech segment: {e}")
+            return AudioResult(
+                text=f"Error processing speech: {str(e)}", audio_data=None
+            )
 
     async def get_performance_metrics(self) -> Dict[str, Any]:
         """Get performance metrics for the real-time engine."""

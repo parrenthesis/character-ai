@@ -35,10 +35,18 @@ class CharacterManager:
         """Initialize the character manager."""
         self.characters: Dict[str, Character] = {}
         self.templates: Dict[str, CharacterTemplate] = CHARACTER_TEMPLATES.copy()
-        self.ai_generator = AICharacterGenerator()
-        self.characters_dir = Path.cwd() / "characters"
+        self._ai_generator: Optional[AICharacterGenerator] = None  # Lazy init
+        self.characters_dir = Path.cwd() / "configs" / "characters"
         # Don't create directory during instantiation - create when actually needed
         self._active_character: Optional[str] = None
+
+    @property
+    def ai_generator(self) -> AICharacterGenerator:
+        """Lazy-load AI character generator only when needed."""
+        if self._ai_generator is None:
+            logger.info("Initializing AI character generator (lazy load)")
+            self._ai_generator = AICharacterGenerator()
+        return self._ai_generator
 
     async def initialize(self) -> None:
         """Initialize the character manager."""
@@ -60,12 +68,18 @@ class CharacterManager:
             if not self.characters_dir.exists():
                 self.characters_dir.mkdir(parents=True, exist_ok=True)
 
-            for char_file in self.characters_dir.glob("*.yaml"):
+            # Look for profile.yaml files in subdirectories
+            logger.info(f"Looking for characters in: {self.characters_dir}")
+            for char_file in self.characters_dir.glob("**/profile.yaml"):
+                logger.info(f"Found profile file: {char_file}")
                 character = await self._load_character_from_file(char_file)
                 if character:
                     self.characters[character.name.lower()] = character
+                    logger.info(f"Loaded character: {character.name}")
 
-            logger.info(f"Loaded {len(self.characters)} characters")
+            logger.info(
+                f"Loaded {len(self.characters)} characters: {list(self.characters.keys())}"
+            )
 
         except Exception as e:
             logger.error(f"Error loading characters: {e}")
@@ -113,12 +127,28 @@ class CharacterManager:
                 dislikes=dimensions_data.get("dislikes", []),
             )
 
+            # Load metadata including prompt_template from llm section and TTS config
+            metadata = data.get("metadata", {})
+            if "llm" in data and "prompt_template" in data["llm"]:
+                metadata["prompt_template"] = data["llm"]["prompt_template"]
+            if "tts" in data:
+                metadata["tts_config"] = data["tts"]
+                logger.info(f"Loaded TTS config for {data['name']}: {data['tts']}")
+
+            # Extract franchise from file path (parent directory of character directory)
+            # e.g., configs/characters/star_trek/data/profile.yaml -> franchise = star_trek
+            franchise = file_path.parent.parent.name
+            if franchise != "characters":  # Only set if we found a franchise directory
+                metadata["franchise"] = franchise
+            else:
+                logger.info(f"No TTS config found for {data['name']}")
+
             character = Character(
                 name=data["name"],
                 dimensions=dimensions,
                 voice_style=data.get("voice_style", "neutral"),
                 language=data.get("language", "en"),
-                metadata=data.get("metadata", {}),
+                metadata=metadata,
             )
 
             return character
@@ -374,12 +404,6 @@ class CharacterManager:
         """Get list of available character names."""
         return list(self.characters.keys())
 
-    def get_active_character(self) -> Optional[Character]:
-        """Get the currently active character."""
-        # For now, return the first character or None
-        # This would need proper active character tracking
-        return next(iter(self.characters.values())) if self.characters else None
-
     def get_character_info(
         self, character_name: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -432,3 +456,9 @@ class CharacterManager:
         except Exception as e:
             logger.error(f"Error setting active character: {e}")
             return False
+
+    def get_active_character(self) -> Optional[Character]:
+        """Get the currently active character."""
+        if self._active_character:
+            return self.get_character(self._active_character)
+        return None

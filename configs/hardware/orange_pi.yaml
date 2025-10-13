@@ -1,0 +1,54 @@
+name: "Orange Pi 5"
+constraints:
+  max_memory_gb: 8
+  cpu_cores: 8
+  gpu_available: true
+  cpu_only: false
+
+models:
+  stt: "wav2vec2-base"
+  llm: "tinyllama-1.1b"
+  tts: "coqui-xtts-v2" # Note: GPU compatibility needs testing on Mali GPU
+
+runtime:
+  target_latency_s: 1.5
+  streaming_enabled: true
+  predictive_loading: true
+
+audio:
+  sample_rate: 16000
+  chunk_size: 1024
+  channels: 1
+
+vad:
+  threshold: 0.6
+  min_speech_duration_s: 0.2
+  max_silence_duration_s: 0.4 # Reduced from 0.8 for faster response
+  wake_word:
+    enabled: true # Enabled for production toy deployment
+    method: "energy" # Energy-based for efficiency on ARM
+    # Note: Wake word phrases come from character config (configs/characters/*/wake_words.yaml)
+
+power:
+  default_mode: "balanced" # performance | balanced | battery_saver
+  sleep_after_idle_s: 120
+  aggressive_model_unloading: false
+  cpu_governor: "ondemand" # performance | ondemand | powersave
+
+optimizations:
+  # Balanced performance and power
+  use_int8_quantization: false
+  reduce_sample_rate: false
+  batch_size: 2
+  memory_mapped_models: true
+
+  # Model-specific optimizations
+  llm:
+    n_threads: 6 # Use most cores
+    use_mlock: true
+    max_batch_size: 2
+    n_gpu_layers: 10 # Enable GPU offloading for Mali GPU (conservative setting)
+
+  tts:
+    use_half_precision: true # Use GPU if available
+    chunk_size: 256

@@ -4,6 +4,12 @@ Compact LLM processor for text generation (TinyLlama default).
 Uses open, token-free models by default for edge deployment.
 """
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ...core import torch_init  # noqa: F401
+
+# isort: on
+
 import logging
 import time
 from pathlib import Path

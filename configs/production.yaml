@@ -11,7 +11,7 @@ interaction:
   stt_language: en # Wav2Vec2 language (secure PyTorch 2.8.0)
   min_audio_s: 0.2 # Min accepted audio length (s)
   max_audio_s: 30.0 # Max accepted audio length (s)
-  max_new_tokens: 64 # LLM response cap
+  max_new_tokens: 80 # LLM response cap (allow complete responses)
   temperature: 0.6 # LLM sampling temp
   sample_rate: 16000 # System sample rate
   channels: 1 # Channel count (1=mono)

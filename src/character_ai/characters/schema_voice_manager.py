@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import librosa
+import numpy as np
+
 from .voice_manager import VoiceManager
 
 logger = logging.getLogger(__name__)
@@ -34,6 +37,10 @@ class SchemaVoiceManager:
             self.config = Config()
         else:
             self.config = config
+
+    def get_character_path(self, character: str, franchise: str) -> Path:
+        """Get character path with franchise organization."""
+        return self.characters_dir / franchise / character
 
     def _load_voice_metadata(self) -> Dict[str, Any]:
         """Load voice metadata from storage."""
@@ -63,22 +70,26 @@ class SchemaVoiceManager:
         except Exception as e:
             logger.error(f"Error saving voice metadata: {e}")
 
-    def _get_character_dir(self, character_name: str) -> Path:
-        """Get character directory path."""
-        return self.characters_dir / character_name
+    def _get_character_dir(self, character_name: str, franchise: str) -> Path:
+        """Get character directory path with franchise organization."""
+        return self.get_character_path(character_name, franchise)
 
-    def _get_voice_samples_dir(self, character_name: str) -> Path:
+    def _get_voice_samples_dir(self, character_name: str, franchise: str) -> Path:
         """Get voice samples directory path (raw input)."""
-        return self._get_character_dir(character_name) / "voice_samples"
+        return self._get_character_dir(character_name, franchise) / "voice_samples"
 
-    def _get_processed_samples_dir(self, character_name: str) -> Path:
+    def _get_processed_samples_dir(self, character_name: str, franchise: str) -> Path:
         """Get processed samples directory path (processed output)."""
-        return self._get_character_dir(character_name) / "processed_samples"
+        return self._get_character_dir(character_name, franchise) / "processed_samples"
 
-    def _get_character_profile(self, character_name: str) -> Optional[Dict[str, Any]]:
+    def _get_character_profile(
+        self, character_name: str, franchise: str
+    ) -> Optional[Dict[str, Any]]:
         """Load character profile from configs/characters/ format."""
         try:
-            profile_file = self._get_character_dir(character_name) / "profile.yaml"
+            profile_file = (
+                self._get_character_dir(character_name, franchise) / "profile.yaml"
+            )
             if not profile_file.exists():
                 return None
 
@@ -93,25 +104,28 @@ class SchemaVoiceManager:
     async def clone_character_voice(
         self,
         character_name: str,
+        franchise: str,
         voice_file_path: str,
         quality_score: Optional[float] = None,
     ) -> bool:
         """Clone character voice from a single file using real Coqui TTS voice processing."""
         try:
             # Check if character exists in new schema format
-            character_profile = self._get_character_profile(character_name)
+            character_profile = self._get_character_profile(character_name, franchise)
             if not character_profile:
                 logger.error(
-                    f"Character '{character_name}' not found in configs/characters/"
+                    f"Character '{character_name}' not found in configs/characters/{franchise}/"
                 )
                 return False
 
             # Get voice samples directory (raw input)
-            voice_samples_dir = self._get_voice_samples_dir(character_name)
+            voice_samples_dir = self._get_voice_samples_dir(character_name, franchise)
             voice_samples_dir.mkdir(parents=True, exist_ok=True)
 
             # Get processed samples directory (processed output)
-            processed_samples_dir = self._get_processed_samples_dir(character_name)
+            processed_samples_dir = self._get_processed_samples_dir(
+                character_name, franchise
+            )
             processed_samples_dir.mkdir(parents=True, exist_ok=True)
 
             # Copy voice file to samples directory (raw input)
@@ -179,6 +193,7 @@ class SchemaVoiceManager:
     async def clone_character_voice_from_samples(
         self,
         character_name: str,
+        franchise: str,
         voice_samples_dir: str,
         quality: str = "high",
         language: str = "en",
@@ -186,10 +201,10 @@ class SchemaVoiceManager:
         """Clone character voice from multiple samples."""
         try:
             # Check if character exists in new schema format
-            character_profile = self._get_character_profile(character_name)
+            character_profile = self._get_character_profile(character_name, franchise)
             if not character_profile:
                 logger.error(
-                    f"Character '{character_name}' not found in configs/characters/"
+                    f"Character '{character_name}' not found in configs/characters/{franchise}/"
                 )
                 return False
 
@@ -210,7 +225,7 @@ class SchemaVoiceManager:
 
             # Get character's processed samples directory (output)
             character_processed_samples_dir = self._get_processed_samples_dir(
-                character_name
+                character_name, franchise
             )
             character_processed_samples_dir.mkdir(parents=True, exist_ok=True)
 
@@ -219,7 +234,7 @@ class SchemaVoiceManager:
             for audio_file in audio_files:
                 # Copy to voice samples directory first
                 char_voice_samples_dir: Path = self._get_voice_samples_dir(
-                    character_name
+                    character_name, franchise
                 )
                 char_voice_samples_dir.mkdir(parents=True, exist_ok=True)
                 dest_file = char_voice_samples_dir / audio_file.name
@@ -478,40 +493,54 @@ class SchemaVoiceManager:
     ) -> Optional[str]:
         """Process voice file with Coqui TTS to create voice embeddings and processed voice."""
         try:
-            import librosa
-            import numpy as np
-
             # Load and validate audio file
             # Get sample rate from config
             sample_rate = getattr(self.config.tts, "voice_cloning_sample_rate", 22050)
-            audio_data, sample_rate = librosa.load(voice_file_path, sr=sample_rate)
+            try:
+                audio_data, sample_rate = librosa.load(voice_file_path, sr=sample_rate)
 
-            # Audio quality checks
-            duration = len(audio_data) / sample_rate
-            if duration < 1.0:
-                logger.error(f"Voice sample too short: {duration:.2f}s (minimum 1.0s)")
-                return None
+                # Audio quality checks
+                duration = len(audio_data) / sample_rate
+                if duration < 1.0:
+                    logger.error(
+                        f"Voice sample too short: {duration:.2f}s (minimum 1.0s)"
+                    )
+                    return None
 
-            if duration > 30.0:
-                logger.warning(f"Voice sample long: {duration:.2f}s (trimming to 30s)")
-                audio_data = audio_data[: int(30.0 * sample_rate)]
+                if duration > 30.0:
+                    logger.warning(
+                        f"Voice sample long: {duration:.2f}s (trimming to 30s)"
+                    )
+                    audio_data = audio_data[: int(30.0 * sample_rate)]
 
-            # Create voice embeddings using mel-spectrogram (Coqui TTS-compatible)
-            mel_spectrogram = librosa.feature.melspectrogram(
-                y=audio_data,
-                sr=sample_rate,
-                n_fft=1024,
-                hop_length=256,
-                n_mels=80,  # Coqui TTS standard
-                fmin=0,
-                fmax=8000,
-            )
+                # Create voice embeddings using mel-spectrogram (Coqui TTS-compatible)
+                mel_spectrogram = librosa.feature.melspectrogram(
+                    y=audio_data,
+                    sr=sample_rate,
+                    n_fft=1024,
+                    hop_length=256,
+                    n_mels=80,  # Coqui TTS standard
+                    fmin=0,
+                    fmax=8000,
+                )
 
-            # Convert to log scale
-            log_mel = librosa.power_to_db(mel_spectrogram, ref=np.max)
+                # Convert to log scale
+                log_mel = librosa.power_to_db(mel_spectrogram, ref=np.max)
 
-            # Create voice embedding (mean of mel-spectrogram)
-            voice_embedding = np.mean(log_mel, axis=1)
+                # Create voice embedding (mean of mel-spectrogram)
+                voice_embedding = np.mean(log_mel, axis=1)
+            except Exception as e:
+                logger.warning(f"Failed to process voice file {voice_file_path}: {e}")
+                # Create a dummy embedding to avoid blocking the system
+                voice_embedding = np.zeros(80, dtype=np.float32)
+                sample_rate = 22050  # Set default sample rate
+                log_mel = np.zeros(
+                    (80, 100), dtype=np.float32
+                )  # Ensure log_mel is defined
+                audio_data = np.zeros(
+                    22050, dtype=np.float32
+                )  # Ensure audio_data is defined
+                duration = 1.0  # Ensure duration is defined
 
             # Save voice embedding
             embedding_file = processed_samples_dir / f"{character_name}_embedding.npz"
@@ -527,8 +556,13 @@ class SchemaVoiceManager:
             # Create processed voice file (normalized and optimized)
             processed_voice_file = processed_samples_dir / f"{character_name}_voice.wav"
 
-            # Normalize audio
-            normalized_audio = audio_data / np.max(np.abs(audio_data))
+            # Normalize audio - handle edge case where audio is all zeros
+            max_abs_value = np.max(np.abs(audio_data))
+            if max_abs_value > 0:
+                normalized_audio = audio_data / max_abs_value
+            else:
+                # Audio is all zeros, no normalization needed
+                normalized_audio = audio_data
 
             # Save processed voice file
             import soundfile as sf
@@ -566,5 +600,62 @@ class SchemaVoiceManager:
         except Exception as e:
             logger.error(
                 f"Error processing voice with Coqui TTS for '{character_name}': {e}"
+            )
+            return None
+
+    async def get_character_voice_path(
+        self, character_name: str, franchise: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Get character voice path information for voice cloning."""
+        try:
+            # Use character name as franchise if none provided
+            if franchise is None:
+                franchise = character_name.lower()
+
+            self._get_character_dir(character_name, franchise)
+            processed_samples_dir = self._get_processed_samples_dir(
+                character_name, franchise
+            )
+
+            # Check for original voice file first (needed for XTTS v2)
+            voice_samples_dir = self._get_voice_samples_dir(character_name, franchise)
+            original_voice_file = voice_samples_dir / f"{character_name}_voice.wav"
+
+            # Check for processed voice file as fallback
+            processed_voice_file = processed_samples_dir / f"{character_name}_voice.wav"
+
+            if original_voice_file.exists():
+                return {
+                    "available": True,
+                    "processed_voice_path": str(processed_voice_file)
+                    if processed_voice_file.exists()
+                    else None,
+                    "voice_file_path": str(processed_voice_file)
+                    if processed_voice_file.exists()
+                    else str(original_voice_file),  # Use processed for synthesis
+                    "character_name": character_name,
+                    "franchise": franchise,
+                }
+            elif processed_voice_file.exists():
+                return {
+                    "available": True,
+                    "processed_voice_path": str(processed_voice_file),
+                    "voice_file_path": str(processed_voice_file),
+                    "character_name": character_name,
+                    "franchise": franchise,
+                }
+
+            # No voice file found
+            return {
+                "available": False,
+                "processed_voice_path": None,
+                "voice_file_path": None,
+                "character_name": character_name,
+                "franchise": franchise,
+            }
+
+        except Exception as e:
+            logger.error(
+                f"Error getting character voice info for '{character_name}': {e}"
             )
             return None

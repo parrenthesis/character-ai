@@ -88,7 +88,8 @@ class RuntimeConfig(LLMConfig):
     def __post_init__(self) -> None:
         """Set default values for runtime."""
         if self.provider == LLMProvider.LOCAL:
-            self.model = "llama-3.2-1b-instruct"
+            # Prefer a small local edge model by default
+            self.model = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
         elif self.provider == LLMProvider.OLLAMA:
             self.model = "llama3.2:1b"
         elif self.provider == LLMProvider.OPENAI:
@@ -152,7 +153,10 @@ class LLMConfigManager:
 
     def __post_init__(self) -> None:
         """Initialize configurations."""
-        # Load from environment variables
+        # Load from canonical runtime config first (defaults)
+        self._load_from_runtime_yaml()
+
+        # Then load from environment variables (overrides)
         self._load_from_env()
 
         # Validate configurations
@@ -189,6 +193,65 @@ class LLMConfigManager:
             url = os.environ.get("CAI_OLLAMA_BASE_URL")
             if url:
                 self.providers.ollama_base_url = url
+
+    def _load_from_runtime_yaml(self) -> None:
+        """Load LLM provider/model from configs/runtime.yaml if present (defaults).
+
+        Expected schema (minimal):
+        llm:
+          runtime:
+            provider: local|ollama|openai|anthropic
+            model: <model-id>
+          character_creation:
+            provider: local|ollama|openai|anthropic
+            model: <model-id>
+          providers:
+            ollama_base_url: http://localhost:11434
+            local_model_path: models/llm
+        """
+        try:
+            runtime_path = Path("configs/runtime.yaml")
+            if not runtime_path.exists():
+                return
+            with open(runtime_path, "r") as f:
+                data = yaml.safe_load(f) or {}
+
+            llm_section = data.get("llm", {}) or {}
+
+            # Runtime defaults
+            rt = llm_section.get("runtime", {}) or {}
+            prov = rt.get("provider")
+            model = rt.get("model")
+            if prov:
+                try:
+                    self.runtime.provider = LLMProvider(str(prov))
+                except Exception:
+                    logger.warning(f"Unknown runtime provider in runtime.yaml: {prov}")
+            if model:
+                self.runtime.model = str(model)
+
+            # Character creation defaults
+            cc = llm_section.get("character_creation", {}) or {}
+            cprov = cc.get("provider")
+            cmodel = cc.get("model")
+            if cprov:
+                try:
+                    self.character_creation.provider = LLMProvider(str(cprov))
+                except Exception:
+                    logger.warning(f"Unknown character_creation provider: {cprov}")
+            if cmodel:
+                self.character_creation.model = str(cmodel)
+
+            # Provider-level settings
+            provs = llm_section.get("providers", {}) or {}
+            if provs.get("ollama_base_url"):
+                self.providers.ollama_base_url = str(provs["ollama_base_url"])
+            if provs.get("local_model_path"):
+                self.providers.local_model_path = str(provs["local_model_path"])
+
+            logger.info("Loaded LLM defaults from configs/runtime.yaml")
+        except Exception as e:
+            logger.warning(f"Failed to load configs/runtime.yaml for LLM: {e}")
 
     def _validate_configs(self) -> None:
         """Validate LLM configurations."""

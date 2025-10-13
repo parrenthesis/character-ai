@@ -5,7 +5,6 @@ Manages toy hardware constraints, sensors, and optimization for edge deployment.
 """
 
 import logging
-import resource
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 class HardwareConstraints:
     """Hardware constraints for toy deployment."""
 
-    max_memory_gb: float = 4.0
+    max_memory_gb: float = 16.0
     max_cpu_cores: int = 4
     battery_life_hours: float = 8.0
     target_latency_ms: int = 500
@@ -83,12 +82,13 @@ class ToyHardwareManager:
             "battery_optimization": True,
         }
 
-        # Set system limits
-        memory_limit = int(self.constraints.max_memory_gb * 1024 * 1024 * 1024)
-        try:
-            resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
-        except Exception as e:
-            logger.warning(f"Could not set memory limit: {e}")
+        # Set system limits - DISABLED for development
+        # memory_limit = int(self.constraints.max_memory_gb * 1024 * 1024 * 1024)
+        # try:
+        #     resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+        # except Exception as e:
+        #     logger.warning(f"Could not set memory limit: {e}")
+        logger.info("Memory limits disabled for development")
 
         # Initialize power manager
         try:

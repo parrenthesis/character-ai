@@ -1,6 +1,6 @@
 # Character AI Platform
 
-[![Tests](https://img.shields.io/badge/tests-117%20passing-green)](https://github.com/parrenthesis/character-ai/actions)
+[![Tests](https://img.shields.io/badge/tests-98%20passing-green)](https://github.com/parrenthesis/character-ai/actions)
 [![Security](https://img.shields.io/badge/security-0%20vulnerabilities-green)](https://github.com/parrenthesis/character-ai/security)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
@@ -78,7 +78,56 @@ make security
 export CAI_DEBUG="true"
 export CAI_API__HOST="0.0.0.0"
 export OPENAI_API_KEY="your-key-here"
+
+# PyTorch 2.8+ compatibility (required for XTTS v2)
+export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 ```
+
+### Hardware Profiles
+
+Optimize performance for different hardware configurations:
+
+```bash
+# Auto-detect hardware (default)
+poetry run cai test voice-pipeline --character <name> --franchise <franchise> --realtime
+
+# Use specific hardware profile
+poetry run cai test voice-pipeline --character <name> --franchise <franchise> --realtime --hardware desktop
+poetry run cai test voice-pipeline --character <name> --franchise <franchise> --realtime --hardware raspberry_pi
+```
+
+Available profiles in `configs/hardware/`:
+- **desktop.yaml**: High-performance systems with GPU support
+- **raspberry_pi.yaml**: Optimized for Raspberry Pi (CPU-only, reduced models)
+- **orange_pi.yaml**: Optimized for Orange Pi devices
+
+### Voice Activity Detection (VAD)
+
+Configure speech detection thresholds in hardware profiles:
+
+```yaml
+# configs/hardware/desktop.yaml
+vad:
+  speech_start_threshold: 0.020  # Higher = ignore background noise
+  speech_continue_threshold: 0.005  # Lower = sensitive during speech
+  max_silence_duration_s: 0.4  # End speech after 400ms silence
+  min_speech_duration_s: 0.05  # Minimum 50ms to count as speech
+```
+
+### Wake Word Detection
+
+Enable wake word detection for hands-free operation:
+
+```yaml
+# In character profile.yaml
+wake_words:
+  - "hey computer"
+  - "hello assistant"
+```
+
+Supports two detection methods:
+- **energy**: Fast, lightweight energy-based detection
+- **openwakeword**: ML-based detection (more accurate, higher latency)
 
 ### Character Configuration
 

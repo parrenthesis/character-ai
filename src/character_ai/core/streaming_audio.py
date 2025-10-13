@@ -155,7 +155,12 @@ class StreamingAudioProcessor:
 
                 # Create a mock config for the processor
                 mock_config = Config()
-                self.tts_processor = CoquiProcessor(mock_config)
+                from .config import DEFAULT_COQUI_MODEL
+
+                tts_model = getattr(
+                    mock_config.models, "coqui_model", DEFAULT_COQUI_MODEL
+                )
+                self.tts_processor = CoquiProcessor(mock_config, model_name=tts_model)
                 if self.tts_processor is not None:
                     await self.tts_processor.initialize()
             except ImportError:

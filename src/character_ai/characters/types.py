@@ -157,6 +157,10 @@ class Archetype(Enum):
     VILLAIN = "villain"
     RIVAL = "rival"
 
+    # Observer & Learner
+    INNOCENT_OBSERVER = "innocent_observer"
+    SEEKER = "seeker"
+
 
 class PersonalityTrait(Enum):
     """Core personality traits."""
@@ -205,6 +209,14 @@ class PersonalityTrait(Enum):
     STUBBORN = "stubborn"
     IMPATIENT = "impatient"
 
+    # Cognitive & Behavioral
+    LITERAL_MINDED = "literal_minded"
+    EARNEST = "earnest"
+    SINCERE = "sincere"
+    CHILDLIKE_WONDER = "childlike_wonder"
+    PATIENT = "patient"
+    NON_JUDGMENTAL = "non_judgmental"
+
 
 class Ability(Enum):
     """Character abilities and powers."""
@@ -244,12 +256,20 @@ class Ability(Enum):
     # Magical Abilities
     NATURE_CONTROL = "nature_control"
 
+    # Cognitive & Technical
+    PERFECT_MEMORY = "perfect_memory"
+    RAPID_COMPUTATION = "rapid_computation"
+    SYSTEM_INTERFACE = "system_interface"
+    MULTITASKING = "multitasking"
+    INSTANT_LEARNING = "instant_learning"
+
 
 class Topic(Enum):
     """Conversation topics and interests."""
 
     # Learning & Education
     SCIENCE = "science"
+    TECHNOLOGY = "technology"
     MATH = "math"
     HISTORY = "history"
     LITERATURE = "literature"
@@ -288,6 +308,12 @@ class Topic(Enum):
     TIME_TRAVEL = "time_travel"
     SUPERPOWERS = "superpowers"
     POETRY = "poetry"
+
+    # Philosophy & Abstract Concepts
+    PHILOSOPHY = "philosophy"
+    LOGIC = "logic"
+    HUMANITY = "humanity"
+    EXPLORATION = "exploration"
 
 
 @dataclass

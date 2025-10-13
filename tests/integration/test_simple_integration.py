@@ -76,7 +76,7 @@ async def test_wav2vec2_llama_cpp_chain() -> None:
         llama = LlamaCppProcessor(Config())
         await llama.initialize()
 
-        # Generate text from the wav2vec2 output (use a fallback if wav2vec2 returned empty)
+        # Generate text from the Wav2Vec2 output (use a fallback if Wav2Vec2 returned empty)
         input_text = (
             result.text
             if result.text and len(result.text.strip()) > 0

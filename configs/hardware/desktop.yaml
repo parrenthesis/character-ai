@@ -1,0 +1,58 @@
+name: "Desktop/Server"
+constraints:
+  max_memory_gb: 32
+  cpu_cores: 16
+  gpu_available: true
+  cpu_only: false
+
+models:
+  stt: "wav2vec2-base" # Keep base model (fast enough)
+  llm: "llama-3.2-1b-instruct" # Smaller, faster model for <800ms target
+  tts: "coqui-xtts-v2" # GPU-capable model with voice cloning
+
+runtime:
+  target_latency_s: 0.5
+  streaming_enabled: true
+  predictive_loading: true
+
+audio:
+  sample_rate: 22050
+  chunk_size: 2048
+  channels: 2
+
+vad:
+  threshold: 0.75 # Increased from 0.7 to reduce false positives from background noise
+  min_speech_duration_s: 0.05 # Reduced from 0.1 to detect speech faster
+  max_silence_duration_s: 0.4 # Balance between natural pauses and responsiveness (400ms)
+  wake_word:
+    enabled: false # Disabled for testing, enable for production
+    method: "energy" # "energy" (fast, simple) or "openwakeword" (ML-based, accurate)
+    # Note: Wake word phrases come from character config (configs/characters/*/wake_words.yaml)
+
+power:
+  default_mode: "performance" # performance | balanced | battery_saver
+  sleep_after_idle_s: 300
+  aggressive_model_unloading: false
+  cpu_governor: "performance" # performance | ondemand | powersave
+
+optimizations:
+  # Maximum performance
+  use_int8_quantization: false
+  reduce_sample_rate: false
+  batch_size: 4
+  memory_mapped_models: true
+
+  # Model-specific optimizations
+  llm:
+    n_threads: 6 # Balanced for dev environment
+    use_mlock: false # Avoid ulimit issues
+    max_batch_size: 4
+    n_gpu_layers: 0 # Keep on CPU to avoid CUDA context conflicts with TTS
+    use_cpu: true
+
+  stt:
+    use_cpu: true # Keep on CPU to avoid CUDA context conflicts with TTS
+
+  tts:
+    use_half_precision: false # FP32 for CUDA stability (no multi-model conflicts)
+    chunk_size: 128

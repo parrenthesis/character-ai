@@ -9,7 +9,7 @@ interaction:
   stt_language: en # Wav2Vec2 language (secure PyTorch 2.8.0) → Wav2Vec2Processor.transcribe()
   min_audio_s: 0.2 # Min accepted audio length (s) → engine gating/validation
   max_audio_s: 30.0 # Max accepted audio length (s) → engine gating/validation
-  max_new_tokens: 64 # LLM response cap → LlamaProcessor/LlamaCppProcessor
+  max_new_tokens: 80 # LLM response cap (allow complete responses)
   temperature: 0.6 # LLM sampling temp → LlamaProcessor/LlamaCppProcessor
   sample_rate: 16000 # System sample rate → toy_api, audio_tester, Wav2Vec2Processor
   channels: 1 # Channel count (1=mono) → toy_api, audio_tester

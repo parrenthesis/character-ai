@@ -4,6 +4,12 @@ LLM provider implementations for the Character AI.
 Supports both open (local) and token-based (cloud) LLM providers.
 """
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from .. import torch_init  # noqa: F401
+
+# isort: on
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod
@@ -58,9 +64,15 @@ class LocalLLMProvider(LLMInterface):
             try:
                 from llama_cpp import Llama
 
+                # Get context size from config
+                from ..config import Config
+
+                cfg = Config()
+                n_ctx = getattr(cfg.models, "llama_n_ctx", 2048)
+
                 self._model = Llama(
                     model_path=self.model_path,
-                    n_ctx=2048,
+                    n_ctx=n_ctx,
                     n_gpu_layers=0 if self.device == "cpu" else -1,
                     verbose=False,
                 )
@@ -100,13 +112,43 @@ class LocalLLMProvider(LLMInterface):
             await self._load_model()
 
         if self.provider == "llama_cpp" and self._model is not None:
+            # Compose stop sequences: built-ins + caller-provided + generic role labels
+            caller_stop = kwargs.get("stop", []) or []
+            stop_sequences = [
+                "</s>",
+                "\n\n",
+                "\n",
+                "user:",
+                "User:",
+                "assistant:",
+                "Assistant:",
+                "system:",
+                "System:",
+            ]
+            if isinstance(caller_stop, list):
+                stop_sequences = stop_sequences + caller_stop
+
             response = self._model(
                 prompt,
                 max_tokens=kwargs.get("max_tokens", 150),
                 temperature=kwargs.get("temperature", 0.7),
-                stop=["</s>", "\n\n"],
+                stop=stop_sequences,
             )
-            return response["choices"][0]["text"]  # type: ignore
+            text = response["choices"][0]["text"]
+
+            # Enforce single-line, no role labels, no leading stage directions
+            try:
+                # Use TextNormalizer for consistent text cleaning
+                from ...algorithms.conversational_ai.text_normalizer import (
+                    TextNormalizer,
+                )
+
+                normalizer = TextNormalizer()
+                cleaned = normalizer.clean_llm_response(text or "")
+                # Return first line only for this specific use case
+                return cleaned.splitlines()[0] if cleaned else ""
+            except Exception:
+                return (text or "").strip()
         elif (
             self.provider == "transformers"
             and self._model is not None

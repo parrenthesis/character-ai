@@ -10,6 +10,9 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import librosa
+import numpy as np
+
 from ..core.config import Config
 from ..core.protocols import AudioData
 
@@ -295,13 +298,6 @@ class VoiceManager:
         This is optional and best-effort; failures are logged and ignored.
         """
         try:
-            import librosa
-            import numpy as np
-        except Exception:
-            # Dependencies not available; skip silently
-            return
-
-        try:
             # Prepare output paths and compute file checksum to avoid redundant work
             out_dir = self.voices_artifacts_root / character_name
             out_dir.mkdir(parents=True, exist_ok=True)
@@ -343,19 +339,27 @@ class VoiceManager:
                     )
 
             # Load audio, resample to 22050 mono
-            y, sr = librosa.load(str(storage_path), sr=22050, mono=True)
-            if y.size == 0:
-                return
-            # Compute mel-spectrogram and take mean across time
-            mel = librosa.feature.melspectrogram(
-                y=y,
-                sr=EMBEDDING_PARAMS["sr"],
-                n_fft=EMBEDDING_PARAMS["n_fft"],
-                hop_length=EMBEDDING_PARAMS["hop_length"],
-                n_mels=EMBEDDING_PARAMS["n_mels"],
-            )
-            mel_db = librosa.power_to_db(mel + 1e-10)
-            emb = mel_db.mean(axis=1).astype(np.float32)  # 64-dim
+            try:
+                y, sr = librosa.load(str(storage_path), sr=22050, mono=True)
+                if y.size == 0:
+                    return
+                # Compute mel-spectrogram and take mean across time
+                mel = librosa.feature.melspectrogram(
+                    y=y,
+                    sr=EMBEDDING_PARAMS["sr"],
+                    n_fft=EMBEDDING_PARAMS["n_fft"],
+                    hop_length=EMBEDDING_PARAMS["hop_length"],
+                    n_mels=EMBEDDING_PARAMS["n_mels"],
+                )
+                mel_db = librosa.power_to_db(mel + 1e-10)
+                emb = mel_db.mean(axis=1).astype(np.float32)  # 64-dim
+            except Exception as e:
+                logger.warning(
+                    f"Failed to compute voice embedding for {character_name}: {e}"
+                )
+                # Create a dummy embedding to avoid blocking the system
+                emb = np.zeros(EMBEDDING_PARAMS["n_mels"], dtype=np.float32)
+                sr = 22050  # Set default sample rate
 
             # Persist under catalog/voices/<character_name>/voice_emb.npz
             np.savez_compressed(

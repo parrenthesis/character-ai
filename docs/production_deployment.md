@@ -39,7 +39,12 @@ export CAI_RATE_LIMIT_BURST="100"
 export CAI_ENABLE_DEVICE_REGISTRATION="true"
 export CAI_JWT_EXPIRY_SECONDS="3600"
 export CAI_JWT_ALGORITHM="HS256"
+
+# Required for PyTorch 2.8+ compatibility with XTTS v2
+export TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1
 ```
+
+> **Note**: The `TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD` environment variable is required for PyTorch 2.8+ compatibility with Coqui XTTS v2 models. This prevents CUDA context conflicts during model loading.
 
 #### SSL/TLS Configuration
 ```bash
@@ -573,7 +578,7 @@ journalctl -u cai -f
 
 ## Production Readiness Checklist
 
-- [ ] All tests passing (117/117)
+- [ ] All tests passing (98/98)
 - [ ] Security hardening complete
 - [ ] Performance optimization applied
 - [ ] Monitoring and alerting configured

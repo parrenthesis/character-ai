@@ -12,7 +12,7 @@ import tempfile
 import types
 import warnings
 from pathlib import Path
-from typing import Generator
+from typing import Generator, TextIO
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -157,11 +157,11 @@ def suppress_async_mock_warnings() -> Generator[None, None, None]:
         category: type,
         filename: str,
         lineno: int,
-        file: str | None = None,
+        file: TextIO | None = None,
         line: str | None = None,
-    ) -> bool:
+    ) -> None:
         """Custom warning filter that suppresses async mock warnings."""
-        if category is RuntimeWarning:
+        if category == RuntimeWarning:
             msg_str = str(message)
             # Suppress specific async mock patterns
             if any(
@@ -175,17 +175,16 @@ def suppress_async_mock_warnings() -> Generator[None, None, None]:
                     "_execute_mock_call",
                 ]
             ):
-                return True
+                return
 
         # Call the original warning handler for other warnings
         if hasattr(warnings, "_showwarning_orig"):
             warnings._showwarning_orig(message, category, filename, lineno, file, line)
-        return False
 
     # Store original warning handler
     if not hasattr(warnings, "_showwarning_orig"):
-        warnings._showwarning_orig = warnings.showwarning  # type: ignore
-    warnings.showwarning = custom_warning_filter  # type: ignore
+        warnings._showwarning_orig = warnings.showwarning  # type: ignore[attr-defined]
+    warnings.showwarning = custom_warning_filter  # type: ignore[assignment]
 
     yield
 
@@ -212,7 +211,7 @@ def mock_external_deps(request: pytest.FixtureRequest) -> Generator[None, None, 
         yield
         return
 
-    # TTS (Coqui) - Mock the entire Coqui TTS import chain to avoid dependency issues
+    # TTS (Coqui) - Mock the entire TTS import chain to avoid dependency issues
     def create_mock_module(name: str) -> MagicMock:
         mock = MagicMock()
         mock.__name__ = name
@@ -238,6 +237,27 @@ def mock_external_deps(request: pytest.FixtureRequest) -> Generator[None, None, 
         {
             "TTS": create_mock_module("TTS"),
             "TTS.api": create_mock_module("TTS.api"),
+            "TTS.utils": create_mock_module("TTS.utils"),
+            "TTS.utils.synthesizer": create_mock_module("TTS.utils.synthesizer"),
+            "TTS.tts": create_mock_module("TTS.tts"),
+            "TTS.tts.configs": create_mock_module("TTS.tts.configs"),
+            "TTS.tts.configs.vits_config": create_mock_module(
+                "TTS.tts.configs.vits_config"
+            ),
+            "TTS.tts.models": create_mock_module("TTS.tts.models"),
+            "TTS.tts.models.vits": create_mock_module("TTS.tts.models.vits"),
+            "TTS.tts.utils": create_mock_module("TTS.tts.utils"),
+            "TTS.tts.utils.text": create_mock_module("TTS.tts.utils.text"),
+            "TTS.tts.utils.text.tokenizer": create_mock_module(
+                "TTS.tts.utils.text.tokenizer"
+            ),
+            "TTS.tts.utils.text.phonemizers": create_mock_module(
+                "TTS.tts.utils.text.phonemizers"
+            ),
+            "TTS.tts.utils.text.phonemizers.gruut_wrapper": create_mock_module(
+                "TTS.tts.utils.text.phonemizers.gruut_wrapper"
+            ),
+            "TTS.tts.datasets": create_mock_module("TTS.tts.datasets"),
             "gruut": create_mock_module("gruut"),
             "pycrfsuite": create_mock_module("pycrfsuite"),
             "regex": create_mock_module("regex"),
@@ -254,31 +274,37 @@ def mock_external_deps(request: pytest.FixtureRequest) -> Generator[None, None, 
             "safetensors._safetensors_rust": create_mock_module(
                 "safetensors._safetensors_rust"
             ),
+            "whisper": create_mock_module("whisper"),
             "numba": create_mock_module("numba"),
         },
     ):
-        # Create a mock Coqui TTS class that can be instantiated
-        mock_coqui_class = MagicMock()
-        coqui_inst = MagicMock()
+        # Create a mock TTS class that can be instantiated
+        mock_tts_class = MagicMock()
+        tts_inst = MagicMock()
         # Return a small array for audio
-        coqui_inst.tts.return_value = np.zeros(22050, dtype=np.float32)
-        mock_coqui_class.return_value = coqui_inst
+        tts_inst.tts.return_value = np.zeros(22050, dtype=np.float32)
+        mock_tts_class.return_value = tts_inst
 
-        # Set up the mock Coqui TTS module structure
+        # Set up the mock TTS module structure
         import TTS
 
-        TTS.api.TTS = mock_coqui_class
+        TTS.TTS = mock_tts_class
+
+        # Set up TTS.api.TTS for the import path used by XTTSProcessor
+        import TTS.api
+
+        TTS.api.TTS = mock_tts_class
 
         # Mock torch to avoid docstring conflicts and CUDA issues
         if "torch" not in sys.modules:
             sys.modules["torch"] = types.ModuleType("torch")
             torch = sys.modules["torch"]
-            torch.cuda = MagicMock()  # type: ignore
+            torch.cuda = MagicMock()  # type: ignore[attr-defined]
             torch.cuda.is_available = MagicMock(return_value=False)
             torch.cuda.device_count = MagicMock(return_value=0)
-            torch.Tensor = MagicMock()  # type: ignore
-            torch.nn = MagicMock()  # type: ignore
-            torch.optim = MagicMock()  # type: ignore
+            torch.Tensor = MagicMock()  # type: ignore[attr-defined]
+            torch.nn = MagicMock()  # type: ignore[attr-defined]
+            torch.optim = MagicMock()  # type: ignore[attr-defined]
 
         # Transformers (TinyLlama via Auto classes)
         with (

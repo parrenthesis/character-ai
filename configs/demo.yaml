@@ -9,7 +9,7 @@ interaction:
   stt_language: en # Wav2Vec2 language
   min_audio_s: 0.2 # Min accepted audio length (s)
   max_audio_s: 15.0 # Tighter max for demo speed (s)
-  max_new_tokens: 64 # LLM response cap
+  max_new_tokens: 80 # LLM response cap (allow complete responses)
   temperature: 0.6 # LLM sampling temp
   sample_rate: 16000 # System sample rate
   channels: 1 # Channel count (1=mono)

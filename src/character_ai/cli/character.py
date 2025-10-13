@@ -1141,11 +1141,17 @@ def voice() -> None:
 
 
 @voice.command()
-@click.argument("character_name")
-@click.argument("voice_file", type=click.Path(exists=True))
+@click.option("--character", required=True, help="Character name")
+@click.option("--franchise", required=True, help="Franchise name")
+@click.option(
+    "--voice-file", type=click.Path(exists=True), help="Custom voice file path"
+)
 @click.option("--quality-score", type=float, help="Voice quality score (0.0-1.0)")
 def clone_voice(
-    character_name: str, voice_file: str, quality_score: Optional[float]
+    character: str,
+    franchise: str,
+    voice_file: Optional[str],
+    quality_score: Optional[float],
 ) -> None:
     """Clone voice for a character using new schema format."""
     try:
@@ -1153,23 +1159,28 @@ def clone_voice(
 
         from ..characters.schema_voice_manager import SchemaVoiceManager
 
+        # Use default voice path if not provided
+        if voice_file is None:
+            voice_file = f"configs/characters/{franchise}/{character}/voice_samples/{character}_voice.wav"
+
         schema_voice_manager = SchemaVoiceManager()
         success = asyncio.run(
             schema_voice_manager.clone_character_voice(
-                character_name=character_name,
+                character_name=character,
+                franchise=franchise,
                 voice_file_path=voice_file,
                 quality_score=quality_score,
             )
         )
 
         if success:
-            click.echo(f"✅ Voice cloned for character '{character_name}'")
+            click.echo(f"✅ Voice cloned for character '{character}'")
             click.echo(f"🎤 Voice file: {voice_file}")
             if quality_score:
                 click.echo(f"⭐ Quality score: {quality_score}")
         else:
             click.echo(
-                f"❌ Failed to clone voice for character '{character_name}'", err=True
+                f"❌ Failed to clone voice for character '{character}'", err=True
             )
             raise click.Abort()
 
@@ -1363,6 +1374,7 @@ def import_voice_catalog(voice_catalog_file: str) -> None:
 
 @voice.command()
 @click.argument("character")
+@click.argument("franchise")
 @click.argument("voice_samples", type=click.Path(exists=True))
 @click.option(
     "--quality",
@@ -1372,7 +1384,7 @@ def import_voice_catalog(voice_catalog_file: str) -> None:
 )
 @click.option("--language", default="en", help="Voice language")
 def clone_from_samples(
-    character: str, voice_samples: str, quality: str, language: str
+    character: str, franchise: str, voice_samples: str, quality: str, language: str
 ) -> None:
     """Clone character voice from multiple samples using new schema format."""
     try:
@@ -1406,6 +1418,7 @@ def clone_from_samples(
         success = asyncio.run(
             schema_voice_manager.clone_character_voice_from_samples(
                 character_name=character,
+                franchise=franchise,
                 voice_samples_dir=voice_samples,
                 quality=quality,
                 language=language,

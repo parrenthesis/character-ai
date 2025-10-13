@@ -5,11 +5,16 @@ Implements Facebook's Wav2Vec2 for high-quality speech-to-text conversion
 with secure PyTorch compatibility.
 """
 
+# CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
+# isort: off
+from ...core import torch_init  # noqa: F401
+
+# isort: on
+
 import logging
 import time
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import torch
 
 try:
@@ -30,10 +35,16 @@ logger = logging.getLogger(__name__)
 class Wav2Vec2Processor(BaseAudioProcessor):
     """Wav2Vec2-based speech recognition processor."""
 
-    def __init__(self, config: Config, model_name: str = "facebook/wav2vec2-base-960h"):
+    def __init__(
+        self,
+        config: Config,
+        model_name: str = "facebook/wav2vec2-base-960h",
+        force_cpu: bool = False,
+    ):
         super().__init__(f"wav2vec2_{model_name.split('/')[-1]}")
         self.config: Config = config
         self.model_name = model_name
+        self.force_cpu = force_cpu
         self.model: Optional[Any] = None
         self.processor: Optional[Any] = None
         self.device: Optional[torch.device] = None
@@ -43,14 +54,27 @@ class Wav2Vec2Processor(BaseAudioProcessor):
         try:
             logger.info(f"Loading Wav2Vec2 model: {self.model_name}")
 
-            # Set device
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            logger.info(f"Using device: {self.device}")
+            # Set device - respect force_cpu setting to avoid CUDA conflicts
+            if self.force_cpu:
+                self.device = torch.device("cpu")
+                logger.info(
+                    "Using CPU for STT (forced by hardware config to avoid CUDA conflicts)"
+                )
+            else:
+                try:
+                    self.device = torch.device(
+                        "cuda" if torch.cuda.is_available() else "cpu"
+                    )
+                    logger.info(f"Using device: {self.device}")
+                except Exception as e:
+                    logger.warning(f"GPU detection failed, using CPU: {e}")
+                    self.device = torch.device("cpu")
+                    logger.info(f"Using device: {self.device}")
 
             # Import transformers
             from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-            # Load model and processor with revision pinning for security
+            # Load model and processor using cached models
             self.processor = Wav2Vec2Processor.from_pretrained(
                 self.model_name, revision="main"
             )  # nosec B615
@@ -109,20 +133,26 @@ class Wav2Vec2Processor(BaseAudioProcessor):
         try:
             start_time = time.time()
 
-            # Validate audio
-            if not audio.data or len(audio.data) == 0:
-                return await self._create_error_result("Empty audio data provided")
+            # Convert audio to numpy array (support bytes or ndarray)
+            raw_data: Any = audio.data  # allow runtime to pass bytes or ndarray
+            try:
+                from ...core.audio_io.audio_utils import convert_audio_input
 
-            # Convert audio bytes to numpy array
-            audio_array = (
-                np.frombuffer(audio.data, dtype=np.int16).astype(np.float32) / 32768.0
-            )
+                audio_array = convert_audio_input(raw_data)
+            except ValueError as e:
+                return await self._create_error_result(str(e))
+
+            # Guard against empty input after conversion
+            if audio_array.size == 0:
+                return await self._create_error_result(
+                    "Empty audio array after conversion"
+                )
 
             # Resample if necessary
             if audio.sample_rate != 16000:
-                audio_array = self._resample_audio(
-                    audio_array, audio.sample_rate, 16000
-                )
+                from ...core.audio_io.audio_utils import resample_audio
+
+                audio_array = resample_audio(audio_array, audio.sample_rate, 16000)
 
             # Process with Wav2Vec2
             inputs = self.processor(
@@ -159,27 +189,6 @@ class Wav2Vec2Processor(BaseAudioProcessor):
         except Exception as e:
             logger.error(f"Error processing audio with Wav2Vec2: {e}")
             return await self._create_error_result(f"Wav2Vec2 processing failed: {e}")
-
-    def _resample_audio(
-        self, audio_array: np.ndarray, orig_sr: int, target_sr: int
-    ) -> Any:
-        """Resample audio to target sample rate."""
-        try:
-            if not TORCHAUDIO_AVAILABLE or torchaudio is None:
-                logger.warning("torchaudio not available, using original audio")
-                return audio_array
-
-            # Convert to tensor
-            audio_tensor = torch.from_numpy(audio_array).unsqueeze(0)
-
-            # Resample
-            resampler = torchaudio.transforms.Resample(orig_sr, target_sr)
-            resampled = resampler(audio_tensor)
-
-            return resampled.squeeze(0).numpy()
-        except Exception as e:
-            logger.warning(f"Resampling failed, using original audio: {e}")
-            return audio_array
 
     def _calculate_confidence(self, logits: torch.Tensor) -> float:
         """Calculate confidence score from model logits."""
