@@ -1,13 +1,15 @@
 # Character AI Makefile
 # Focused on tests, bundling models, and building runtime image
 
-.PHONY: help test test-dev clean setup-python-version setup setup-dev setup-ci bundle models-image runtime-image run-api security lint lint-dev format format-dev docker-build docker-run docker-test docker-clean docker-dev docker-compose-up docker-compose-down test-voice-pipeline-list test-voice-pipeline-stt test-voice-pipeline-llm test-voice-pipeline-tts test-voice-pipeline-single test-voice-pipeline-all test-voice-pipeline-realtime test-voice-pipeline-realtime-desktop test-voice-pipeline-realtime-pi test-voice-pipeline-benchmark test-performance-benchmarks test-performance-benchmarks-direct test-voice-pipeline-suite
+.PHONY: help test test-dev clean check-system-deps install-system-deps-instructions setup-python-version setup setup-dev setup-ci bundle models-image runtime-image run-api security lint lint-dev format format-dev docker-build docker-run docker-test docker-clean docker-dev docker-compose-up docker-compose-down test-voice-pipeline-list test-voice-pipeline-stt test-voice-pipeline-llm test-voice-pipeline-tts test-voice-pipeline-single test-voice-pipeline-all test-voice-pipeline-realtime test-voice-pipeline-realtime-desktop test-voice-pipeline-realtime-pi test-voice-pipeline-benchmark test-performance-benchmarks test-performance-benchmarks-direct test-voice-pipeline-suite
 
 # Default target
 help:
 	@echo "Character AI - Available Commands:"
 	@echo ""
 	@echo "Setup:"
+	@echo "  check-system-deps            - Check if system dependencies are installed"
+	@echo "  install-system-deps-instructions - Show installation commands for system dependencies"
 	@echo "  setup-python-version - Set up Python version for the project (creates .python-version)"
 	@echo "  setup               - Set up environment with security dependencies"
 	@echo "  setup-dev           - Set up development environment (includes setup)"
@@ -154,6 +156,43 @@ docker-compose-down:
 	@echo "Services stopped."
 
 # Setup targets
+check-system-deps:
+	@echo "Checking system dependencies..."
+	@MISSING=""; \
+	command -v ffmpeg > /dev/null 2>&1 || MISSING="$$MISSING ffmpeg"; \
+	command -v pkg-config > /dev/null 2>&1 || MISSING="$$MISSING pkg-config"; \
+	if [ -n "$$MISSING" ]; then \
+		echo "⚠️  Missing system dependencies:$$MISSING"; \
+		echo "Run 'make install-system-deps-instructions' for install commands"; \
+		exit 1; \
+	else \
+		echo "✅ All required system dependencies found"; \
+	fi
+
+install-system-deps-instructions:
+	@echo "========================================="
+	@echo "System Dependencies Installation Guide"
+	@echo "========================================="
+	@echo ""
+	@echo "Required packages: ffmpeg, portaudio19-dev, libsndfile1, libasound2-dev"
+	@echo ""
+	@echo "📋 Ubuntu/Debian:"
+	@echo "  sudo apt-get update"
+	@echo "  sudo apt-get install -y ffmpeg portaudio19-dev libsndfile1 libasound2-dev"
+	@echo ""
+	@echo "📋 macOS (Homebrew):"
+	@echo "  brew install ffmpeg portaudio libsndfile"
+	@echo ""
+	@echo "📋 CI/CD (GitHub Actions - add to workflow):"
+	@echo "  - name: Install system dependencies"
+	@echo "    run: |"
+	@echo "      sudo apt-get update"
+	@echo "      sudo apt-get install -y ffmpeg portaudio19-dev libsndfile1"
+	@echo ""
+	@echo "📋 Docker (add to Dockerfile):"
+	@echo "  RUN apt-get update && apt-get install -y ffmpeg portaudio19-dev libsndfile1"
+	@echo ""
+
 setup-python-version:
 	@echo "Setting up Python version for the project..."
 	@if [ ! -f .python-version ]; then \
@@ -183,7 +222,14 @@ setup-python-version:
 
 setup: setup-python-version
 	@echo "Setting up environment with secure architecture (PyTorch 2.8.0 + Wav2Vec2 + Coqui TTS)..."
-	# Note: Install PortAudio system dependency manually: sudo apt-get install -y portaudio19-dev
+	@make check-system-deps 2>/dev/null || { \
+		echo ""; \
+		echo "⚠️  Some system dependencies are missing!"; \
+		echo "TTS speed control and audio I/O may not work correctly."; \
+		echo ""; \
+		echo "Run: make install-system-deps-instructions"; \
+		echo ""; \
+	}
 	# Set up pyenv environment
 	@if [ -d "$$HOME/.pyenv" ]; then \
 		echo "Using pyenv for Python version management..."; \
@@ -214,7 +260,14 @@ setup: setup-python-version
 
 setup-dev: setup-python-version
 	@echo "Setting up development environment (minimal for disk space)..."
-	# Note: Install PortAudio system dependency manually: sudo apt-get install -y portaudio19-dev
+	@make check-system-deps 2>/dev/null || { \
+		echo ""; \
+		echo "⚠️  Some system dependencies are missing!"; \
+		echo "TTS speed control and audio I/O may not work correctly."; \
+		echo ""; \
+		echo "Run: make install-system-deps-instructions"; \
+		echo ""; \
+	}
 	# Set up pyenv environment
 	@if [ -d "$$HOME/.pyenv" ]; then \
 		echo "Using pyenv for Python version management..."; \
@@ -248,6 +301,11 @@ setup-dev: setup-python-version
 # CI-optimized setup that skips heavy PyTorch reinstalls
 setup-ci: setup-python-version
 	@echo "Setting up CI environment (optimized for GitHub Actions)..."
+	@make check-system-deps || { \
+		echo "❌ System dependencies missing in CI environment"; \
+		echo "Add to workflow: sudo apt-get install -y ffmpeg portaudio19-dev libsndfile1"; \
+		exit 1; \
+	}
 	# Set up pyenv environment (if available)
 	@if [ -d "$$HOME/.pyenv" ]; then \
 		echo "Using pyenv for Python version management..."; \

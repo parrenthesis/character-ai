@@ -84,6 +84,26 @@ class TextNormalizer:
         if lines:
             cleaned = lines[0]
 
+        # NOTE: Character-specific phrase filtering moved to CharacterResponseFilter
+        # This keeps TextNormalizer generic and reusable across all characters
+
+        # Truncate if response is too long (>25 words for more natural brevity)
+        words = cleaned.split()
+        if len(words) > 25:
+            # Try to find the last complete sentence within 25 words
+            truncated = " ".join(words[:25])
+            # Find last sentence-ending punctuation
+            last_period = max(
+                truncated.rfind("."),
+                truncated.rfind("!"),
+                truncated.rfind("?"),
+            )
+            if last_period > 0:
+                cleaned = truncated[: last_period + 1]
+            else:
+                # No sentence ending found, just truncate and add period
+                cleaned = truncated + "."
+
         # Final cleanup
         cleaned = cleaned.strip()
 

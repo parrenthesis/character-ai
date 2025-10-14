@@ -3,6 +3,7 @@ Testing commands for the Character AI CLI.
 
 Provides Click-based commands for testing platform functionality.
 """
+
 # mypy: ignore-errors
 
 # CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
@@ -669,9 +670,7 @@ async def _test_realtime_interaction(
             output_device, output_sample_rate = device_manager.setup_output_device()
 
             click.echo(f"🎤 Using input: {input_device.name} ({input_sample_rate}Hz)")
-            click.echo(
-                f"🔊 Using output: {output_device.name} ({output_sample_rate}Hz)"
-            )
+            click.echo(f"🔊 Using output: {output_device.name} ({output_sample_rate}Hz)")
 
             # Display hardware profile information
             click.echo(f"⚙️  Hardware profile: {hardware_profile}")
@@ -786,7 +785,31 @@ async def _test_realtime_interaction(
                     continue
 
                 # Process audio chunk through VAD
+                prev_state = vad_manager.state
                 vad_state = vad_manager.process_audio_chunk(audio_chunk)
+
+                # Show VAD state transitions
+                if vad_state != prev_state:
+                    import sys
+
+                    from ..core.audio_io.vad_session import VADSessionState
+
+                    if vad_state == VADSessionState.SPEECH_DETECTED:
+                        audio_level = vad_manager.get_audio_level(audio_chunk)
+                        click.echo(
+                            f"🎤 Speech start detected (level: {audio_level:.4f} > threshold: {vad_manager.speech_start_threshold:.4f})"
+                        )
+                        sys.stdout.flush()
+                    elif vad_state == VADSessionState.SPEECH_ENDING:
+                        speech_duration = (
+                            time.time() - vad_manager.speech_start_time
+                            if vad_manager.speech_start_time > 0
+                            else 0
+                        )
+                        click.echo(
+                            f"🛑 Speech end detected (duration: {speech_duration:.2f}s, silence: {vad_manager.silence_duration:.2f}s)"
+                        )
+                        sys.stdout.flush()
 
                 # Debug: show audio levels occasionally
                 if verbose and time.time() % 1.0 < 0.01:  # Show every ~1 second
@@ -804,10 +827,13 @@ async def _test_realtime_interaction(
                     vad_manager.set_processing_state()
 
                     # Stop audio capture during processing to prevent overflow
-                    # Always show stop sign - it's informative user feedback
+                    # Show processing start timestamp
                     import sys
 
-                    click.echo("🛑 Speech detected, processing...")
+                    processing_start_ts = time.time()
+                    click.echo(
+                        f"⏱️  Processing started at {processing_start_ts - start_time:.2f}s"
+                    )
                     sys.stdout.flush()  # Force immediate display
 
                     stop_start = time.time()
@@ -824,11 +850,15 @@ async def _test_realtime_interaction(
                         audio_duration = (
                             len(speech_audio) / AudioConfig.DEFAULT_SAMPLE_RATE
                         )
+                        num_chunks = len(vad_manager.speech_buffer)
+
                         if verbose:
                             click.echo(
                                 f"⏱️  stop_capture: {stop_time:.3f}s, combine_audio: {combine_time:.3f}s"
                             )
-                        click.echo(f"📝 Processing {audio_duration:.1f}s of audio...")
+                        click.echo(
+                            f"📝 Processing {audio_duration:.1f}s of audio ({num_chunks} chunks buffered)"
+                        )
                         sys.stdout.flush()  # Force immediate display
                         process_start = time.time()
                         result = await _process_speech_chunk_with_metrics(

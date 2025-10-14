@@ -224,52 +224,13 @@ class CoquiProcessor(BaseAudioProcessor):
                 )  # Default to English if not specified
 
             # Try to add speed control if supported by the model
+            # Coqui XTTS-v2 accepts speed parameters but doesn't actually apply them
+            # Force post-processing with pydub/ffmpeg for reliable speed control
             native_speed_control = False
             if speed != 1.0:
-                # Try different speed parameter names that might be supported
-                for speed_param in ["speed", "rate", "speaking_rate", "duration"]:
-                    try:
-                        # Test if the parameter is accepted by trying a small synthesis
-                        test_kwargs = tts_kwargs.copy()
-                        test_kwargs[speed_param] = speed
-                        test_kwargs["text"] = "test"  # Short text for testing
-
-                        # Try to synthesize with speed parameter (suppress verbose output in quiet mode)
-                        import builtins
-                        import os
-
-                        quiet_mode = os.getenv("CAI_QUIET_MODE") == "1"
-                        original_print = builtins.print
-
-                        if quiet_mode:
-                            builtins.print = lambda *args, **kwargs: None
-
-                        try:
-                            if quiet_mode:
-                                with redirect_stdout(io.StringIO()), redirect_stderr(
-                                    io.StringIO()
-                                ):
-                                    test_audio = self.tts.tts(**test_kwargs)
-                            else:
-                                test_audio = self.tts.tts(**test_kwargs)
-                        finally:
-                            if quiet_mode:
-                                builtins.print = original_print
-
-                        logger.info(
-                            f"✅ Native speed control works with {speed_param}={speed}"
-                        )
-                        tts_kwargs[speed_param] = speed
-                        native_speed_control = True
-                        break
-                    except Exception as e:
-                        logger.debug(f"Parameter {speed_param} not supported: {e}")
-                        continue
-
-                if not native_speed_control:
-                    logger.info(
-                        "Native speed control not supported, will use post-processing"
-                    )
+                logger.info(
+                    f"Speed control requested ({speed}x) - will use pydub post-processing"
+                )
 
             # Synthesize speech with robust GPU fallback handling
             if self.use_gpu:

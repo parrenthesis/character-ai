@@ -107,8 +107,19 @@ def create(
             prompts_file = character_dir / "prompts.yaml"
             _save_character_prompts(character_profile, str(prompts_file))
 
+            # Create filters.yaml (Jinja2 templates + CharacterResponseFilter)
+            filters_file = character_dir / "filters.yaml"
+            _save_character_filters(character_profile, str(filters_file))
+
+            # Create templates directory with Jinja2 templates
+            templates_dir = character_dir / "templates"
+            templates_dir.mkdir(exist_ok=True)
+            _save_character_templates(character_profile, templates_dir)
+
             click.echo(f"✓ Character directory created: {character_dir}")
             click.echo(f"✓ Voice samples directory created: {voice_samples_dir}")
+            click.echo(f"✓ Templates directory created: {templates_dir}")
+            click.echo(f"✓ Response filters configured: {filters_file}")
 
         click.echo(f"✓ Character '{name}' created successfully!")
 
@@ -202,10 +213,21 @@ Format as valid JSON only."""
                     prompts_file = character_dir / "prompts.yaml"
                     _save_character_prompts(character_profile, str(prompts_file))
 
+                    # Create filters.yaml (Jinja2 templates + CharacterResponseFilter)
+                    filters_file = character_dir / "filters.yaml"
+                    _save_character_filters(character_profile, str(filters_file))
+
+                    # Create templates directory with Jinja2 templates
+                    templates_dir = character_dir / "templates"
+                    templates_dir.mkdir(exist_ok=True)
+                    _save_character_templates(character_profile, templates_dir)
+
                     click.echo(f"✓ Character directory created: {character_dir}")
                     click.echo(
                         f"✓ Voice samples directory created: {voice_samples_dir}"
                     )
+                    click.echo(f"✓ Templates directory created: {templates_dir}")
+                    click.echo(f"✓ Response filters configured: {filters_file}")
                 else:
                     click.echo("Character not saved.")
             else:
@@ -266,8 +288,34 @@ def _create_from_template(template_name: str, name: str) -> None:
         prompts_file = character_dir / "prompts.yaml"
         _save_enhanced_character_prompts(character, str(prompts_file))
 
+        # Create filters.yaml (Jinja2 templates + CharacterResponseFilter)
+        filters_file = character_dir / "filters.yaml"
+        # Convert Character to CharacterProfile format for _save_character_filters
+        from ..characters.profile_models import CharacterProfile
+
+        temp_profile = CharacterProfile(
+            id=character.name.lower().replace(" ", "_"),
+            display_name=character.name,
+            character_type=character.dimensions.species.value,
+            voice_style=character.voice_style,
+            language=character.language,
+            traits={
+                "personality": ", ".join(
+                    [t.value for t in character.dimensions.personality_traits]
+                )
+            },
+        )
+        _save_character_filters(temp_profile, str(filters_file))
+
+        # Create templates directory with Jinja2 templates
+        templates_dir = character_dir / "templates"
+        templates_dir.mkdir(exist_ok=True)
+        _save_character_templates(temp_profile, templates_dir)
+
         click.echo(f"✓ Character directory created: {character_dir}")
         click.echo(f"✓ Voice samples directory created: {voice_samples_dir}")
+        click.echo(f"✓ Templates directory created: {templates_dir}")
+        click.echo(f"✓ Response filters configured: {filters_file}")
 
         click.echo(f"✓ Character '{name}' created from template '{template_name}'!")
         click.echo(f"Species: {character.dimensions.species.value}")
@@ -1179,9 +1227,7 @@ def clone_voice(
             if quality_score:
                 click.echo(f"⭐ Quality score: {quality_score}")
         else:
-            click.echo(
-                f"❌ Failed to clone voice for character '{character}'", err=True
-            )
+            click.echo(f"❌ Failed to clone voice for character '{character}'", err=True)
             raise click.Abort()
 
     except Exception as e:
@@ -1438,9 +1484,7 @@ def clone_from_samples(
             )
             click.echo("🔗 TTS integration ready - character can speak in cloned voice")
         else:
-            click.echo(
-                f"❌ Failed to clone voice for character '{character}'", err=True
-            )
+            click.echo(f"❌ Failed to clone voice for character '{character}'", err=True)
             raise click.Abort()
 
     except Exception as e:
@@ -2146,17 +2190,140 @@ def _save_character_prompts(
     """Save character prompts to new schema format."""
     import yaml
 
-    # Create prompts data
+    # Create prompts data with examples for Jinja2 templates
     prompts_data = {
         "system_prompt": f"You are {character_profile.display_name}, a {character_profile.character_type}. {character_profile.traits.get('personality', '')}",
         "greeting": f"Hello! I'm {character_profile.display_name}. How can I help you today?",
         "topics": character_profile.traits.get("topics", []),
         "personality_traits": character_profile.traits.get("personality", ""),
         "voice_style": character_profile.voice_style,
+        "examples": {
+            "good": [
+                f"Hello! I'm {character_profile.display_name}.",
+                "That's fascinating. Tell me more.",
+                "I find that quite interesting.",
+            ],
+            "bad": [
+                "I am ready to assist you with any questions you may have.",
+                "As an AI, I process information according to my programming.",
+            ],
+        },
     }
 
     with open(file_path, "w") as f:
-        yaml.dump(prompts_data, f, default_flow_style=False)
+        yaml.dump(prompts_data, f, default_flow_style=False, allow_unicode=True)
+
+
+def _save_character_filters(
+    character_profile: CharacterProfile, file_path: str
+) -> None:
+    """Save character-specific response filters."""
+    import yaml
+
+    filters_data = {
+        "remove_phrases": [
+            "I will remain online",
+            "I am ready to assist",
+            "How may I help",
+            "Is there anything else",
+        ],
+        "simplify_patterns": {},
+        "max_words": 25,
+        "prevent_repetition": {
+            "enabled": True,
+            "window_turns": 3,
+            "phrases_to_track": ["fascinating", "interesting", "curious"],
+        },
+        "conversation_awareness": {
+            "casual_threshold": 5,
+            "familiarity_markers": ["you know", "as I mentioned"],
+        },
+    }
+
+    with open(file_path, "w") as f:
+        yaml.dump(filters_data, f, default_flow_style=False, allow_unicode=True)
+
+
+def _save_character_templates(
+    character_profile: CharacterProfile, templates_dir: Path
+) -> None:
+    """Create Jinja2 template files for character (character-agnostic)."""
+    # Base prompt template - fully generic, works for any character
+    base_template = """{# Base character template - auto-generated #}
+You are {{ character.name }}, a {{ character.dimensions.species }} character.
+
+{% if character.voice_style %}
+Voice style: {{ character.voice_style }}
+{% endif %}
+
+Key characteristics:
+{% for trait in character.dimensions.personality_traits[:5] %}
+- {{ trait|replace('_', ' ')|title }}
+{% endfor %}
+
+CRITICAL RESPONSE GUIDELINES:
+- Respond with {{ response_config.max_words|default(20) }}-{{ response_config.max_words|default(20) + 5 }} words MAXIMUM
+- Be conversational and natural
+- Respond as {{ character.name }} the character, NOT an AI helper
+- ONE brief statement or reaction ONLY
+
+Examples of GOOD responses:
+{% for example in good_examples %}
+- "{{ example }}"
+{% endfor %}
+
+Output rules:
+- Reply as a single spoken line only in first person
+- Do not include dialogue labels
+- Do not include thoughts or stage directions
+
+{% if conversation_context %}
+<conversation_history>
+{{ conversation_context }}
+</conversation_history>
+{% endif %}
+
+User: {{ user_input }}
+
+{{ character.name }}:
+"""
+
+    # Conversational prompt template - fully generic
+    conversational_template = """{# Conversation-aware template - auto-generated #}
+You are {{ character.name }}, a {{ character.dimensions.species }}.
+
+{% if conversation_depth == 0 %}
+This is your first interaction with the user. Be welcoming.
+{% elif conversation_depth <= 3 %}
+You've had {{ conversation_depth }} exchanges with this user.
+{% else %}
+You've been conversing with this user ({{ conversation_depth }} exchanges). Feel comfortable being casual.
+{% endif %}
+
+Key traits: {{ character.dimensions.personality_traits|join(', ') }}
+
+RESPONSE CONSTRAINTS:
+- Maximum: {% if conversation_depth > 5 %}15-20{% else %}20-25{% endif %} words
+- Format: Single spoken sentence as {{ character.name }}
+
+{% if conversation_context %}
+Recent conversation:
+{{ conversation_context }}
+{% endif %}
+
+User: {{ user_input }}
+
+{{ character.name }}:
+"""
+
+    # Write template files
+    base_template_file = templates_dir / "base_prompt.jinja2"
+    with open(base_template_file, "w") as f:
+        f.write(base_template)
+
+    conversational_template_file = templates_dir / "conversational_prompt.jinja2"
+    with open(conversational_template_file, "w") as f:
+        f.write(conversational_template)
 
 
 def _save_enhanced_character_profile(character: Character, file_path: str) -> None:

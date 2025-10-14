@@ -167,6 +167,13 @@ class SessionMemory:
 
         return list(conversation)
 
+    def get_conversation_depth(self, character_name: str) -> int:
+        """Get number of turns in current conversation (for template selection)."""
+        character_name = character_name.lower()
+        if character_name not in self.conversations:
+            return 0
+        return len(self.conversations[character_name])
+
     def get_conversation_summary(self, character_name: str) -> Dict[str, Any]:
         """Get a summary of conversation state for a character."""
         character_name = character_name.lower()

@@ -55,6 +55,9 @@ TTS = "==0.21.3"  # Coqui TTS - native voice cloning
 
 # Voice cloning now native with Coqui TTS (no container required)
 
+# Template engine for prompts
+jinja2 = "^3.1.0"
+
 # Web framework and API
 fastapi = "^0.116.0"  # Updated to support Starlette 0.47.2
 uvicorn = {extras = ["standard"], version = "^0.23.0"}

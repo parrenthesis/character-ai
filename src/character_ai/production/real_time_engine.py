@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 from ..algorithms.conversational_ai.session_memory import SessionMemory
 from ..algorithms.conversational_ai.text_normalizer import TextNormalizer
 from ..characters import CharacterManager, ChildSafetyFilter
+from ..characters.response_filter import CharacterResponseFilter
 from ..characters.schema_voice_manager import SchemaVoiceManager
 from ..characters.types import Character
 from ..core.audio_io.device_selector import AudioDeviceSelector
@@ -26,7 +27,7 @@ from ..core.audio_io.vad_session import VADSessionManager
 from ..core.config import Config
 from ..core.edge_optimizer import EdgeModelOptimizer
 from ..core.hardware_profile import HardwareProfileManager
-from ..core.llm.prompt_builder import LLMPromptBuilder
+from ..core.llm.template_prompt_builder import TemplatePromptBuilder
 from ..core.logging import ProcessingTimer, get_logger
 from ..core.protocols import AudioData, AudioResult
 from ..core.resource_manager import ResourceManager
@@ -74,9 +75,12 @@ class RealTimeInteractionEngine:
             self.text_normalizer = text_normalizer
 
         if prompt_builder is None:
-            self.prompt_builder = LLMPromptBuilder()
+            self.prompt_builder = TemplatePromptBuilder()
         else:
             self.prompt_builder = prompt_builder
+
+        # Character-specific response filter (initialized per character)
+        self.character_response_filter: Optional[CharacterResponseFilter] = None
 
         if resource_manager is None:
             # edge_optimizer will be set later, so pass None for now
@@ -640,6 +644,30 @@ class RealTimeInteractionEngine:
     ) -> str:
         """Generate response using ResourceManager's LLM processor."""
         try:
+            # Initialize character-specific filter if needed
+            character_name = (
+                character.name if hasattr(character, "name") else str(character)
+            )
+            if (
+                self.character_response_filter is None
+                or self.character_response_filter.character != character
+            ):
+                franchise = (
+                    getattr(character, "franchise", None)
+                    or (
+                        character.metadata.get("franchise")
+                        if character.metadata
+                        else None
+                    )
+                    or character_name.lower()
+                )
+                self.character_response_filter = CharacterResponseFilter(
+                    character, franchise
+                )
+                logger.debug(
+                    f"Initialized CharacterResponseFilter for {character_name}"
+                )
+
             # Get processor from ResourceManager
             llm_processor = self.resource_manager.get_llm_processor()
             if llm_processor is None:
@@ -650,16 +678,19 @@ class RealTimeInteractionEngine:
             if llm_processor is None:
                 raise RuntimeError("Failed to initialize LLM processor")
 
-            # Use prompt builder instead of _create_character_prompt
-            character_name = (
-                character.name if hasattr(character, "name") else str(character)
+            # Get conversation depth for template selection
+            conversation_depth = self.session_memory.get_conversation_depth(
+                character_name
             )
+
+            # Build prompt using Jinja2 template (conversation-aware)
             character_prompt = self.prompt_builder.build_prompt(
                 user_input=text,
                 character=character,
                 conversation_context=self.session_memory.format_context_for_llm(
                     character_name=character_name, current_user_input=text, max_turns=5
                 ),
+                conversation_depth=conversation_depth,
             )
 
             # Use processor
@@ -669,11 +700,19 @@ class RealTimeInteractionEngine:
             )
 
             # Debug logging to see raw LLM output before cleaning
-            logger.debug(f"Raw LLM output before normalization: '{response_text}'")
+            logger.debug(f"Raw LLM output before filtering: '{response_text}'")
 
-            # Use text normalizer instead of _clean_llm_response
+            # NEW: Apply character-specific filtering BEFORE generic text normalization
+            conversation_history = self.session_memory.get_conversation_context(
+                character_name
+            )
+            response_text = self.character_response_filter.filter_response(
+                response_text, conversation_history
+            )
+            logger.debug(f"After character filter: '{response_text}'")
+
+            # Then apply generic text normalization
             response_text = self.text_normalizer.clean_llm_response(response_text)
-
             logger.debug(f"After text normalization: '{response_text}'")
 
             # Mark model as used

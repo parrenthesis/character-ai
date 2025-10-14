@@ -183,8 +183,8 @@ class VADSessionManager:
         if audio_level > active_threshold:
             # Speech detected
             if not self.is_speaking:
-                logger.debug(
-                    f"Speech started (level: {audio_level:.6f} > {active_threshold:.6f})"
+                logger.info(
+                    f"🎤 Speech started - level: {audio_level:.6f} > threshold: {active_threshold:.6f}"
                 )
                 self.is_speaking = True
                 self.speech_buffer = []
@@ -205,13 +205,13 @@ class VADSessionManager:
             # Check for maximum speech duration
             speech_duration = current_time - self.speech_start_time
             if speech_duration > self.max_speech_duration:
-                logger.info(f"Speech too long ({speech_duration:.1f}s), forcing end")
+                logger.info(f"🛑 Speech too long ({speech_duration:.1f}s), forcing end")
                 self.state = VADSessionState.SPEECH_ENDING
                 return self.state
 
             self.state = VADSessionState.SPEECH_ACTIVE
             logger.debug(
-                f"Speaking (level: {audio_level:.6f}, duration: {speech_duration:.1f}s)"
+                f"Speaking - level: {audio_level:.6f}, duration: {speech_duration:.1f}s"
             )
 
         elif self.is_speaking:
@@ -226,15 +226,17 @@ class VADSessionManager:
             # End speech if silence is too long
             if self.silence_duration > self.silence_threshold:
                 should_end = True
-                logger.debug(
-                    f"Speech ended due to silence ({self.silence_duration:.1f}s)"
+                logger.info(
+                    f"🛑 Speech ended - silence duration: {self.silence_duration:.2f}s > threshold: {self.silence_threshold:.2f}s, total speech: {speech_duration:.2f}s"
                 )
 
             if should_end:
                 self.state = VADSessionState.SPEECH_ENDING
                 return self.state
 
-            logger.debug(f"Still speaking, silence: {self.silence_duration:.2f}s")
+            logger.debug(
+                f"Silence accumulating: {self.silence_duration:.2f}s / {self.silence_threshold:.2f}s"
+            )
 
         else:
             # No speech detected

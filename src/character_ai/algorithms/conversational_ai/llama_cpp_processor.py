@@ -122,11 +122,19 @@ class LlamaCppProcessor(BaseTextProcessor):
             )
         try:
             start = time.time()
-            prompt = await self._prepare_prompt(text, context)
+            # Check if prompt is already formatted (contains character name or system markers)
+            # If so, use it directly; otherwise apply _prepare_prompt wrapper
+            if self._is_preformatted_prompt(text):
+                prompt = text  # Use as-is for character prompts from LLMPromptBuilder
+                logger.debug("Using preformatted character prompt")
+            else:
+                prompt = await self._prepare_prompt(text, context)
+                logger.debug("Applied generic prompt wrapper")
+
             # Use configured max_tokens for complete responses
             max_tokens = (
                 self.config.interaction.max_new_tokens
-            )  # Use config value (no artificial cap)
+            )  # Use config value (controlled via runtime.yaml)
 
             out = self.model(
                 prompt=prompt,
@@ -134,13 +142,22 @@ class LlamaCppProcessor(BaseTextProcessor):
                 temperature=self.config.interaction.temperature,
                 stop=[
                     "</s>",
-                    "\n",
+                    "\n\n",  # Stop at double newline (end of thought)
                     "User:",
+                    "Human:",
+                    " - ",  # Stop at list markers
                     "Assistant:",
-                ],  # More stop tokens for shorter responses
+                ],  # Stop tokens for shorter responses (removed bare "\n" to allow multi-line responses)
             )
             resp = out["choices"][0]["text"].strip()
             dt = time.time() - start
+
+            # Log if response is empty to help debug
+            if not resp:
+                logger.warning(
+                    f"Empty response from llama.cpp for prompt: {prompt[:100]}..."
+                )
+
             return TextResult(
                 text=resp,
                 metadata={"model": "llama_cpp", "processing_time": dt},
@@ -150,9 +167,23 @@ class LlamaCppProcessor(BaseTextProcessor):
             logger.error(f"Error generating with llama.cpp: {e}")
             return await self._create_error_result(str(e))
 
+    def _is_preformatted_prompt(self, text: str) -> bool:
+        """Check if prompt is already formatted (e.g., from LLMPromptBuilder)."""
+        # Look for markers that indicate a preformatted character prompt
+        preformat_markers = [
+            "You are ",  # Character introduction
+            "Key characteristics:",  # Character description
+            "Output rules:",  # Formatting rules
+            "<conversation_history>",  # Conversation context
+            "\nUser:",  # Dialogue format
+            "CRITICAL:",  # Instruction emphasis
+        ]
+        return any(marker in text for marker in preformat_markers)
+
     async def _prepare_prompt(
         self, text: str, context: Optional[Dict[str, Any]] = None
     ) -> str:
+        """Wrap generic text input with system prompt (only for non-character prompts)."""
         system_prompt = "You are a helpful AI assistant for children."
         if context and context.get("conversation_history"):
             system_prompt += (
