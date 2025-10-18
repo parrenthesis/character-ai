@@ -213,4 +213,4 @@ def _format_character_list(characters: List[Character], format: str = "table") -
             )
 
         headers = ["Name", "Species", "Archetype", "Personality", "Voice Style"]
-        return tabulate(table_data, headers=headers, tablefmt="grid")
+        return str(tabulate(table_data, headers=headers, tablefmt="grid"))

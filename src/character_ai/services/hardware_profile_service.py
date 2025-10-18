@@ -162,7 +162,7 @@ class HardwareProfileService:
         try:
             import psutil
 
-            cpu_count = psutil.cpu_count()
+            cpu_count = psutil.cpu_count() or 1  # Default to 1 if None
             memory_gb = psutil.virtual_memory().total / (1024**3)
 
             # Check for GPU
