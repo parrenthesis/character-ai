@@ -26,7 +26,7 @@ This guide covers deploying the Character AI on toy hardware with edge constrain
 
 ```bash
 # Initialize hardware manager
-from src.character.ai.hardware import ToyHardwareManager, HardwareConstraints
+from character_ai.hardware import ToyHardwareManager, HardwareConstraints
 
 constraints = HardwareConstraints(
     max_memory_gb=4.0,

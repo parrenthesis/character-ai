@@ -52,15 +52,21 @@ make lint
 
 ## Architecture
 
-**Components:**
-- **Web**: FastAPI, WebSocket, REST API
-- **Core**: Character Management, Voice Engine, LLM Integration
-- **ML**: Wav2Vec2 (STT), Coqui TTS (TTS + Voice Cloning)
-- **Monitoring**: Prometheus, Grafana, Security Scanning
+**Modular Components:**
+- **`algorithms/`**: AI algorithms (STT, TTS, voice cloning, safety)
+- **`characters/`**: Character management (catalog, voices, safety, management)
+- **`core/`**: Core platform (config, audio I/O, LLM, persistence, caching)
+- **`features/`**: Feature modules (localization, security, parental controls, cost monitoring)
+- **`observability/`**: Monitoring (logging, metrics, crash reporting, Grafana)
+- **`production/`**: Production deployment (real-time engine, processing pipeline)
+- **`services/`**: Service layer (STT, TTS, LLM, pipeline orchestration)
+- **`web/`**: Web API (core endpoints, features, middleware, monitoring, streaming)
+- **`hardware/`**: Hardware interfaces (power management, toy hardware)
 
 **Edge Deployment:**
 - Pre-downloaded ML models for offline operation
 - Optimized for local hardware (Raspberry Pi, etc.)
+- Modular architecture enables selective feature deployment
 
 ## Testing
 

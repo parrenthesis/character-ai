@@ -68,7 +68,7 @@ make docker-test
 ```python
 # tests/test_voice_manager.py
 import pytest
-from character_ai.characters.voice_manager import VoiceManager
+from character_ai.characters.voices.voice_manager import VoiceManager
 
 def test_voice_manager_initialization():
     """Test voice manager can be initialized."""
@@ -261,13 +261,40 @@ make docker-build
 
 ```
 src/character_ai/
-├── algorithms/          # AI algorithms and models
-├── characters/          # Character management
+├── algorithms/          # AI algorithms (STT, TTS, voice cloning, safety)
+│   ├── conversational_ai/  # Conversational AI processors
+│   └── safety/            # Content safety and filtering
+├── characters/          # Character management system
+│   ├── catalog/          # Character catalog and storage
+│   ├── management/       # Character lifecycle management
+│   ├── safety/           # Character-specific safety filters
+│   └── voices/           # Voice management and cloning
 ├── core/               # Core platform functionality
+│   ├── audio_io/        # Audio input/output handling
+│   ├── caching/         # Response caching
+│   ├── config/          # Configuration management
+│   ├── llm/             # Large Language Model integration
+│   └── persistence/      # Data persistence layer
+├── features/           # Feature modules
+│   ├── cost_monitoring/ # Cost tracking and optimization
+│   ├── localization/    # Multi-language support
+│   ├── parental_controls/ # Parental control features
+│   └── security/        # Security and authentication
 ├── hardware/           # Hardware interfaces
-├── monitoring/         # Monitoring and metrics
+├── observability/      # Monitoring and observability
 ├── production/         # Production deployment
+│   └── engine/         # Real-time processing engine
+├── services/           # Service layer
+│   ├── stt_service.py  # Speech-to-Text service
+│   ├── tts_service.py  # Text-to-Speech service
+│   ├── llm_service.py  # LLM service
+│   └── pipeline_orchestrator.py # Pipeline coordination
 └── web/               # Web API and interfaces
+    ├── core/          # Core API endpoints
+    ├── features/      # Feature-specific endpoints
+    ├── middleware/    # Web middleware
+    ├── monitoring/    # Monitoring endpoints
+    └── streaming/     # Real-time streaming
 ```
 
 ### Adding New Features
