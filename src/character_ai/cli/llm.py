@@ -11,11 +11,11 @@ from typing import List, Optional
 
 import click
 
-from ..core.llm.config import LLMConfigManager
+from ..core.llm.config import LLMConfigService
 from ..core.llm.config import LLMProvider as ConfigLLMProvider
 from ..core.llm.config import LLMType
 from ..core.llm.factory import LLMFactory
-from ..core.llm.manager import ModelInfo, OpenModelManager
+from ..core.llm.manager import ModelInfo, OpenModelService
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ def llm_commands() -> None:
 def list_models(installed: bool, use_case: Optional[str]) -> None:
     """List available or installed LLM models."""
     try:
-        LLMConfigManager()
-        model_manager = OpenModelManager()
+        LLMConfigService()
+        model_manager = OpenModelService()
 
         if installed:
             installed_models = model_manager.list_installed_models()
@@ -76,8 +76,8 @@ def list_models(installed: bool, use_case: Optional[str]) -> None:
 def install(model_name: str, progress: bool) -> None:
     """Install an LLM model."""
     try:
-        LLMConfigManager()
-        model_manager = OpenModelManager()
+        LLMConfigService()
+        model_manager = OpenModelService()
 
         if model_manager.is_model_installed(model_name):
             click.echo(f"Model {model_name} is already installed")
@@ -114,7 +114,7 @@ def install(model_name: str, progress: bool) -> None:
 def remove(model_name: str) -> None:
     """Remove an installed LLM model."""
     try:
-        model_manager = OpenModelManager()
+        model_manager = OpenModelService()
 
         if not model_manager.is_model_installed(model_name):
             click.echo(f"Model {model_name} is not installed")
@@ -136,7 +136,7 @@ def remove(model_name: str) -> None:
 def model_info(model_name: str) -> None:
     """Show information about a specific model."""
     try:
-        model_manager = OpenModelManager()
+        model_manager = OpenModelService()
         model_info = model_manager.get_model_info(model_name)
 
         if not model_info:
@@ -191,7 +191,7 @@ def config(
 ) -> None:
     """Configure LLM settings."""
     try:
-        config_manager = LLMConfigManager()
+        config_manager = LLMConfigService()
 
         if show:
             _show_config(config_manager)
@@ -240,7 +240,7 @@ def config(
         raise click.Abort()
 
 
-def _show_config(config_manager: LLMConfigManager) -> None:
+def _show_config(config_manager: LLMConfigService) -> None:
     """Show current LLM configuration."""
     click.echo("Current LLM Configuration:")
     click.echo(
@@ -264,8 +264,8 @@ def _show_config(config_manager: LLMConfigManager) -> None:
 def status(output_json: bool) -> None:
     """Show LLM status and health."""
     try:
-        config_manager = LLMConfigManager()
-        model_manager = OpenModelManager()
+        config_manager = LLMConfigService()
+        model_manager = OpenModelService()
         factory = LLMFactory(config_manager, model_manager)
 
         status_info = factory.get_llm_status()
@@ -301,8 +301,8 @@ def status(output_json: bool) -> None:
 def test(llm_type: str) -> None:
     """Test LLM connections."""
     try:
-        config_manager = LLMConfigManager()
-        model_manager = OpenModelManager()
+        config_manager = LLMConfigService()
+        model_manager = OpenModelService()
         factory = LLMFactory(config_manager, model_manager)
 
         if llm_type in ["character_creation", "both"]:
@@ -324,7 +324,7 @@ def test(llm_type: str) -> None:
 def storage(cleanup: bool) -> None:
     """Show storage usage for LLM models."""
     try:
-        model_manager = OpenModelManager()
+        model_manager = OpenModelService()
         usage = model_manager.get_storage_usage()
 
         click.echo("Storage Usage:")

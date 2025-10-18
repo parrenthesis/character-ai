@@ -9,12 +9,15 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from ..core.llm.config import LLMConfigManager, LLMType
+if TYPE_CHECKING:
+    from ..core.config.main import Config
+
+from ..core.llm.config import LLMType
 from ..core.llm.factory import LLMFactory
-from ..core.llm.manager import OpenModelManager
-from .types import (
+from ..core.llm.manager import OpenModelService
+from .management.types import (
     CHARACTER_TEMPLATES,
     Ability,
     Archetype,
@@ -25,7 +28,7 @@ from .types import (
     Species,
     Topic,
 )
-from .validation import CharacterValidator, ValidationLevel, ValidationResult
+from .management.validation import CharacterValidator, ValidationLevel, ValidationResult
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +36,15 @@ logger = logging.getLogger(__name__)
 class AICharacterGenerator:
     """AI-powered character generation using LLMs."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: Optional["Config"] = None) -> None:
         """Initialize the AI character generator."""
-        self.config_manager = LLMConfigManager()
-        self.model_manager = OpenModelManager()
+        if config is None:
+            from ..core.config.main import Config
+
+            config = Config()
+
+        self.config_manager = config.create_llm_config_manager()
+        self.model_manager = OpenModelService()
         self.factory = LLMFactory(self.config_manager, self.model_manager)
         self.validator = CharacterValidator()
         self.llm: Optional[Any] = None

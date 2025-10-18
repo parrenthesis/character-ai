@@ -5,7 +5,7 @@ Basic tests to improve test coverage.
 from unittest.mock import Mock, patch
 
 from src.character_ai.characters.ai_generator import AICharacterGenerator
-from src.character_ai.characters.types import (
+from src.character_ai.characters.management.types import (
     Ability,
     Archetype,
     Character,
@@ -14,7 +14,7 @@ from src.character_ai.characters.types import (
     Species,
     Topic,
 )
-from src.character_ai.characters.validation import CharacterValidator
+from src.character_ai.characters.management.validation import CharacterValidator
 
 
 class TestBasicCoverage:

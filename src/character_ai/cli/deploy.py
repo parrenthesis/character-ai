@@ -6,7 +6,7 @@ Provides Click-based commands for creating deployment bundles.
 
 import click
 
-from ..core.deployment.bundler import CharacterBundler
+from ..characters.catalog import CharacterBundler
 
 
 @click.group()
@@ -25,7 +25,9 @@ def deploy_commands() -> None:
     help="Hardware profile (raspberry_pi, desktop, etc)",
 )
 @click.option("--format", type=click.Choice(["tar.gz", "docker"]), default="tar.gz")
-@click.option("--output", "-o", help="Output directory")
+@click.option(
+    "--output", "-o", default="bundles", help="Output directory (default: bundles/)"
+)
 @click.option("--include-models/--no-models", default=True, help="Bundle models")
 def bundle(character, franchise, hardware, format, output, include_models):
     """Create deployment bundle for character on specific hardware."""
@@ -51,7 +53,7 @@ def bundle(character, franchise, hardware, format, output, include_models):
 def profiles(list_profiles):
     """Manage hardware profiles."""
     if list_profiles:
-        from ..core.hardware_profile import HardwareProfileManager
+        from ..services.hardware_profile_service import HardwareProfileManager
 
         profile_manager = HardwareProfileManager()
         profiles = profile_manager.list_available_profiles()
@@ -70,8 +72,7 @@ def profiles(list_profiles):
 @click.option("--output", "-o", help="Output directory")
 def validate(character, franchise, hardware, output):
     """Validate deployment configuration."""
-    from ..characters import CharacterManager
-    from ..core.hardware_profile import HardwareProfileManager
+    from ..services.hardware_profile_service import HardwareProfileManager
 
     click.echo(f"Validating deployment for {character} ({franchise}) on {hardware}...")
 
@@ -86,8 +87,10 @@ def validate(character, franchise, hardware, output):
 
     # Validate character
     try:
-        character_manager = CharacterManager()
-        character_obj = character_manager.get_character(character)
+        from .character.helpers import _load_character_manager
+
+        character_service = _load_character_manager()
+        character_obj = character_service.get_character(character)
         if character_obj:
             click.echo(f"✅ Character '{character}' is valid")
         else:

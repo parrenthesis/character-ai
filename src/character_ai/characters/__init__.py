@@ -1,12 +1,13 @@
-from .manager import CharacterManager
-from .safety_filter import ChildSafetyFilter
-from .types import Character, CharacterType
-from .voice_manager import VoiceManager
+# Expose key classes for backward compatibility
+from .management import Character, CharacterService, CharacterType
+from .safety import CharacterResponseFilter, ChildSafetyFilter
+from .voices import VoiceService
 
 __all__ = [
-    "VoiceManager",
+    "CharacterService",
     "Character",
     "CharacterType",
-    "CharacterManager",
     "ChildSafetyFilter",
+    "CharacterResponseFilter",
+    "VoiceService",
 ]

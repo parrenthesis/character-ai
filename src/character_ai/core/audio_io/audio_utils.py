@@ -12,9 +12,12 @@ from .. import torch_init  # noqa: F401
 
 import io
 import logging
-from typing import Any, Tuple
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from ..protocols import AudioData
 
 logger = logging.getLogger(__name__)
 
@@ -167,12 +170,39 @@ def validate_and_fix_audio(audio_array: np.ndarray) -> np.ndarray:
     if audio.dtype != np.float32:
         audio = audio.astype(np.float32)
 
-    # Clip values to valid range
+    # Normalize values to valid range instead of clipping
     if np.any(np.abs(audio) > 1.0):
-        logger.warning("Audio data contains values outside [-1.0, 1.0], clipping")
-        audio = np.clip(audio, -1.0, 1.0)
+        max_val = np.max(np.abs(audio))
+        logger.info(
+            f"Audio data contains values outside [-1.0, 1.0], normalizing by factor {max_val:.3f}"
+        )
+        audio = audio / max_val
 
     return audio
+
+
+class AudioNormalizer:
+    """Centralized audio normalization utilities.
+
+    Use these helpers instead of inlined normalization logic to ensure
+    consistent behavior across the codebase.
+    """
+
+    @staticmethod
+    def normalize_peak(audio_array: np.ndarray) -> np.ndarray:
+        """Peak-normalize to [-1.0, 1.0] range without clipping."""
+        if audio_array.size == 0:
+            return audio_array
+        audio = audio_array.astype(np.float32, copy=False)
+        max_val = np.max(np.abs(audio)) if audio.size else 0.0
+        if max_val > 1.0:
+            return audio / max_val
+        return audio
+
+    @staticmethod
+    def normalize_if_needed(audio_array: np.ndarray) -> np.ndarray:
+        """Normalize only when values exceed [-1.0, 1.0]."""
+        return validate_and_fix_audio(audio_array)
 
 
 def decode_wav_bytes(wav_bytes: bytes) -> Tuple[np.ndarray, int]:
@@ -281,3 +311,190 @@ def prepare_audio_for_playback(
     audio_array = validate_and_fix_audio(audio_array)
 
     return audio_array, target_sr
+
+
+def concatenate_audio_chunks(
+    chunks: list[Any], target_sample_rate: int = 44100
+) -> Optional["AudioData"]:
+    """
+    Concatenate multiple audio chunks into a single AudioData object.
+
+    Handles various audio formats and resamples to target sample rate.
+
+    Args:
+        chunks: List of audio chunks (bytes, numpy arrays, or WAV bytes)
+        target_sample_rate: Target sample rate for output audio
+
+    Returns:
+        AudioData object with concatenated and resampled audio
+    """
+    if not chunks:
+        return None
+
+    from ..protocols import AudioData
+
+    audio_arrays = []
+    tts_sample_rate = 22050  # TTS generates at 22050 Hz
+
+    for chunk in chunks:
+        try:
+            if isinstance(chunk, np.ndarray):
+                # Already a numpy array - use directly
+                audio_array = chunk.astype(np.float32)
+            elif isinstance(chunk, bytes):
+                # Try to decode as WAV first
+                if chunk.startswith(b"RIFF"):
+                    audio_array, chunk_sr = decode_wav_bytes(chunk)
+                    if chunk_sr != tts_sample_rate:
+                        audio_array = resample_audio(
+                            audio_array, chunk_sr, tts_sample_rate
+                        )
+                else:
+                    # Convert raw bytes to audio array
+                    audio_array = convert_audio_input(chunk)
+            else:
+                logger.warning(f"Unsupported chunk type: {type(chunk)}")
+                continue
+
+            audio_arrays.append(audio_array)
+        except Exception as e:
+            logger.warning(f"Failed to process audio chunk: {e}")
+            continue
+
+    if not audio_arrays:
+        return None
+
+    # Concatenate all audio arrays
+    combined_audio = np.concatenate(audio_arrays)
+
+    # Resample from TTS sample rate (22050 Hz) to target sample rate
+    if len(combined_audio) > 0 and tts_sample_rate != target_sample_rate:
+        resampled_audio = resample_audio(
+            combined_audio, tts_sample_rate, target_sample_rate
+        )
+        logger.info(
+            f"Resampled audio from {tts_sample_rate}Hz to {target_sample_rate}Hz: {len(combined_audio)} -> {len(resampled_audio)} samples"
+        )
+    else:
+        resampled_audio = combined_audio
+
+    # Convert numpy array to WAV bytes
+
+    wav_buffer = io.BytesIO()
+    sf.write(
+        wav_buffer, resampled_audio, target_sample_rate, format="WAV", subtype="PCM_16"
+    )
+    wav_bytes = wav_buffer.getvalue()
+    wav_buffer.close()
+
+    return AudioData(
+        data=wav_bytes,
+        sample_rate=target_sample_rate,
+        duration=len(resampled_audio) / target_sample_rate,
+        channels=1,
+    )
+
+
+def write_wav_file(
+    file_path: str,
+    audio_data: Any,
+    sample_rate: int,
+    subtype: str = "PCM_16",
+    channels: int = 1,
+) -> None:
+    """
+    Write audio data to WAV file with proper format handling.
+
+    Handles both numpy arrays and raw bytes, ensuring compatibility
+    with various audio devices and players.
+
+    Args:
+        file_path: Path to output WAV file
+        audio_data: Audio data (numpy array or bytes)
+        sample_rate: Sample rate in Hz
+        subtype: WAV subtype (PCM_16, PCM_24, etc.)
+    """
+    if not SOUNDFILE_AVAILABLE:
+        raise ValueError("soundfile not available for WAV writing")
+
+    try:
+        if isinstance(audio_data, bytes):
+            # Check if it's already WAV format
+            if audio_data.startswith(b"RIFF"):
+                # Already WAV format - write directly
+                with open(file_path, "wb") as f:
+                    f.write(audio_data)
+                logger.info(
+                    f"Wrote WAV file: {file_path} (raw WAV bytes, {len(audio_data)} bytes)"
+                )
+                return
+            else:
+                # Use convert_audio_input to handle raw bytes properly
+                audio_array = convert_audio_input(audio_data)
+                logger.info(
+                    f"Converted raw bytes to float32 array: {len(audio_array)} samples"
+                )
+        elif isinstance(audio_data, np.ndarray):
+            # Numpy array - use directly
+            audio_array = audio_data
+        else:
+            raise ValueError(f"Unsupported audio data type: {type(audio_data)}")
+
+        # Normalize audio to prevent clipping
+        audio_array = validate_and_fix_audio(audio_array)
+
+        # Convert mono to stereo if needed
+        if channels == 2 and len(audio_array.shape) == 1:
+            audio_array = np.column_stack((audio_array, audio_array))
+            logger.info("Converted mono to stereo for device compatibility")
+
+        # Always use sf.write for numpy arrays with proper subtype
+        sf.write(file_path, audio_array, sample_rate, subtype=subtype)
+        logger.info(
+            f"Wrote WAV file: {file_path} ({len(audio_array)} samples, {sample_rate}Hz, {subtype}, {channels}ch)"
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to write WAV file {file_path}: {e}")
+        raise
+
+
+def load_audio_file(file_path: str) -> Optional["AudioData"]:
+    """
+    Load audio file and return AudioData object.
+
+    Args:
+        file_path: Path to the audio file
+
+    Returns:
+        AudioData object with loaded audio data
+
+    Raises:
+        FileNotFoundError: If the file doesn't exist
+        ValueError: If the file format is unsupported
+    """
+    if not SOUNDFILE_AVAILABLE:
+        raise ValueError("soundfile not available for audio file loading")
+
+    try:
+        from ..protocols import AudioData
+
+        # Load audio file
+        audio_data, sample_rate = sf.read(file_path)
+
+        # Convert to AudioData object
+        audio_obj = AudioData(
+            data=audio_data,
+            sample_rate=sample_rate,
+            duration=len(audio_data) / sample_rate,
+            channels=1 if len(audio_data.shape) == 1 else audio_data.shape[1],
+        )
+
+        logger.info(
+            f"Loaded audio file: {file_path} ({len(audio_data)} samples, {sample_rate}Hz, {audio_obj.channels}ch)"
+        )
+        return audio_obj
+
+    except Exception as e:
+        logger.error(f"Failed to load audio file {file_path}: {e}")
+        raise

@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from ..voice_activity_detection import VADConfig, VoiceActivityDetector
+from .voice_activity_detection import VADConfig, VoiceActivityDetector
 from .wake_word_detector import WakeWordDetector
 
 logger = logging.getLogger(__name__)
@@ -112,15 +112,25 @@ class VADSessionManager:
         self.last_speech_time = 0.0
         self.speech_start_time = 0.0
 
-        # Session parameters (tuned for natural conversation)
-        # Use hardware profile settings if provided, otherwise use defaults
+        # Session parameters - use hardware profile settings if provided, otherwise use defaults
         # Use separate thresholds for speech start (high, avoid noise) and continuation (lower, detect all speech)
-        self.speech_start_threshold = 0.020  # Very high threshold to avoid false starts (background noise can spike to 0.015)
-        self.speech_continue_threshold = 0.005  # Threshold during speech - above background noise, allows natural pauses
+        vad_threshold = self.hardware_vad_settings.get("threshold", 0.75)
+        self.speech_start_threshold = (
+            vad_threshold * 0.02
+        )  # Convert to energy level (0.75 -> 0.015)
+        self.speech_continue_threshold = (
+            vad_threshold * 0.005
+        )  # Lower threshold during speech
         self.speech_threshold = self.speech_start_threshold  # Will be set dynamically
+
+        # Use hardware settings for silence threshold, fallback to VADConfig
         self.silence_threshold = self.hardware_vad_settings.get(
-            "max_silence_duration_s", 0.3
+            "max_silence_duration_s",
+            self.vad_config.min_silence_duration_ms / 1000.0
+            if hasattr(self.vad_config, "min_silence_duration_ms")
+            else 1.0,
         )
+
         self.min_speech_duration = self.hardware_vad_settings.get(
             "min_speech_duration_s", 0.3
         )

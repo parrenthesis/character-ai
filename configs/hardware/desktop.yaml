@@ -23,7 +23,7 @@ audio:
 vad:
   threshold: 0.75 # Increased from 0.7 to reduce false positives from background noise
   min_speech_duration_s: 0.05 # Reduced from 0.1 to detect speech faster
-  max_silence_duration_s: 0.4 # Balance between natural pauses and responsiveness (400ms)
+  max_silence_duration_s: 1.0 # Allow natural speech pauses (1.0s)
   wake_word:
     enabled: false # Disabled for testing, enable for production
     method: "energy" # "energy" (fast, simple) or "openwakeword" (ML-based, accurate)

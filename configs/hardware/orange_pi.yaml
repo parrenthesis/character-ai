@@ -23,7 +23,7 @@ audio:
 vad:
   threshold: 0.6
   min_speech_duration_s: 0.2
-  max_silence_duration_s: 0.4 # Reduced from 0.8 for faster response
+  max_silence_duration_s: 1.0 # Allow natural speech pauses (1.0s)
   wake_word:
     enabled: true # Enabled for production toy deployment
     method: "energy" # Energy-based for efficiency on ARM

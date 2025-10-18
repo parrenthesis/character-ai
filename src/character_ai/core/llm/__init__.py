@@ -3,11 +3,9 @@ LLM (Large Language Model) providers and management for the Interactive Characte
 rm.
 """
 
-from .cli import LLMCLI
-from .cli import main as cli_main
-from .config import CharacterCreationConfig, LLMConfig, LLMConfigManager, RuntimeConfig
+from .config import CharacterCreationConfig, LLMConfig, LLMConfigService, RuntimeConfig
 from .factory import LLMFactory
-from .manager import OpenModelManager
+from .manager import OpenModelService
 from .providers import (
     AnthropicProvider,
     LLMInterface,
@@ -25,9 +23,7 @@ __all__ = [
     "LLMConfig",
     "CharacterCreationConfig",
     "RuntimeConfig",
-    "LLMConfigManager",
-    "OpenModelManager",
+    "LLMConfigService",
+    "OpenModelService",
     "LLMFactory",
-    "LLMCLI",
-    "cli_main",
 ]

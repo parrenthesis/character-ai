@@ -17,7 +17,7 @@ from fastapi.openapi.utils import get_openapi
 # Import the main app
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from character_ai.web.toy_api import app  # noqa: E402
+from character_ai.web.core.character_api import app  # noqa: E402
 
 
 def get_project_version() -> str:
@@ -270,7 +270,7 @@ The Character AI API supports multiple authentication methods for different use 
 Register a new device to receive authentication credentials:
 
 ```bash
-POST /api/v1/toy/auth/register
+POST /api/v1/character/auth/register
 ```
 
 **Response:**
@@ -292,7 +292,7 @@ Use the Bearer token in the Authorization header:
 
 ```bash
 curl -H "Authorization: Bearer your-jwt-token" \\
-     https://api.example.com/api/v1/toy/characters
+     https://api.example.com/api/v1/character/characters
 ```
 
 ### 3. Admin Token Authentication
@@ -301,7 +301,7 @@ For administrative operations, use the x-admin-token header:
 
 ```bash
 curl -H "x-admin-token: your-admin-token" \\
-     https://api.example.com/api/v1/toy/memory/clear
+     https://api.example.com/api/v1/character/memory/clear
 ```
 
 ## Device Roles
@@ -498,7 +498,7 @@ characters:
 
 ### Create Character
 ```bash
-curl -X POST "https://api.example.com/api/v1/toy/character/create" \\
+curl -X POST "https://api.example.com/api/v1/character/character/create" \\
   -H "Authorization: Bearer your-token" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -510,7 +510,7 @@ curl -X POST "https://api.example.com/api/v1/toy/character/create" \\
 
 ### Upload Character Profile
 ```bash
-curl -X POST "https://api.example.com/api/v1/toy/profiles/upload" \\
+curl -X POST "https://api.example.com/api/v1/character/profiles/upload" \\
   -H "Authorization: Bearer your-token" \\
   -F "file=@character_profile.zip"
 ```
@@ -518,7 +518,7 @@ curl -X POST "https://api.example.com/api/v1/toy/profiles/upload" \\
 ### Get Character Information
 ```bash
 curl -H "Authorization: Bearer your-token" \\
-     "https://api.example.com/api/v1/toy/characters/sparkle"
+     "https://api.example.com/api/v1/character/characters/sparkle"
 ```
 """
         )

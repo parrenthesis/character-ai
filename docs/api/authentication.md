@@ -11,7 +11,7 @@ The Character AI API supports multiple authentication methods for different use 
 Register a new device to receive authentication credentials:
 
 ```bash
-POST /api/v1/toy/auth/register
+POST /api/v1/character/auth/register
 ```
 
 **Response:**
@@ -33,7 +33,7 @@ Use the Bearer token in the Authorization header:
 
 ```bash
 curl -H "Authorization: Bearer your-jwt-token" \
-     https://api.example.com/api/v1/toy/characters
+     https://api.example.com/api/v1/character/characters
 ```
 
 ### 3. Admin Token Authentication
@@ -42,7 +42,7 @@ For administrative operations, use the x-admin-token header:
 
 ```bash
 curl -H "x-admin-token: your-admin-token" \
-     https://api.example.com/api/v1/toy/memory/clear
+     https://api.example.com/api/v1/character/memory/clear
 ```
 
 ## Device Roles

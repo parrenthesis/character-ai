@@ -12,35 +12,25 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ..core.config import Config
-from ..core.security import (
+from ..features.security import (
     DeviceIdentity,
-    DeviceIdentityManager,
+    DeviceIdentityService,
     DeviceRole,
     SecurityMiddleware,
 )
 
 logger = logging.getLogger(__name__)
 
-# Global security manager instance
-_security_manager: Optional[DeviceIdentityManager] = None
-_security_middleware: Optional[SecurityMiddleware] = None
 
-
-def get_security_manager() -> DeviceIdentityManager:
-    """Get the global security manager instance."""
-    global _security_manager
-    if _security_manager is None:
-        config = Config()
-        _security_manager = DeviceIdentityManager(config.security)  # type: ignore
-    return _security_manager
+def get_security_manager() -> DeviceIdentityService:
+    """Dependency to get security manager instance."""
+    config = Config()
+    return DeviceIdentityService(config.security)  # type: ignore
 
 
 def get_security_middleware() -> SecurityMiddleware:
-    """Get the global security middleware instance."""
-    global _security_middleware
-    if _security_middleware is None:
-        _security_middleware = SecurityMiddleware(get_security_manager())
-    return _security_middleware
+    """Dependency to get security middleware instance."""
+    return SecurityMiddleware(get_security_manager())
 
 
 # HTTP Bearer token scheme

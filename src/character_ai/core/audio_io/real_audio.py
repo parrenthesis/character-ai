@@ -378,6 +378,71 @@ class RealAudioOutput(AudioOutput):
         sd.play(audio_data.astype(np.float32), samplerate=sample_rate, device=device)
         sd.wait()
 
+    async def play_audio_stream(
+        self,
+        audio_chunks: AsyncGenerator[bytes, None],
+        sample_rate: int = 22050,
+    ) -> None:
+        """
+        Stream audio playback chunk-by-chunk.
+
+        Starts playback immediately when first chunk arrives,
+        continues as chunks stream in from TTS synthesis.
+
+        Args:
+            audio_chunks: Async generator yielding audio bytes
+            sample_rate: Audio sample rate
+        """
+        import io
+        import wave
+
+        chunk_count = 0
+        total_bytes = 0
+
+        try:
+            async for chunk_bytes in audio_chunks:
+                if chunk_count == 0:
+                    import time
+
+                    time.time()
+                    logger.info(
+                        "🔊 Starting streaming audio playback (first chunk received)"
+                    )
+
+                # Convert bytes to numpy array for playback
+                # Assuming chunk_bytes is WAV format
+                try:
+                    with wave.open(io.BytesIO(chunk_bytes), "rb") as wav_file:
+                        audio_data = (
+                            np.frombuffer(
+                                wav_file.readframes(wav_file.getnframes()),
+                                dtype=np.int16,
+                            ).astype(np.float32)
+                            / 32768.0
+                        )
+
+                        # Write to stream immediately
+                        await self.write_audio_chunk(audio_data)
+
+                except Exception as e:
+                    logger.warning(f"Failed to decode audio chunk {chunk_count}: {e}")
+                    continue
+
+                chunk_count += 1
+                total_bytes += len(chunk_bytes)
+
+                # Yield control to allow other async tasks
+                await asyncio.sleep(0)
+
+            logger.info(
+                f"✅ Streaming playback complete: {chunk_count} chunks, "
+                f"{total_bytes} bytes total"
+            )
+
+        except Exception as e:
+            logger.error(f"Streaming playback failed: {e}")
+            raise
+
     def is_playing(self) -> bool:
         """Check if playing."""
         return self._is_playing

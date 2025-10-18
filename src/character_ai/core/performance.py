@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
 
-from .logging import get_logger
+from ..observability.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -329,6 +329,23 @@ class PerformanceTimer:
                 metadata=self.metadata,
             )
 
+    async def __aenter__(self) -> "PerformanceTimer":
+        self.start_time = time.time()
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        if self.start_time:
+            self.duration_ms = (time.time() - self.start_time) * 1000
+            self.success = exc_type is None
+
+            self.tracker.record_metric(
+                component=self.component,
+                operation=self.operation,
+                duration_ms=self.duration_ms,
+                success=self.success,
+                metadata=self.metadata,
+            )
+
 
 class StressTester:
     """Stress testing for concurrent operations."""
@@ -441,16 +458,9 @@ class StressTester:
         return results
 
 
-# Global performance tracker instance
-_performance_tracker: Optional[PerformanceTracker] = None
-
-
-def get_performance_tracker() -> PerformanceTracker:
-    """Get the global performance tracker instance."""
-    global _performance_tracker
-    if _performance_tracker is None:
-        _performance_tracker = PerformanceTracker()
-    return _performance_tracker
+def create_performance_tracker() -> PerformanceTracker:
+    """Create a new performance tracker instance."""
+    return PerformanceTracker()
 
 
 def track_performance(
@@ -463,7 +473,7 @@ def track_performance(
 
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
                 with PerformanceTimer(
-                    get_performance_tracker(), component, operation, metadata
+                    create_performance_tracker(), component, operation, metadata
                 ):
                     return await func(*args, **kwargs)
 
@@ -472,7 +482,7 @@ def track_performance(
 
             def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
                 with PerformanceTimer(
-                    get_performance_tracker(), component, operation, metadata
+                    create_performance_tracker(), component, operation, metadata
                 ):
                     return func(*args, **kwargs)
 
@@ -486,7 +496,7 @@ async def performance_timer(
     component: str, operation: str, metadata: Optional[Dict[str, Any]] = None
 ) -> AsyncGenerator[PerformanceTimer, None]:
     """Async context manager for performance timing."""
-    tracker = get_performance_tracker()
+    tracker = create_performance_tracker()
     timer = PerformanceTimer(tracker, component, operation, metadata)
     try:
         yield timer

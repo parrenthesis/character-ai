@@ -16,6 +16,7 @@ import warnings
 
 import click  # noqa: E402
 
+from ..core.llm import OpenModelService  # noqa: E402
 from .character import character_commands  # noqa: E402
 from .config import config_commands  # noqa: E402
 from .deploy import deploy_commands  # noqa: E402
@@ -187,10 +188,10 @@ def status() -> None:
 
     # Check LLM system
     try:
-        from ..core.llm import LLMConfigManager, LLMFactory, OpenModelManager
+        from ..core.llm import LLMConfigService, LLMFactory, OpenModelService
 
-        config_manager = LLMConfigManager()
-        model_manager = OpenModelManager()
+        config_manager = LLMConfigService()
+        model_manager = OpenModelService()
         LLMFactory(config_manager, model_manager)
         click.echo("✓ LLM System: Available")
     except Exception as e:
@@ -226,7 +227,6 @@ def setup(
     verify: bool,
 ) -> None:
     """Setup platform with automatic model download and configuration."""
-    from ..core.llm.manager import OpenModelManager
 
     click.echo("🚀 Character AI Setup")
     click.echo("=" * 40)
@@ -248,7 +248,7 @@ def setup(
         return
 
     # Default setup - check if models exist, offer to download
-    model_manager = OpenModelManager()
+    model_manager = OpenModelService()
     if model_manager.has_any_models():
         click.echo("✅ Platform ready! Models found.")
         click.echo("Run 'cai status' to check platform health.")
@@ -262,9 +262,8 @@ def setup(
 
 def _verify_models() -> None:
     """Verify installed models."""
-    from ..core.llm.manager import OpenModelManager
 
-    model_manager = OpenModelManager()
+    model_manager = OpenModelService()
     installed = model_manager.list_installed_models()
 
     if not installed:
@@ -334,9 +333,7 @@ def _download_models(model_size: str) -> None:
     """Download models based on size selection."""
     import asyncio
 
-    from ..core.llm.manager import OpenModelManager
-
-    model_manager = OpenModelManager()
+    model_manager = OpenModelService()
 
     # Map size to model names
     model_mapping = {

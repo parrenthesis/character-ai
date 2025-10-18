@@ -160,6 +160,46 @@ class VoiceSynthesizer(Protocol):
         ...
 
 
+class VoiceManagerProtocol(Protocol):
+    """Protocol for voice management components."""
+
+    async def inject_character_voice(
+        self,
+        character_name: str,
+        voice_file_path: str,
+        tts_processor: Any,
+        *,
+        force_recompute_embedding: bool = False,
+    ) -> bool:
+        """Inject a character's voice for synthesis."""
+        ...
+
+    async def get_character_voice_path(self, character_name: str) -> Optional[str]:
+        """Get the voice file path for a character."""
+        ...
+
+    async def synthesize_with_character_voice(
+        self,
+        character_name: str,
+        text: str,
+        tts_processor: Any,
+    ) -> AudioData:
+        """Synthesize speech using character's injected voice."""
+        ...
+
+    async def list_available_voices(self) -> List[str]:
+        """List all available character voices."""
+        ...
+
+    async def remove_character_voice(self, character_name: str) -> bool:
+        """Remove a character's voice."""
+        ...
+
+    async def initialize(self) -> None:
+        """Initialize the voice manager."""
+        ...
+
+
 class MultimodalProcessor(Protocol):
     """Protocol for multimodal processing components."""
 
@@ -184,7 +224,7 @@ class MultimodalProcessor(Protocol):
         ...
 
 
-class ModelManager(Protocol):
+class ModelService(Protocol):
     """Protocol for model management components."""
 
     async def load_model(self, model_name: str, **kwargs: Any) -> bool:
@@ -210,7 +250,7 @@ class ModelManager(Protocol):
         ...
 
 
-class GPUManager(Protocol):
+class GPUService(Protocol):
     """Protocol for GPU resource management."""
 
     async def get_available_memory(self) -> str:
@@ -427,3 +467,23 @@ async def create_success_result(
         metadata=metadata or {},
         error=None,
     )
+
+
+class BaseServiceProtocol(Protocol):
+    """Protocol for base service functionality."""
+
+    async def initialize(self) -> None:
+        """Initialize the service."""
+        ...
+
+    async def shutdown(self) -> None:
+        """Shutdown the service."""
+        ...
+
+    async def health_check(self) -> bool:
+        """Check if the service is healthy."""
+        ...
+
+    async def get_or_create_processor(self, model_type: str) -> Any:
+        """Get or create a processor for the given model type."""
+        ...

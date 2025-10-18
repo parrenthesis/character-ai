@@ -135,7 +135,7 @@ characters:
 
 ### Create Character
 ```bash
-curl -X POST "https://api.example.com/api/v1/toy/character/create" \
+curl -X POST "https://api.example.com/api/v1/character/character/create" \
   -H "Authorization: Bearer your-token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -147,7 +147,7 @@ curl -X POST "https://api.example.com/api/v1/toy/character/create" \
 
 ### Upload Character Profile
 ```bash
-curl -X POST "https://api.example.com/api/v1/toy/profiles/upload" \
+curl -X POST "https://api.example.com/api/v1/character/profiles/upload" \
   -H "Authorization: Bearer your-token" \
   -F "file=@character_profile.zip"
 ```
@@ -155,5 +155,5 @@ curl -X POST "https://api.example.com/api/v1/toy/profiles/upload" \
 ### Get Character Information
 ```bash
 curl -H "Authorization: Bearer your-token" \
-     "https://api.example.com/api/v1/toy/characters/sparkle"
+     "https://api.example.com/api/v1/character/characters/sparkle"
 ```

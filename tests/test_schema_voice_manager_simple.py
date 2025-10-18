@@ -20,8 +20,8 @@ sys.modules["torch._C._has_torch_function"] = MagicMock()
 sys.modules["torch._C._disabled_torch_function_impl"] = MagicMock()
 
 
-class TestSchemaVoiceManagerSimple:
-    """Test SchemaVoiceManager to improve coverage from 14% to 80%+."""
+class TestSchemaVoiceServiceSimple:
+    """Test SchemaVoiceService to improve coverage from 14% to 80%+."""
 
     def setup_method(self) -> None:
         """Set up test environment."""
@@ -32,38 +32,38 @@ class TestSchemaVoiceManagerSimple:
         shutil.rmtree(self.temp_dir)
 
     def test_schema_voice_manager_import(self) -> None:
-        """Test that SchemaVoiceManager can be imported."""
+        """Test that SchemaVoiceService can be imported."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            assert SchemaVoiceManager is not None
+            assert SchemaVoiceService is not None
         except ImportError as e:
-            pytest.skip(f"SchemaVoiceManager import failed: {e}")
+            pytest.skip(f"SchemaVoiceService import failed: {e}")
 
     def test_schema_voice_manager_init(self) -> None:
-        """Test SchemaVoiceManager initialization."""
+        """Test SchemaVoiceService initialization."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
             assert voice_manager.base_path == Path(self.temp_dir)
             assert voice_manager.voice_metadata is not None
 
         except ImportError as e:
-            pytest.skip(f"SchemaVoiceManager init test failed: {e}")
+            pytest.skip(f"SchemaVoiceService init test failed: {e}")
 
     def test_get_character_profile(self) -> None:
         """Test get_character_profile method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Create a test character profile
             character_dir = (
@@ -97,11 +97,11 @@ class TestSchemaVoiceManagerSimple:
     def test_get_character_profile_not_found(self) -> None:
         """Test get_character_profile when character not found."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
             result = voice_manager._get_character_profile(
                 "nonexistent", "other_franchises"
             )
@@ -113,11 +113,11 @@ class TestSchemaVoiceManagerSimple:
     def test_get_voice_samples_dir(self) -> None:
         """Test _get_voice_samples_dir method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
             result = voice_manager._get_voice_samples_dir(
                 "test_char", "other_franchises"
             )
@@ -137,11 +137,11 @@ class TestSchemaVoiceManagerSimple:
     def test_process_voice_with_coqui(self) -> None:
         """Test _process_voice_with_coqui method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Test that the method exists
             assert hasattr(voice_manager, "_process_voice_with_coqui")
@@ -152,11 +152,11 @@ class TestSchemaVoiceManagerSimple:
     def test_process_voice_with_coqui_error(self) -> None:
         """Test _process_voice_with_coqui error handling."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Test that the method exists
             assert hasattr(voice_manager, "_process_voice_with_coqui")
@@ -167,11 +167,11 @@ class TestSchemaVoiceManagerSimple:
     def test_update_voice_metadata(self) -> None:
         """Test _update_voice_metadata method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
             voice_data = {
                 "embedding_path": "test_char_embedding.npz",
                 "samples": ["sample1.wav", "sample2.wav"],
@@ -191,11 +191,11 @@ class TestSchemaVoiceManagerSimple:
     def test_save_voice_metadata(self) -> None:
         """Test _save_voice_metadata method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Add some test data
             voice_manager.voice_metadata["characters"]["test_char"] = {
@@ -218,13 +218,11 @@ class TestSchemaVoiceManagerSimple:
     def test_get_character_voice_info(self) -> None:
         """Test get_character_voice_info method."""
         try:
-            import asyncio
-
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Add test data to metadata
             voice_manager.voice_metadata["characters"]["test_char"] = {
@@ -234,7 +232,7 @@ class TestSchemaVoiceManagerSimple:
                 "quality_score": 0.9,
             }
 
-            result = asyncio.run(voice_manager.get_character_voice_info("test_char"))
+            result = voice_manager.get_character_voice_info("test_char")
             assert result is not None
             assert result["embedding_path"] == "test_char_embedding.npz"
 
@@ -244,15 +242,13 @@ class TestSchemaVoiceManagerSimple:
     def test_get_character_voice_info_not_found(self) -> None:
         """Test get_character_voice_info when character not found."""
         try:
-            import asyncio
-
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
-            result = asyncio.run(voice_manager.get_character_voice_info("nonexistent"))
-            assert result is None
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
+            result = voice_manager.get_character_voice_info("nonexistent")
+            assert result == {}
 
         except ImportError as e:
             pytest.skip(f"get_character_voice_info_not_found test failed: {e}")
@@ -260,11 +256,11 @@ class TestSchemaVoiceManagerSimple:
     def test_list_characters_with_voice(self) -> None:
         """Test list_characters_with_voice method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Add test data to the correct structure
             voice_manager.voice_metadata = {
@@ -274,9 +270,7 @@ class TestSchemaVoiceManagerSimple:
                 }
             }
 
-            import asyncio
-
-            result = asyncio.run(voice_manager.list_characters_with_voice())
+            result = voice_manager.list_characters_with_voice()
             # Just test that we get a list back
             assert isinstance(result, list)
 
@@ -286,11 +280,11 @@ class TestSchemaVoiceManagerSimple:
     def test_remove_character_voice(self) -> None:
         """Test remove_character_voice method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Add test character to metadata
             voice_manager.voice_metadata["characters"]["test_char"] = {
@@ -310,11 +304,11 @@ class TestSchemaVoiceManagerSimple:
     def test_remove_character_voice_not_found(self) -> None:
         """Test remove_character_voice when character not found."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
             import asyncio
 
             result = asyncio.run(voice_manager.remove_character_voice("nonexistent"))
@@ -326,11 +320,11 @@ class TestSchemaVoiceManagerSimple:
     def test_validate_voice_metadata(self) -> None:
         """Test _validate_voice_metadata method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            SchemaVoiceManager(Path(self.temp_dir))
+            SchemaVoiceService(Path(self.temp_dir))
 
             # Test valid metadata
             valid_metadata = {
@@ -364,11 +358,11 @@ class TestSchemaVoiceManagerSimple:
     def test_get_voice_statistics(self) -> None:
         """Test get_voice_statistics method."""
         try:
-            from src.character_ai.characters.schema_voice_manager import (
-                SchemaVoiceManager,
+            from src.character_ai.characters.voices.schema_voice_manager import (
+                SchemaVoiceService,
             )
 
-            voice_manager = SchemaVoiceManager(Path(self.temp_dir))
+            voice_manager = SchemaVoiceService(Path(self.temp_dir))
 
             # Add test data
             voice_manager.voice_metadata["characters"]["char1"] = {

@@ -4,10 +4,9 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-import yaml
 from jinja2 import Environment, FileSystemLoader, Template, TemplateNotFound
 
-from ...characters.types import Character
+from ...characters import Character
 from ..config import Config
 
 logger = logging.getLogger(__name__)
@@ -130,8 +129,11 @@ class TemplatePromptBuilder:
         for path in paths:
             if os.path.exists(path):
                 try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        return yaml.safe_load(f) or {}
+                    from pathlib import Path
+
+                    from ..config.yaml_loader import YAMLConfigLoader
+
+                    return YAMLConfigLoader.load_yaml(Path(path))
                 except Exception as e:
                     logger.warning(f"Failed to load prompts.yaml from {path}: {e}")
 
@@ -199,10 +201,13 @@ class TemplatePromptBuilder:
         for path in paths:
             if os.path.exists(path):
                 try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        config = yaml.safe_load(f) or {}
-                        logger.debug(f"Loaded filters config from {path}")
-                        return config
+                    from pathlib import Path
+
+                    from ..config.yaml_loader import YAMLConfigLoader
+
+                    config = YAMLConfigLoader.load_yaml(Path(path))
+                    logger.debug(f"Loaded filters config from {path}")
+                    return config
                 except Exception as e:
                     logger.warning(f"Failed to load filters from {path}: {e}")
 

@@ -256,7 +256,7 @@ class ProductionValidator:
         """Run basic smoke tests on the API."""
         smoke_tests = [
             ("GET /health", "GET", "/health"),
-            ("GET /api/v1/toy/health", "GET", "/api/v1/toy/health"),
+            ("GET /api/v1/character/health", "GET", "/api/v1/character/health"),
             ("GET /api/v1/characters", "GET", "/api/v1/characters"),
         ]
 

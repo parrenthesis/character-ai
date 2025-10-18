@@ -1,0 +1,20 @@
+dimensions:
+  abilities:
+    - protection
+  archetype: companion
+  backstory:
+    "A character created from the description: 'A pony character named Test
+    Character interested in friendship'"
+  dislikes: []
+  fears: []
+  goals: []
+  likes: []
+  personality_traits:
+    - friendly
+  species: robot
+  topics:
+    - friendship
+language: en
+metadata: {}
+name: Test Character
+voice_style: friendly

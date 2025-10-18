@@ -9,7 +9,10 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from ..config.main import Config
 
 import yaml
 
@@ -134,7 +137,7 @@ class LLMProviderConfig:
 
 
 @dataclass
-class LLMConfigManager:
+class LLMConfigService:
     """Manages LLM configurations for the platform."""
 
     character_creation: CharacterCreationConfig = field(
@@ -153,14 +156,31 @@ class LLMConfigManager:
 
     def __post_init__(self) -> None:
         """Initialize configurations."""
-        # Load from canonical runtime config first (defaults)
-        self._load_from_runtime_yaml()
-
-        # Then load from environment variables (overrides)
+        # Load from environment variables (overrides)
         self._load_from_env()
 
         # Validate configurations
         self._validate_configs()
+
+    @classmethod
+    def from_config(cls, config: "Config") -> "LLMConfigService":
+        """Create LLMConfigManager from main Config instance, loading LLM-specific settings."""
+        instance = cls()
+
+        # Load LLM configuration from the main config's runtime.yaml data
+        try:
+            from pathlib import Path
+
+            from ..config.yaml_loader import YAMLConfigLoader
+
+            runtime_path = Path("configs/runtime.yaml")
+            if runtime_path.exists():
+                data = YAMLConfigLoader.load_yaml(runtime_path)
+                instance._load_llm_from_yaml_data(data)
+        except Exception as e:
+            logger.warning(f"Failed to load LLM config from runtime.yaml: {e}")
+
+        return instance
 
     def _load_from_env(self) -> None:
         """Load configuration from environment variables."""
@@ -194,8 +214,8 @@ class LLMConfigManager:
             if url:
                 self.providers.ollama_base_url = url
 
-    def _load_from_runtime_yaml(self) -> None:
-        """Load LLM provider/model from configs/runtime.yaml if present (defaults).
+    def _load_llm_from_yaml_data(self, data: dict) -> None:
+        """Load LLM configuration from YAML data (extracted from main config loading).
 
         Expected schema (minimal):
         llm:
@@ -209,49 +229,40 @@ class LLMConfigManager:
             ollama_base_url: http://localhost:11434
             local_model_path: models/llm
         """
-        try:
-            runtime_path = Path("configs/runtime.yaml")
-            if not runtime_path.exists():
-                return
-            with open(runtime_path, "r") as f:
-                data = yaml.safe_load(f) or {}
+        llm_section = data.get("llm", {}) or {}
 
-            llm_section = data.get("llm", {}) or {}
+        # Runtime defaults
+        rt = llm_section.get("runtime", {}) or {}
+        prov = rt.get("provider")
+        model = rt.get("model")
+        if prov:
+            try:
+                self.runtime.provider = LLMProvider(str(prov))
+            except Exception:
+                logger.warning(f"Unknown runtime provider in runtime.yaml: {prov}")
+        if model:
+            self.runtime.model = str(model)
 
-            # Runtime defaults
-            rt = llm_section.get("runtime", {}) or {}
-            prov = rt.get("provider")
-            model = rt.get("model")
-            if prov:
-                try:
-                    self.runtime.provider = LLMProvider(str(prov))
-                except Exception:
-                    logger.warning(f"Unknown runtime provider in runtime.yaml: {prov}")
-            if model:
-                self.runtime.model = str(model)
+        # Character creation defaults
+        cc = llm_section.get("character_creation", {}) or {}
+        cprov = cc.get("provider")
+        cmodel = cc.get("model")
+        if cprov:
+            try:
+                self.character_creation.provider = LLMProvider(str(cprov))
+            except Exception:
+                logger.warning(f"Unknown character_creation provider: {cprov}")
+        if cmodel:
+            self.character_creation.model = str(cmodel)
 
-            # Character creation defaults
-            cc = llm_section.get("character_creation", {}) or {}
-            cprov = cc.get("provider")
-            cmodel = cc.get("model")
-            if cprov:
-                try:
-                    self.character_creation.provider = LLMProvider(str(cprov))
-                except Exception:
-                    logger.warning(f"Unknown character_creation provider: {cprov}")
-            if cmodel:
-                self.character_creation.model = str(cmodel)
+        # Provider-level settings
+        provs = llm_section.get("providers", {}) or {}
+        if provs.get("ollama_base_url"):
+            self.providers.ollama_base_url = str(provs["ollama_base_url"])
+        if provs.get("local_model_path"):
+            self.providers.local_model_path = str(provs["local_model_path"])
 
-            # Provider-level settings
-            provs = llm_section.get("providers", {}) or {}
-            if provs.get("ollama_base_url"):
-                self.providers.ollama_base_url = str(provs["ollama_base_url"])
-            if provs.get("local_model_path"):
-                self.providers.local_model_path = str(provs["local_model_path"])
-
-            logger.info("Loaded LLM defaults from configs/runtime.yaml")
-        except Exception as e:
-            logger.warning(f"Failed to load configs/runtime.yaml for LLM: {e}")
+        logger.info("Loaded LLM defaults from runtime.yaml data")
 
     def _validate_configs(self) -> None:
         """Validate LLM configurations."""
@@ -363,8 +374,9 @@ class LLMConfigManager:
             logger.warning(f"Configuration file not found: {file_path}")
             return
 
-        with open(file_path, "r") as f:
-            config_data = yaml.safe_load(f)
+        from ..config.yaml_loader import YAMLConfigLoader
+
+        config_data = YAMLConfigLoader.load_yaml(Path(file_path))
 
         # Load character creation config
         if "character_creation" in config_data:

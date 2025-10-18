@@ -443,10 +443,16 @@ recompute-embeddings:
 # Ensure AudioBox is ready before running voice tests
 setup-audiobox:
 	@echo "Setting up AudioBox for voice testing..."
-	pactl load-module module-alsa-sink device=hw:3,0 2>/dev/null || true
-	pactl set-default-sink alsa_output.hw_3_0 2>/dev/null || true
-	pactl suspend-sink alsa_output.hw_3_0 false 2>/dev/null || true
-	@echo "✅ AudioBox setup complete"
+	@# Only restart PulseAudio if it's completely broken (not just not responding)
+	@pactl info >/dev/null 2>&1 || (echo "PulseAudio not responding, restarting..." && pulseaudio --kill && sleep 2 && pulseaudio --start && sleep 1)
+	@# Load AudioBox sink if not already loaded (avoid duplicates)
+	@pactl list sinks short | grep -q "alsa_output.hw_3_0" || (echo "Loading AudioBox sink..." && pactl load-module module-alsa-sink device=hw:3,0)
+	@# Only change default sink if AudioBox is not already default
+	@pactl get-default-sink | grep -q "alsa_output.hw_3_0" || (echo "Setting AudioBox as default..." && pactl set-default-sink alsa_output.hw_3_0)
+	@# Unsuspend the sink if it's suspended
+	@pactl list sinks short | grep "alsa_output.hw_3_0.*SUSPENDED" && (echo "Unsuspending AudioBox..." && pactl suspend-sink alsa_output.hw_3_0 false) || true
+	@# Verify setup
+	@pactl list sinks short | grep -q "alsa_output.hw_3_0" && echo "✅ AudioBox setup complete" || echo "⚠️  AudioBox setup may have issues"
 test-voice-pipeline-list: setup-audiobox
 	@echo "Listing available input files for Data..."
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
@@ -487,9 +493,9 @@ test-voice-pipeline-realtime: setup-audiobox
 	@echo "Testing real-time voice interaction (auto-detect hardware profile)..."
 	@echo "Test will run for 10 seconds with countdown"
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
-	CAI_QUIET_MODE=1 \
+	CAI_QUIET_MODE=0
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
-	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10 --quiet
+	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10
 
 test-voice-pipeline-realtime-desktop: setup-audiobox
 	@echo "Testing real-time voice interaction with desktop hardware profile..."
@@ -550,6 +556,8 @@ test-voice-pipeline-suite: setup-audiobox
 	@echo "6. Testing all files..."
 	@$(MAKE) test-voice-pipeline-all
 	@echo ""
+	@echo "7. Testing real-time interaction..."
+	@$(MAKE) test-voice-pipeline-realtime
+	@echo ""
 	@echo "=========================================="
 	@echo "Voice pipeline test suite completed!"
-	@echo "Note: Real-time test (test-voice-pipeline-realtime) skipped - run manually if needed"

@@ -8,8 +8,8 @@ e.
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-from .config import LLMConfigManager, LLMType
-from .manager import OpenModelManager
+from .config import LLMConfigService, LLMType
+from .manager import OpenModelService
 from .providers import (
     AnthropicProvider,
     LLMInterface,
@@ -26,7 +26,7 @@ class LLMFactory:
     """Factory for creating LLM instances."""
 
     def __init__(
-        self, config_manager: LLMConfigManager, model_manager: OpenModelManager
+        self, config_manager: LLMConfigService, model_manager: OpenModelService
     ):
         self.config_manager = config_manager
         self.model_manager = model_manager
@@ -93,7 +93,7 @@ class LLMFactory:
 
         Resolution order (path-first):
         1) Explicit GGUF path from runtime config (configs/runtime.yaml → Config.models.llama_gguf_path)
-        2) Name-based lookup via OpenModelManager
+        2) Name-based lookup via OpenModelService
         3) Fallback to any installed model
         """
         try:

@@ -10,7 +10,7 @@ import re
 import time
 from typing import Any, Dict, Optional
 
-from ...core.language_support import LanguageCode, get_localization_manager
+# Import locally to avoid circular dependency
 from ..safety.classifier import (
     SafetyClassifier,
     SafetyLevel,
@@ -26,7 +26,10 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
 
     def __init__(self) -> None:
         super().__init__()
-        self.localization_manager = get_localization_manager()
+        # Import locally to avoid circular dependency
+        from ...features.localization import LanguageCode, create_localization_manager
+
+        self.localization_manager = create_localization_manager()
         self.language_specific_patterns: Dict[
             LanguageCode, Dict[str, Dict[str, Any]]
         ] = {}
@@ -34,6 +37,9 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
 
     def _load_language_specific_patterns(self) -> None:
         """Load language-specific toxicity patterns."""
+        # Import locally to avoid circular dependency
+        from ...features.localization import LanguageCode
+
         # Spanish patterns
         self.language_specific_patterns[LanguageCode.SPANISH] = {
             "violence": {
@@ -238,26 +244,35 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
         }
 
     def classify_toxicity(
-        self, text: str, language_code: Optional[LanguageCode] = None
+        self, text: str, language_code: Optional[str] = None
     ) -> SafetyResult:
         """Classify text for toxicity with language-specific patterns."""
+        # Import locally to avoid circular dependency
         start_time = time.time()
         text_lower = text.lower()
 
         # Get language-specific patterns
         if language_code is None:
-            language_code = self.localization_manager.current_language
+            language_code = self.localization_manager.current_language.value
 
         # Combine base patterns with language-specific patterns
         all_patterns = self.toxicity_patterns.copy()
-        if language_code in self.language_specific_patterns:
-            lang_patterns = self.language_specific_patterns[language_code]
-            for category, config in lang_patterns.items():
-                if category in all_patterns:
-                    # Merge patterns
-                    all_patterns[category]["patterns"].extend(config["patterns"])
-                else:
-                    all_patterns[category] = config
+        # Convert string to LanguageCode enum for pattern lookup
+        from ...features.localization import LanguageCode
+
+        try:
+            lang_enum = LanguageCode(language_code)
+            if lang_enum in self.language_specific_patterns:
+                lang_patterns = self.language_specific_patterns[lang_enum]
+                for category, config in lang_patterns.items():
+                    if category in all_patterns:
+                        # Merge patterns
+                        all_patterns[category]["patterns"].extend(config["patterns"])
+                    else:
+                        all_patterns[category] = config
+        except (ValueError, KeyError):
+            # Language code not supported, use base patterns only
+            pass
 
         detected_categories = []
         total_score = 0.0
@@ -282,7 +297,7 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
                 total_score += category_score
 
         # Determine safety level with cultural sensitivity
-        cultural_threshold = self._get_cultural_threshold(language_code)
+        cultural_threshold = self._get_cultural_threshold(language_code or "en")
 
         if total_score >= cultural_threshold["unsafe"]:
             level = SafetyLevel.UNSAFE
@@ -304,8 +319,11 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
             processing_time_ms=processing_time,
         )
 
-    def _get_cultural_threshold(self, language_code: LanguageCode) -> Dict[str, float]:
+    def _get_cultural_threshold(self, language_code: str) -> Dict[str, float]:
         """Get cultural sensitivity thresholds for different languages."""
+        # Import locally to avoid circular dependency
+        from ...features.localization import LanguageCode
+
         # Different cultures may have different sensitivity levels
         thresholds = {
             LanguageCode.ENGLISH: {"unsafe": 3.0, "warning": 1.5},
@@ -318,14 +336,21 @@ class MultilingualToxicityClassifier(ToxicityClassifier):
             LanguageCode.ARABIC: {"unsafe": 2.0, "warning": 1.0},
         }
 
-        return thresholds.get(language_code, {"unsafe": 3.0, "warning": 1.5})
+        try:
+            lang_enum = LanguageCode(language_code)
+            return thresholds.get(lang_enum, {"unsafe": 3.0, "warning": 1.5})
+        except ValueError:
+            return {"unsafe": 3.0, "warning": 1.5}
 
 
 class MultilingualPIIClassifier:
     """Multi-language PII detection with cultural adaptations."""
 
     def __init__(self) -> None:
-        self.localization_manager = get_localization_manager()
+        # Import locally to avoid circular dependency
+        from ...features.localization import LanguageCode, create_localization_manager
+
+        self.localization_manager = create_localization_manager()
         self.language_specific_patterns: Dict[
             LanguageCode, Dict[str, Dict[str, Any]]
         ] = {}
@@ -333,6 +358,9 @@ class MultilingualPIIClassifier:
 
     def _load_language_specific_pii_patterns(self) -> None:
         """Load language-specific PII patterns."""
+        # Import locally to avoid circular dependency
+        from ...features.localization import LanguageCode
+
         # Spanish PII patterns
         self.language_specific_patterns[LanguageCode.SPANISH] = {
             "phone": {
@@ -363,23 +391,32 @@ class MultilingualPIIClassifier:
         # For now, we'll use the base patterns for other languages
 
     def classify_pii(
-        self, text: str, language_code: Optional[LanguageCode] = None
+        self, text: str, language_code: Optional[str] = None
     ) -> SafetyResult:
         """Classify text for PII with language-specific patterns."""
+        # Import locally to avoid circular dependency
         start_time = time.time()
 
         if language_code is None:
-            language_code = self.localization_manager.current_language
+            language_code = self.localization_manager.current_language.value
 
         # Get language-specific patterns
         all_patterns = self._get_base_pii_patterns()
-        if language_code in self.language_specific_patterns:
-            lang_patterns = self.language_specific_patterns[language_code]
-            for category, config in lang_patterns.items():
-                if category in all_patterns:
-                    all_patterns[category]["patterns"].extend(config["patterns"])
-                else:
-                    all_patterns[category] = config
+        # Convert string to LanguageCode enum for pattern lookup
+        from ...features.localization import LanguageCode
+
+        try:
+            lang_enum = LanguageCode(language_code)
+            if lang_enum in self.language_specific_patterns:
+                lang_patterns = self.language_specific_patterns[lang_enum]
+                for category, config in lang_patterns.items():
+                    if category in all_patterns:
+                        all_patterns[category]["patterns"].extend(config["patterns"])
+                    else:
+                        all_patterns[category] = config
+        except (ValueError, KeyError):
+            # Language code not supported, use base patterns only
+            pass
 
         detected_categories = []
         total_score = 0.0
@@ -468,14 +505,16 @@ class MultilingualSafetyClassifier(SafetyClassifier):
 
     def __init__(self) -> None:
         super().__init__()
-        self.localization_manager = get_localization_manager()
+        # Import locally to avoid circular dependency
+        from ...features.localization import create_localization_manager
+
+        self.localization_manager = create_localization_manager()
         self.multilingual_toxicity = MultilingualToxicityClassifier()
         self.multilingual_pii = MultilingualPIIClassifier()
 
-    def classify(
-        self, text: str, language_code: Optional[LanguageCode] = None
-    ) -> SafetyResult:
+    def classify(self, text: str, language_code: Optional[str] = None) -> SafetyResult:
         """Classify text for safety concerns with language detection."""
+        # Import locally to avoid circular dependency
         if not self.enabled:
             return SafetyResult(
                 level=SafetyLevel.SAFE,
@@ -488,7 +527,7 @@ class MultilingualSafetyClassifier(SafetyClassifier):
         # Auto-detect language if not provided
         if language_code is None:
             detection_result = self.localization_manager.detect_and_set_language(text)
-            language_code = detection_result.detected_language
+            language_code = detection_result.detected_language.value
 
         # Get toxicity and PII results
         toxicity_result = self.multilingual_toxicity.classify_toxicity(
@@ -520,9 +559,9 @@ class MultilingualSafetyClassifier(SafetyClassifier):
         combined_details = {
             "toxicity": toxicity_result.details,
             "pii": pii_result.details,
-            "language": language_code.value,
+            "language": language_code,
             "cultural_adaptations": self.localization_manager.get_cultural_adaptations(
-                language_code
+                self.localization_manager.current_language
             ),
         }
 
@@ -538,9 +577,10 @@ class MultilingualSafetyClassifier(SafetyClassifier):
         )
 
     def classify_detailed(
-        self, text: str, language_code: Optional[LanguageCode] = None
+        self, text: str, language_code: Optional[str] = None
     ) -> Dict[str, SafetyResult]:
         """Get detailed classification results with language detection."""
+        # Import locally to avoid circular dependency
         if not self.enabled:
             return {
                 "overall": SafetyResult(
@@ -569,7 +609,7 @@ class MultilingualSafetyClassifier(SafetyClassifier):
         # Auto-detect language if not provided
         if language_code is None:
             detection_result = self.localization_manager.detect_and_set_language(text)
-            language_code = detection_result.detected_language
+            language_code = detection_result.detected_language.value
 
         # Get detailed results
         toxicity_result = self.multilingual_toxicity.classify_toxicity(
@@ -587,9 +627,10 @@ class MultilingualSafetyClassifier(SafetyClassifier):
         }
 
     def get_safety_summary(
-        self, text: str, language_code: Optional[LanguageCode] = None
+        self, text: str, language_code: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get a summary of safety assessment with language information."""
+        # Import locally to avoid circular dependency
         result = self.classify(text, language_code)
 
         return {
@@ -599,11 +640,11 @@ class MultilingualSafetyClassifier(SafetyClassifier):
             "categories": result.categories,
             "processing_time_ms": result.processing_time_ms,
             "language": (
-                language_code.value
+                language_code
                 if language_code
                 else self.localization_manager.current_language.value
             ),
             "cultural_adaptations": self.localization_manager.get_cultural_adaptations(
-                language_code
+                self.localization_manager.current_language
             ),
         }

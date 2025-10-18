@@ -47,7 +47,7 @@ class ModelDownload:
     error: Optional[str] = None
 
 
-class OpenModelManager:
+class OpenModelService:
     """Manages open-source LLM models."""
 
     def __init__(self, models_dir: str = "models/llm"):

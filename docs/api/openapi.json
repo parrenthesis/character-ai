@@ -16,67 +16,21 @@
     }
   ],
   "paths": {
-    "/api/v1/toy/health": {
-      "get": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Health Check",
-        "description": "Health check for toy systems.",
-        "operationId": "health_check_api_v1_toy_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Health Check Api V1 Toy Health Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/characters": {
-      "get": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Get Available Characters",
-        "description": "Get list of available characters.",
-        "operationId": "get_available_characters_api_v1_toy_characters_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Get Available Characters Api V1 Toy Characters Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/character/set": {
+    "/api/v1/character/interact": {
       "post": {
         "tags": [
-          "toy"
+          "character-interaction"
         ],
-        "summary": "Set Active Character",
-        "description": "Set the active character for interactions.",
-        "operationId": "set_active_character_api_v1_toy_character_set_post",
+        "summary": "Interact With Character",
+        "description": "Interact with the active character in real-time.",
+        "operationId": "interact_with_character_api_v1_character_interact_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CharacterSetRequest"
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Request"
               }
             }
           },
@@ -90,7 +44,7 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Set Active Character Api V1 Toy Character Set Post"
+                  "title": "Response Interact With Character Api V1 Character Interact Post"
                 }
               }
             }
@@ -108,19 +62,19 @@
         }
       }
     },
-    "/api/v1/toy/character/create": {
+    "/api/v1/character/interact/audio": {
       "post": {
         "tags": [
-          "toy"
+          "character-interaction"
         ],
-        "summary": "Create Custom Character",
-        "description": "Create a custom character.",
-        "operationId": "create_custom_character_api_v1_toy_character_create_post",
+        "summary": "Interact With Audio File",
+        "description": "Interact with character using uploaded audio file.",
+        "operationId": "interact_with_audio_file_api_v1_character_interact_audio_post",
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/CharacterCreateRequest"
+                "$ref": "#/components/schemas/Body_interact_with_audio_file_api_v1_character_interact_audio_post"
               }
             }
           },
@@ -134,7 +88,99 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Create Custom Character Api V1 Toy Character Create Post"
+                  "title": "Response Interact With Audio File Api V1 Character Interact Audio Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/character/set": {
+      "post": {
+        "tags": [
+          "character-session"
+        ],
+        "summary": "Set Active Character",
+        "description": "Set the active character for interactions.",
+        "operationId": "set_active_character_api_v1_character_character_set_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Set Active Character Api V1 Character Character Set Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/character/create": {
+      "post": {
+        "tags": [
+          "character-session"
+        ],
+        "summary": "Create Custom Character",
+        "description": "Create a custom character.",
+        "operationId": "create_custom_character_api_v1_character_character_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Custom Character Api V1 Character Character Create Post"
                 }
               }
             }
@@ -157,14 +203,14 @@
         ]
       }
     },
-    "/api/v1/toy/character/info": {
+    "/api/v1/character/character/info": {
       "get": {
         "tags": [
-          "toy"
+          "character-session"
         ],
         "summary": "Get Character Info",
         "description": "Get information about a character.",
-        "operationId": "get_character_info_api_v1_toy_character_info_get",
+        "operationId": "get_character_info_api_v1_character_character_info_get",
         "parameters": [
           {
             "name": "character_name",
@@ -191,7 +237,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Get Character Info Api V1 Toy Character Info Get"
+                  "title": "Response Get Character Info Api V1 Character Character Info Get"
                 }
               }
             }
@@ -209,252 +255,14 @@
         }
       }
     },
-    "/api/v1/toy/interact": {
-      "post": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Interact With Character",
-        "description": "Interact with the active character in real-time.",
-        "operationId": "interact_with_character_api_v1_toy_interact_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/character_ai__web__toy_api__InteractionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InteractionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/interact/audio": {
-      "post": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Interact With Audio File",
-        "description": "Interact with character using uploaded audio file.",
-        "operationId": "interact_with_audio_file_api_v1_toy_interact_audio_post",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_interact_with_audio_file_api_v1_toy_interact_audio_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InteractionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/profiles": {
+    "/api/v1/character/memory/status": {
       "get": {
         "tags": [
-          "toy"
-        ],
-        "summary": "List Profiles",
-        "description": "List installed character profiles with basic metadata.",
-        "operationId": "list_profiles_api_v1_toy_profiles_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response List Profiles Api V1 Toy Profiles Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/profiles/reload": {
-      "post": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Reload Profiles",
-        "description": "Reload character profiles from disk (configs/characters).",
-        "operationId": "reload_profiles_api_v1_toy_profiles_reload_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Reload Profiles Api V1 Toy Profiles Reload Post"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/profiles/upload": {
-      "post": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Upload Profile Archive",
-        "description": "Upload a zip archive containing a character profile folder (profile.yaml, consent\n.yaml, voice artifact).\n\n    The archive is extracted under configs/characters/ and profiles are reloaded.",
-        "operationId": "upload_profile_archive_api_v1_toy_profiles_upload_post",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_upload_profile_archive_api_v1_toy_profiles_upload_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Upload Profile Archive Api V1 Toy Profiles Upload Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/voices/embeddings/recompute": {
-      "post": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Recompute Voice Embeddings",
-        "description": "Recompute stored voice embeddings for one or all characters.\n\n    Requires admin token provided via `x-admin-token` header and configured in env `CAI_\nADMIN_TOKEN`.",
-        "operationId": "recompute_voice_embeddings_api_v1_toy_voices_embeddings_recompute_post",
-        "parameters": [
-          {
-            "name": "x-admin-token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Admin-Token"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecomputeEmbeddingsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Recompute Voice Embeddings Api V1 Toy Voices Embeddings Recompute Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/memory/status": {
-      "get": {
-        "tags": [
-          "toy"
+          "character-session"
         ],
         "summary": "Get Memory Status",
         "description": "Get session memory status for a character or all characters.",
-        "operationId": "get_memory_status_api_v1_toy_memory_status_get",
+        "operationId": "get_memory_status_api_v1_character_memory_status_get",
         "parameters": [
           {
             "name": "character_name",
@@ -481,7 +289,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Get Memory Status Api V1 Toy Memory Status Get"
+                  "title": "Response Get Memory Status Api V1 Character Memory Status Get"
                 }
               }
             }
@@ -499,14 +307,14 @@
         }
       }
     },
-    "/api/v1/toy/memory/clear": {
+    "/api/v1/character/memory/clear": {
       "post": {
         "tags": [
-          "toy"
+          "character-session"
         ],
         "summary": "Clear Memory",
         "description": "Clear session memory for a character or all characters.\n\nRequires authentication. Admin role required for clearing all characters.",
-        "operationId": "clear_memory_api_v1_toy_memory_clear_post",
+        "operationId": "clear_memory_api_v1_character_memory_clear_post",
         "security": [
           {
             "HTTPBearer": []
@@ -538,7 +346,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Clear Memory Api V1 Toy Memory Clear Post"
+                  "title": "Response Clear Memory Api V1 Character Memory Clear Post"
                 }
               }
             }
@@ -556,14 +364,14 @@
         }
       }
     },
-    "/api/v1/toy/memory/conversation/{character_name}": {
+    "/api/v1/character/memory/conversation/{character_name}": {
       "get": {
         "tags": [
-          "toy"
+          "character-session"
         ],
         "summary": "Get Conversation History",
         "description": "Get conversation history for a character.",
-        "operationId": "get_conversation_history_api_v1_toy_memory_conversation__character_name__get",
+        "operationId": "get_conversation_history_api_v1_character_memory_conversation__character_name__get",
         "parameters": [
           {
             "name": "character_name",
@@ -599,7 +407,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Get Conversation History Api V1 Toy Memory Conversation  Character Name  Get"
+                  "title": "Response Get Conversation History Api V1 Character Memory Conversation  Character Name  Get"
                 }
               }
             }
@@ -617,14 +425,62 @@
         }
       }
     },
-    "/api/v1/toy/safety/analyze": {
+    "/api/v1/character/health": {
+      "get": {
+        "tags": [
+          "character-health"
+        ],
+        "summary": "Health Check",
+        "description": "Health check for character systems.",
+        "operationId": "health_check_api_v1_character_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Check Api V1 Character Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/characters": {
+      "get": {
+        "tags": [
+          "character-health"
+        ],
+        "summary": "Get Available Characters",
+        "description": "Get list of available characters.",
+        "operationId": "get_available_characters_api_v1_character_characters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Available Characters Api V1 Character Characters Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/safety/analyze": {
       "post": {
         "tags": [
-          "toy"
+          "character-health"
         ],
         "summary": "Analyze Safety",
         "description": "Analyze text for safety concerns (toxicity and PII detection).",
-        "operationId": "analyze_safety_api_v1_toy_safety_analyze_post",
+        "operationId": "analyze_safety_api_v1_character_safety_analyze_post",
         "parameters": [
           {
             "name": "text",
@@ -644,7 +500,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Analyze Safety Api V1 Toy Safety Analyze Post"
+                  "title": "Response Analyze Safety Api V1 Character Safety Analyze Post"
                 }
               }
             }
@@ -662,14 +518,14 @@
         }
       }
     },
-    "/api/v1/toy/safety/status": {
+    "/api/v1/character/safety/status": {
       "get": {
         "tags": [
-          "toy"
+          "character-health"
         ],
         "summary": "Get Safety Status",
         "description": "Get safety system status and configuration.",
-        "operationId": "get_safety_status_api_v1_toy_safety_status_get",
+        "operationId": "get_safety_status_api_v1_character_safety_status_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -678,7 +534,7 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Get Safety Status Api V1 Toy Safety Status Get"
+                  "title": "Response Get Safety Status Api V1 Character Safety Status Get"
                 }
               }
             }
@@ -686,14 +542,242 @@
         }
       }
     },
-    "/api/v1/toy/auth/register": {
+    "/api/v1/character/performance": {
+      "get": {
+        "tags": [
+          "character-health"
+        ],
+        "summary": "Get Performance Metrics",
+        "description": "Get performance metrics for the character system.",
+        "operationId": "get_performance_metrics_api_v1_character_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Performance Metrics Api V1 Character Performance Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/profiles": {
+      "get": {
+        "tags": [
+          "character-config"
+        ],
+        "summary": "List Profiles",
+        "description": "List installed character profiles with basic metadata.",
+        "operationId": "list_profiles_api_v1_character_profiles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response List Profiles Api V1 Character Profiles Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/profiles/reload": {
       "post": {
         "tags": [
-          "toy"
+          "character-config"
+        ],
+        "summary": "Reload Profiles",
+        "description": "Reload character profiles from disk (configs/characters).",
+        "operationId": "reload_profiles_api_v1_character_profiles_reload_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Reload Profiles Api V1 Character Profiles Reload Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/profiles/upload": {
+      "post": {
+        "tags": [
+          "character-config"
+        ],
+        "summary": "Upload Profile Archive",
+        "description": "Upload a zip archive containing a character profile folder (profile.yaml, consent.yaml, voice artifact).\n\nThe archive is extracted under configs/characters/ and profiles are reloaded.",
+        "operationId": "upload_profile_archive_api_v1_character_profiles_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_profile_archive_api_v1_character_profiles_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Upload Profile Archive Api V1 Character Profiles Upload Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/voices/embeddings/recompute": {
+      "post": {
+        "tags": [
+          "character-config"
+        ],
+        "summary": "Recompute Voice Embeddings",
+        "description": "Recompute stored voice embeddings for one or all characters.\n\nRequires admin token provided via `x-admin-token` header and configured in env `CAI_ADMIN_TOKEN`.",
+        "operationId": "recompute_voice_embeddings_api_v1_character_voices_embeddings_recompute_post",
+        "parameters": [
+          {
+            "name": "x-admin-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Recompute Voice Embeddings Api V1 Character Voices Embeddings Recompute Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/hardware/status": {
+      "get": {
+        "tags": [
+          "character-config"
+        ],
+        "summary": "Get Hardware Status",
+        "description": "Get hardware status and constraints.",
+        "operationId": "get_hardware_status_api_v1_character_hardware_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Hardware Status Api V1 Character Hardware Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/hardware/optimize": {
+      "post": {
+        "tags": [
+          "character-config"
+        ],
+        "summary": "Optimize Hardware",
+        "description": "Optimize hardware for character deployment.",
+        "operationId": "optimize_hardware_api_v1_character_hardware_optimize_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Optimize Hardware Api V1 Character Hardware Optimize Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/auth/register": {
+      "post": {
+        "tags": [
+          "character-auth"
         ],
         "summary": "Register Device",
         "description": "Register a new device and get authentication token.",
-        "operationId": "register_device_api_v1_toy_auth_register_post",
+        "operationId": "register_device_api_v1_character_auth_register_post",
         "parameters": [
           {
             "name": "device_name",
@@ -720,7 +804,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Register Device Api V1 Toy Auth Register Post"
+                  "title": "Response Register Device Api V1 Character Auth Register Post"
                 }
               }
             }
@@ -738,14 +822,14 @@
         }
       }
     },
-    "/api/v1/toy/auth/me": {
+    "/api/v1/character/auth/me": {
       "get": {
         "tags": [
-          "toy"
+          "character-auth"
         ],
         "summary": "Get Current Device Info",
         "description": "Get current device information.",
-        "operationId": "get_current_device_info_api_v1_toy_auth_me_get",
+        "operationId": "get_current_device_info_api_v1_character_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -754,7 +838,7 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Get Current Device Info Api V1 Toy Auth Me Get"
+                  "title": "Response Get Current Device Info Api V1 Character Auth Me Get"
                 }
               }
             }
@@ -767,14 +851,14 @@
         ]
       }
     },
-    "/api/v1/toy/auth/token": {
+    "/api/v1/character/auth/token": {
       "post": {
         "tags": [
-          "toy"
+          "character-auth"
         ],
         "summary": "Generate Token",
         "description": "Generate a new JWT token for the authenticated device.",
-        "operationId": "generate_token_api_v1_toy_auth_token_post",
+        "operationId": "generate_token_api_v1_character_auth_token_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -801,7 +885,7 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Generate Token Api V1 Toy Auth Token Post"
+                  "title": "Response Generate Token Api V1 Character Auth Token Post"
                 }
               }
             }
@@ -824,14 +908,14 @@
         ]
       }
     },
-    "/api/v1/toy/auth/public-key": {
+    "/api/v1/character/auth/public-key": {
       "get": {
         "tags": [
-          "toy"
+          "character-auth"
         ],
         "summary": "Get Public Key",
         "description": "Get the device's public key for signature verification.",
-        "operationId": "get_public_key_api_v1_toy_auth_public_key_get",
+        "operationId": "get_public_key_api_v1_character_auth_public_key_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -840,79 +924,7 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Get Public Key Api V1 Toy Auth Public Key Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/performance": {
-      "get": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Get Performance Metrics",
-        "description": "Get performance metrics for the toy system.",
-        "operationId": "get_performance_metrics_api_v1_toy_performance_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Get Performance Metrics Api V1 Toy Performance Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/hardware/status": {
-      "get": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Get Hardware Status",
-        "description": "Get hardware status and constraints.",
-        "operationId": "get_hardware_status_api_v1_toy_hardware_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Get Hardware Status Api V1 Toy Hardware Status Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/toy/hardware/optimize": {
-      "post": {
-        "tags": [
-          "toy"
-        ],
-        "summary": "Optimize Hardware",
-        "description": "Optimize hardware for toy deployment.",
-        "operationId": "optimize_hardware_api_v1_toy_hardware_optimize_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Optimize Hardware Api V1 Toy Hardware Optimize Post"
+                  "title": "Response Get Public Key Api V1 Character Auth Public Key Get"
                 }
               }
             }
@@ -2270,78 +2282,6 @@
         }
       }
     },
-    "/api/v1/monitoring/elk/status": {
-      "get": {
-        "tags": [
-          "monitoring"
-        ],
-        "summary": "Get Elk Status",
-        "description": "Get ELK stack connection status.",
-        "operationId": "get_elk_status_api_v1_monitoring_elk_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Get Elk Status Api V1 Monitoring Elk Status Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/monitoring/elk/export": {
-      "post": {
-        "tags": [
-          "monitoring"
-        ],
-        "summary": "Export Elk Configuration",
-        "description": "Export ELK stack configuration files.",
-        "operationId": "export_elk_configuration_api_v1_monitoring_elk_export_post",
-        "parameters": [
-          {
-            "name": "output_dir",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "monitoring/elk",
-              "title": "Output Dir"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Export Elk Configuration Api V1 Monitoring Elk Export Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/monitoring/prometheus/config": {
       "get": {
         "tags": [
@@ -2742,7 +2682,7 @@
           "monitoring"
         ],
         "summary": "Export All Monitoring Configs",
-        "description": "Export all monitoring configurations (Grafana, ELK, Prometheus).",
+        "description": "Export all monitoring configurations (Grafana, Prometheus).",
         "operationId": "export_all_monitoring_configs_api_v1_monitoring_export_all_post",
         "parameters": [
           {
@@ -3495,419 +3435,6 @@
         }
       }
     },
-    "/api/v1/personalization/preferences": {
-      "post": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Update Preference",
-        "description": "Update a user preference.",
-        "operationId": "update_preference_api_v1_personalization_preferences_post",
-        "parameters": [
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreferenceUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PreferenceResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Get User Preferences",
-        "description": "Get all user preferences.",
-        "operationId": "get_user_preferences_api_v1_personalization_preferences_get",
-        "parameters": [
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PreferenceResponse"
-                  },
-                  "title": "Response Get User Preferences Api V1 Personalization Preferences Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/personalization/recommendations": {
-      "get": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Get Character Recommendations",
-        "description": "Get personalized character recommendations.",
-        "operationId": "get_character_recommendations_api_v1_personalization_recommendations_get",
-        "parameters": [
-          {
-            "name": "max_recommendations",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 20,
-              "minimum": 1,
-              "description": "Maximum number of recommendations",
-              "default": 5,
-              "title": "Max Recommendations"
-            },
-            "description": "Maximum number of recommendations"
-          },
-          {
-            "name": "include_affinities",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "Include affinity scores",
-              "default": true,
-              "title": "Include Affinities"
-            },
-            "description": "Include affinity scores"
-          },
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CharacterRecommendationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/personalization/conversation-style": {
-      "post": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Get Adaptive Conversation Style",
-        "description": "Get adaptive conversation style for a character.",
-        "operationId": "get_adaptive_conversation_style_api_v1_personalization_conversation_style_post",
-        "parameters": [
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConversationStyleRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversationStyleResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/personalization/insights": {
-      "get": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Get User Insights",
-        "description": "Get user personalization insights.",
-        "operationId": "get_user_insights_api_v1_personalization_insights_get",
-        "parameters": [
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInsightsResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/personalization/privacy": {
-      "post": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Handle Privacy Request",
-        "description": "Handle privacy-related requests (export, clear, status).",
-        "operationId": "handle_privacy_request_api_v1_personalization_privacy_post",
-        "parameters": [
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PrivacyRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PrivacyResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/personalization/learn": {
-      "post": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Learn From Conversation",
-        "description": "Learn from conversation data (for internal use).",
-        "operationId": "learn_from_conversation_api_v1_personalization_learn_post",
-        "parameters": [
-          {
-            "name": "current_device",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Device ID",
-              "title": "Current Device"
-            },
-            "description": "Device ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Conversation Data"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Learn From Conversation Api V1 Personalization Learn Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/personalization/health": {
-      "get": {
-        "tags": [
-          "Personalization"
-        ],
-        "summary": "Personalization Health Check",
-        "description": "Health check for personalization system.",
-        "operationId": "personalization_health_check_api_v1_personalization_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Personalization Health Check Api V1 Personalization Health Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/parental-controls/profiles": {
       "post": {
         "tags": [
@@ -4353,7 +3880,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/character_ai__web__parental_controls_api__InteractionRequest"
+                "$ref": "#/components/schemas/InteractionRequest"
               }
             }
           }
@@ -4691,27 +4218,27 @@
         }
       }
     },
-    "/health": {
+    "/": {
       "get": {
-        "summary": "Root Health",
-        "operationId": "root_health_health_get",
+        "summary": "Root",
+        "description": "Root endpoint with API information.",
+        "operationId": "root__get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Health Health Get"
-                }
+                "schema": {}
               }
             }
           }
         }
-      },
+      }
+    },
+    "/health": {
       "options": {
         "summary": "Root Options Health",
+        "description": "CORS options for health endpoint.",
         "operationId": "root_options_health_health_options",
         "responses": {
           "200": {
@@ -4724,313 +4251,11 @@
           }
         }
       }
-    },
-    "/characters": {
-      "get": {
-        "summary": "Root Characters",
-        "operationId": "root_characters_characters_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Characters Characters Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/characters/active": {
-      "get": {
-        "summary": "Root Active Character",
-        "operationId": "root_active_character_characters_active_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Active Character Characters Active Get"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Root Set Active Character",
-        "operationId": "root_set_active_character_characters_active_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/hardware/status": {
-      "get": {
-        "summary": "Root Hardware Status",
-        "operationId": "root_hardware_status_hardware_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Hardware Status Hardware Status Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/hardware/sensors": {
-      "get": {
-        "summary": "Root Hardware Sensors",
-        "operationId": "root_hardware_sensors_hardware_sensors_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Hardware Sensors Hardware Sensors Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/hardware/power": {
-      "get": {
-        "summary": "Root Hardware Power",
-        "operationId": "root_hardware_power_hardware_power_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Hardware Power Hardware Power Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/interact": {
-      "post": {
-        "summary": "Root Interact",
-        "operationId": "root_interact_interact_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Payload"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Interact Interact Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/metrics": {
-      "get": {
-        "summary": "Root Metrics",
-        "operationId": "root_metrics_metrics_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Metrics Metrics Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/models/info": {
-      "get": {
-        "summary": "Root Models Info",
-        "operationId": "root_models_info_models_info_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Models Info Models Info Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/models/status": {
-      "get": {
-        "summary": "Root Models Status",
-        "operationId": "root_models_status_models_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Models Status Models Status Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/voices/inject": {
-      "post": {
-        "summary": "Root Voices Inject",
-        "operationId": "root_voices_inject_voices_inject_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Data"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Root Voices Inject Voices Inject Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/voices": {
-      "get": {
-        "summary": "Root Voices",
-        "operationId": "root_voices_voices_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Root Voices Voices Get"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "Body_interact_with_audio_file_api_v1_toy_interact_audio_post": {
+      "Body_interact_with_audio_file_api_v1_character_interact_audio_post": {
         "properties": {
           "audio_file": {
             "type": "string",
@@ -5042,7 +4267,7 @@
         "required": [
           "audio_file"
         ],
-        "title": "Body_interact_with_audio_file_api_v1_toy_interact_audio_post"
+        "title": "Body_interact_with_audio_file_api_v1_character_interact_audio_post"
       },
       "Body_transcribe_audio_api_v1_audio_stt_post": {
         "properties": {
@@ -5077,7 +4302,7 @@
         ],
         "title": "Body_transcribe_audio_api_v1_audio_stt_post"
       },
-      "Body_upload_profile_archive_api_v1_toy_profiles_upload_post": {
+      "Body_upload_profile_archive_api_v1_character_profiles_upload_post": {
         "properties": {
           "archive": {
             "type": "string",
@@ -5089,84 +4314,7 @@
         "required": [
           "archive"
         ],
-        "title": "Body_upload_profile_archive_api_v1_toy_profiles_upload_post"
-      },
-      "CharacterCreateRequest": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "character_type": {
-            "type": "string",
-            "title": "Character Type"
-          },
-          "custom_topics": {
-            "anyOf": [
-              {
-                "items": {},
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Custom Topics"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "character_type"
-        ],
-        "title": "CharacterCreateRequest"
-      },
-      "CharacterRecommendationResponse": {
-        "properties": {
-          "recommendations": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Recommendations",
-            "description": "List of recommended characters"
-          },
-          "total_available": {
-            "type": "integer",
-            "title": "Total Available",
-            "description": "Total available characters"
-          },
-          "user_affinities": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "type": "object",
-            "title": "User Affinities",
-            "description": "User character affinities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "recommendations",
-          "total_available",
-          "user_affinities"
-        ],
-        "title": "CharacterRecommendationResponse",
-        "description": "Response model for character recommendations."
-      },
-      "CharacterSetRequest": {
-        "properties": {
-          "character_name": {
-            "type": "string",
-            "title": "Character Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "character_name"
-        ],
-        "title": "CharacterSetRequest"
+        "title": "Body_upload_profile_archive_api_v1_character_profiles_upload_post"
       },
       "ContentSafetyRequest": {
         "properties": {
@@ -5236,50 +4384,6 @@
         ],
         "title": "ContentSafetyResponse",
         "description": "Response model for content safety checking."
-      },
-      "ConversationStyleRequest": {
-        "properties": {
-          "character_id": {
-            "type": "string",
-            "title": "Character Id",
-            "description": "Character ID for style adaptation"
-          }
-        },
-        "type": "object",
-        "required": [
-          "character_id"
-        ],
-        "title": "ConversationStyleRequest",
-        "description": "Request model for adaptive conversation style."
-      },
-      "ConversationStyleResponse": {
-        "properties": {
-          "character_id": {
-            "type": "string",
-            "title": "Character Id",
-            "description": "Character ID"
-          },
-          "style_adaptations": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Style Adaptations",
-            "description": "Style adaptations"
-          },
-          "user_preferences": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "User Preferences",
-            "description": "Applied user preferences"
-          }
-        },
-        "type": "object",
-        "required": [
-          "character_id",
-          "style_adaptations",
-          "user_preferences"
-        ],
-        "title": "ConversationStyleResponse",
-        "description": "Response model for adaptive conversation style."
       },
       "CreateProfileRequest": {
         "properties": {
@@ -5424,33 +4528,32 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "InteractionResponse": {
+      "InteractionRequest": {
         "properties": {
-          "response_audio": {
+          "child_id": {
             "type": "string",
-            "title": "Response Audio"
+            "title": "Child Id",
+            "description": "Child identifier"
           },
-          "response_text": {
+          "character_id": {
             "type": "string",
-            "title": "Response Text"
+            "title": "Character Id",
+            "description": "Character identifier"
           },
-          "character_name": {
+          "content": {
             "type": "string",
-            "title": "Character Name"
-          },
-          "latency_ms": {
-            "type": "number",
-            "title": "Latency Ms"
+            "title": "Content",
+            "description": "Interaction content"
           }
         },
         "type": "object",
         "required": [
-          "response_audio",
-          "response_text",
-          "character_name",
-          "latency_ms"
+          "child_id",
+          "character_id",
+          "content"
         ],
-        "title": "InteractionResponse"
+        "title": "InteractionRequest",
+        "description": "Request model for recording interactions."
       },
       "LanguageCapabilitiesResponse": {
         "properties": {
@@ -6058,161 +5161,6 @@
         "title": "PerformanceTestRequest",
         "description": "Request model for performance testing."
       },
-      "PreferenceResponse": {
-        "properties": {
-          "preference_type": {
-            "type": "string",
-            "title": "Preference Type",
-            "description": "Type of preference"
-          },
-          "value": {
-            "title": "Value",
-            "description": "Preference value"
-          },
-          "confidence": {
-            "type": "number",
-            "title": "Confidence",
-            "description": "Confidence score"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source",
-            "description": "Learning source"
-          },
-          "last_updated": {
-            "type": "number",
-            "title": "Last Updated",
-            "description": "Last update timestamp"
-          },
-          "interaction_count": {
-            "type": "integer",
-            "title": "Interaction Count",
-            "description": "Number of interactions"
-          }
-        },
-        "type": "object",
-        "required": [
-          "preference_type",
-          "value",
-          "confidence",
-          "source",
-          "last_updated",
-          "interaction_count"
-        ],
-        "title": "PreferenceResponse",
-        "description": "Response model for user preferences."
-      },
-      "PreferenceUpdateRequest": {
-        "properties": {
-          "preference_type": {
-            "type": "string",
-            "title": "Preference Type",
-            "description": "Type of preference to update"
-          },
-          "value": {
-            "title": "Value",
-            "description": "Preference value"
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "description": "Confidence in the preference",
-            "default": 0.8
-          },
-          "source": {
-            "type": "string",
-            "title": "Source",
-            "description": "Source of the preference",
-            "default": "explicit_feedback"
-          }
-        },
-        "type": "object",
-        "required": [
-          "preference_type",
-          "value"
-        ],
-        "title": "PreferenceUpdateRequest",
-        "description": "Request model for updating user preferences."
-      },
-      "PrivacyRequest": {
-        "properties": {
-          "action": {
-            "type": "string",
-            "title": "Action",
-            "description": "Privacy action: 'export', 'clear', or 'status'"
-          }
-        },
-        "type": "object",
-        "required": [
-          "action"
-        ],
-        "title": "PrivacyRequest",
-        "description": "Request model for privacy operations."
-      },
-      "PrivacyResponse": {
-        "properties": {
-          "action": {
-            "type": "string",
-            "title": "Action",
-            "description": "Action performed"
-          },
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Success status"
-          },
-          "data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data",
-            "description": "Exported data (if applicable)"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message",
-            "description": "Status message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "action",
-          "success",
-          "message"
-        ],
-        "title": "PrivacyResponse",
-        "description": "Response model for privacy operations."
-      },
-      "RecomputeEmbeddingsRequest": {
-        "properties": {
-          "character": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Character"
-          },
-          "force": {
-            "type": "boolean",
-            "title": "Force",
-            "default": false
-          }
-        },
-        "type": "object",
-        "title": "RecomputeEmbeddingsRequest"
-      },
       "STTResponse": {
         "properties": {
           "text": {
@@ -6703,73 +5651,6 @@
         "title": "UsageReportResponse",
         "description": "Response model for usage reports."
       },
-      "UserInsightsResponse": {
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "title": "User Id",
-            "description": "User ID"
-          },
-          "profile_age_days": {
-            "type": "number",
-            "title": "Profile Age Days",
-            "description": "Age of profile in days"
-          },
-          "total_preferences": {
-            "type": "integer",
-            "title": "Total Preferences",
-            "description": "Total number of preferences"
-          },
-          "interaction_patterns": {
-            "type": "integer",
-            "title": "Interaction Patterns",
-            "description": "Number of interaction patterns"
-          },
-          "character_affinities": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "type": "object",
-            "title": "Character Affinities",
-            "description": "Character affinity scores"
-          },
-          "preferences_summary": {
-            "additionalProperties": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "object",
-            "title": "Preferences Summary",
-            "description": "Summary of preferences"
-          },
-          "learning_sources": {
-            "additionalProperties": {
-              "type": "integer"
-            },
-            "type": "object",
-            "title": "Learning Sources",
-            "description": "Learning source counts"
-          },
-          "privacy_compliance": {
-            "type": "boolean",
-            "title": "Privacy Compliance",
-            "description": "Privacy compliance status"
-          }
-        },
-        "type": "object",
-        "required": [
-          "user_id",
-          "profile_age_days",
-          "total_preferences",
-          "interaction_patterns",
-          "character_affinities",
-          "preferences_summary",
-          "learning_sources",
-          "privacy_compliance"
-        ],
-        "title": "UserInsightsResponse",
-        "description": "Response model for user insights."
-      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -6844,57 +5725,6 @@
         ],
         "title": "VoiceCharacteristicsInfo",
         "description": "Voice characteristics for a language."
-      },
-      "character_ai__web__parental_controls_api__InteractionRequest": {
-        "properties": {
-          "child_id": {
-            "type": "string",
-            "title": "Child Id",
-            "description": "Child identifier"
-          },
-          "character_id": {
-            "type": "string",
-            "title": "Character Id",
-            "description": "Character identifier"
-          },
-          "content": {
-            "type": "string",
-            "title": "Content",
-            "description": "Interaction content"
-          }
-        },
-        "type": "object",
-        "required": [
-          "child_id",
-          "character_id",
-          "content"
-        ],
-        "title": "InteractionRequest",
-        "description": "Request model for recording interactions."
-      },
-      "character_ai__web__toy_api__InteractionRequest": {
-        "properties": {
-          "audio_data": {
-            "type": "string",
-            "title": "Audio Data"
-          },
-          "character_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Character Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "audio_data"
-        ],
-        "title": "InteractionRequest"
       }
     },
     "securitySchemes": {

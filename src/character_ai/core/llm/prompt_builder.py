@@ -3,9 +3,7 @@
 import os
 from typing import Any, Dict, Optional
 
-import yaml
-
-from ...characters.types import Character
+from ...characters import Character
 from ..config import Config
 
 
@@ -112,9 +110,11 @@ Output rules:
                     break
 
             if prompts_path:
-                with open(prompts_path, "r", encoding="utf-8") as f:
-                    prompts = yaml.safe_load(f)
-                return prompts or {}
+                from pathlib import Path
+
+                from ..config.yaml_loader import YAMLConfigLoader
+
+                return YAMLConfigLoader.load_yaml(Path(prompts_path))
             else:
                 # Return empty dict if no prompts file found - let build_prompt handle the fallback
                 return {}
