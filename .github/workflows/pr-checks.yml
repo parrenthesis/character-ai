@@ -46,7 +46,7 @@ jobs:
             ${{ runner.os }}-poetry-
 
       - name: Setup development environment (secure architecture)
-        run: make setup-dev
+        run: make setup-ci
 
       - name: Run quick linting
         run: make lint
@@ -87,7 +87,7 @@ jobs:
             ${{ runner.os }}-poetry-
 
       - name: Setup development environment (secure architecture)
-        run: make setup-dev
+        run: make setup-ci
 
       - name: Run quick security checks
         run: make security
@@ -138,7 +138,7 @@ jobs:
             ${{ runner.os }}-poetry-
 
       - name: Setup development environment (secure architecture)
-        run: make setup-dev
+        run: make setup-ci
 
       - name: Run quick tests
         run: make test
