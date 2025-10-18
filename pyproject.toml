@@ -88,7 +88,7 @@ rich = "^13.0.0"
 prometheus-client = "^0.17.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
+pytest = "^8.4.2"
 pytest-asyncio = "^0.21.0"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.11.0"
