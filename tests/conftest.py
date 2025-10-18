@@ -209,7 +209,7 @@ def suppress_async_mock_warnings() -> Generator[None, None, None]:
         line: str | None = None,
     ) -> None:
         """Custom warning filter that suppresses async mock warnings."""
-        if category == RuntimeWarning:
+        if category is RuntimeWarning:
             msg_str = str(message)
             # Suppress specific async mock patterns
             if any(
