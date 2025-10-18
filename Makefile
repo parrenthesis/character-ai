@@ -360,8 +360,8 @@ lint:
 	poetry run black --check src/ tests/
 	poetry run isort --check-only src/ tests/
 	poetry run ruff check src/ tests/
-	cd src && poetry run mypy . --ignore-missing-imports
-	cd tests && poetry run mypy . --ignore-missing-imports
+	cd src && poetry run mypy . --ignore-missing-imports --install-types --non-interactive
+	cd tests && poetry run mypy . --ignore-missing-imports --install-types --non-interactive
 
 lint-dev:
 	@echo "Running development linting checks..."
@@ -370,8 +370,8 @@ lint-dev:
 	poetry run black --check src/ tests_dev/
 	poetry run isort --check-only src/ tests_dev/
 	poetry run ruff check src/ tests_dev/
-	cd src && poetry run mypy . --ignore-missing-imports
-	cd tests_dev && poetry run mypy . --ignore-missing-imports
+	cd src && poetry run mypy . --ignore-missing-imports --install-types --non-interactive
+	cd tests_dev && poetry run mypy . --ignore-missing-imports --install-types --non-interactive
 
 format:
 	@echo "Formatting code..."
