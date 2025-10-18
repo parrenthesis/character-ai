@@ -225,7 +225,8 @@ class CharacterInteractionController:
                     )
                     compatible_rate = rate
                     break
-                except Exception:
+                except (OSError, ValueError, RuntimeError) as e:
+                    logger.debug(f"Sample rate {rate} not compatible with device: {e}")
                     continue
             else:
                 raise RuntimeError("No compatible sample rates found for audio device")

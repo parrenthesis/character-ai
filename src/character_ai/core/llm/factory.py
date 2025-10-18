@@ -109,9 +109,9 @@ class LLMFactory:
                     p = _P(str(gguf_path))
                     if p.exists():
                         return str(p)
-            except Exception:
+            except (ImportError, AttributeError, OSError) as e:
                 # Non-fatal: fall through to model manager lookup
-                pass
+                logger.debug(f"Could not load GGUF path from config: {e}")
 
             # 2) Name-based lookup via model manager
             model_path = self.model_manager.get_model_path(model_name)

@@ -90,7 +90,10 @@ class AudioDeviceManager:
                 # Test if device supports this sample rate
                 sd.check_device(device_index, samplerate=rate)
                 supported.append(float(rate))
-            except Exception:
+            except (OSError, ValueError, RuntimeError) as e:
+                logger.debug(
+                    f"Device {device_index} does not support sample rate {rate}: {e}"
+                )
                 continue
 
         return supported if supported else [44100.0]  # Fallback to 44.1kHz
@@ -193,8 +196,8 @@ class AudioDeviceManager:
             for device in self._devices:
                 if device.index == default_index and device.input_channels > 0:
                     return device
-        except Exception:
-            pass
+        except (OSError, ValueError, RuntimeError) as e:
+            logger.debug(f"Failed to get default input device: {e}")
 
         # Find any input device
         for device in self._devices:
@@ -210,8 +213,8 @@ class AudioDeviceManager:
             for device in self._devices:
                 if device.index == default_index and device.output_channels > 0:
                     return device
-        except Exception:
-            pass
+        except (OSError, ValueError, RuntimeError) as e:
+            logger.debug(f"Failed to get default output device: {e}")
 
         # Find any output device
         for device in self._devices:

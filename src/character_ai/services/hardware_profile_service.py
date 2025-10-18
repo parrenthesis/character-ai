@@ -43,8 +43,8 @@ class HardwareProfileManager:
                 if "arm" in cpuinfo or "aarch64" in cpuinfo:
                     # Default to raspberry_pi for ARM systems
                     return "raspberry_pi"
-        except Exception:
-            pass
+        except (OSError, IOError) as e:
+            logger.debug(f"Could not read /proc/cpuinfo: {e}")
 
         # Default to desktop
         return "desktop"
@@ -171,8 +171,8 @@ class HardwareProfileService:
                 import torch
 
                 has_gpu = torch.cuda.is_available()
-            except ImportError:
-                pass
+            except ImportError as e:
+                logger.debug(f"PyTorch not available for GPU detection: {e}")
 
             # Heuristics for hardware detection
             if cpu_count >= 8 and memory_gb >= 16 and has_gpu:

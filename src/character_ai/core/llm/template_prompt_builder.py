@@ -35,6 +35,7 @@ class TemplatePromptBuilder:
             trim_blocks=True,
             lstrip_blocks=True,
             keep_trailing_newline=False,
+            autoescape=True,  # Enable autoescaping for XSS protection
         )
 
         # Add custom filters
