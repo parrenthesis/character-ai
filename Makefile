@@ -447,12 +447,18 @@ setup-audiobox:
 	@pactl info >/dev/null 2>&1 || (echo "PulseAudio not responding, restarting..." && pulseaudio --kill && sleep 2 && pulseaudio --start && sleep 1)
 	@# Load AudioBox sink if not already loaded (avoid duplicates)
 	@pactl list sinks short | grep -q "alsa_output.hw_3_0" || (echo "Loading AudioBox sink..." && pactl load-module module-alsa-sink device=hw:3,0)
+	@# Load AudioBox source if not already loaded (avoid duplicates)
+	@pactl list sources short | grep -q "alsa_input.hw_3_0" || (echo "Loading AudioBox source..." && pactl load-module module-alsa-source device=hw:3,0)
 	@# Only change default sink if AudioBox is not already default
 	@pactl get-default-sink | grep -q "alsa_output.hw_3_0" || (echo "Setting AudioBox as default..." && pactl set-default-sink alsa_output.hw_3_0)
+	@# Set AudioBox as default source
+	@pactl get-default-source | grep -q "alsa_input.hw_3_0" || (echo "Setting AudioBox as default source..." && pactl set-default-source alsa_input.hw_3_0)
 	@# Unsuspend the sink if it's suspended
 	@pactl list sinks short | grep "alsa_output.hw_3_0.*SUSPENDED" && (echo "Unsuspending AudioBox..." && pactl suspend-sink alsa_output.hw_3_0 false) || true
+	@# Unsuspend the source if it's suspended
+	@pactl list sources short | grep "alsa_input.hw_3_0.*SUSPENDED" && (echo "Unsuspending AudioBox source..." && pactl suspend-source alsa_input.hw_3_0 false) || true
 	@# Verify setup
-	@pactl list sinks short | grep -q "alsa_output.hw_3_0" && echo "✅ AudioBox setup complete" || echo "⚠️  AudioBox setup may have issues"
+	@pactl list sinks short | grep -q "alsa_output.hw_3_0" && pactl list sources short | grep -q "alsa_input.hw_3_0" && echo "✅ AudioBox setup complete" || echo "⚠️  AudioBox setup may have issues"
 test-voice-pipeline-list: setup-audiobox
 	@echo "Listing available input files for Data..."
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
@@ -495,7 +501,7 @@ test-voice-pipeline-realtime: setup-audiobox
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
 	CAI_QUIET_MODE=0
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
-	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10
+	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 120
 
 test-voice-pipeline-realtime-desktop: setup-audiobox
 	@echo "Testing real-time voice interaction with desktop hardware profile..."

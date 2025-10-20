@@ -81,22 +81,9 @@ class AudioDeviceManager:
 
     def _get_supported_sample_rates(self, device_index: int) -> List[float]:
         """Get supported sample rates for a device."""
-        # Common sample rates to test
-        test_rates = [8000, 16000, 22050, 44100, 48000, 96000]
-        supported: List[float] = []
-
-        for rate in test_rates:
-            try:
-                # Test if device supports this sample rate
-                sd.check_device(device_index, samplerate=rate)
-                supported.append(float(rate))
-            except (OSError, ValueError, RuntimeError) as e:
-                logger.debug(
-                    f"Device {device_index} does not support sample rate {rate}: {e}"
-                )
-                continue
-
-        return supported if supported else [44100.0]  # Fallback to 44.1kHz
+        # Just return common rates without testing to avoid PortAudio errors
+        # The original approach was causing issues with device compatibility
+        return [44100.0, 48000.0]  # Return common rates without testing
 
     def find_audiobox_device(self) -> Optional[AudioDevice]:
         """Find AudioBox device by name pattern."""

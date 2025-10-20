@@ -55,6 +55,7 @@ class CoquiConfig:
                 with redirect_stdout(open("/dev/null", "w")):
                     with redirect_stderr(open("/dev/null", "w")):
                         # Initialize TTS model
+                        # TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 is set in Makefile to handle PyTorch 2.6+ weights_only issue
                         self.tts = TTS(model_name=self.model_name, progress_bar=False)
 
             # Move model to appropriate device

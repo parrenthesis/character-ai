@@ -88,6 +88,7 @@ class CoquiProcessor(BaseAudioProcessor):
         text: str,
         language: str = "en",
         speaker_id: Optional[str] = None,
+        speed: float = 1.0,
         **kwargs: Any,
     ) -> AsyncGenerator[AudioData, None]:
         """Synthesize speech in streaming mode."""
@@ -95,7 +96,7 @@ class CoquiProcessor(BaseAudioProcessor):
             logger.error("TTS processor not initialized")
             return
         async for audio_data in self.tts_processor.synthesize_speech_stream(
-            text, language, speaker_id, **kwargs
+            text, language, speaker_id, speed, **kwargs
         ):
             yield audio_data
 

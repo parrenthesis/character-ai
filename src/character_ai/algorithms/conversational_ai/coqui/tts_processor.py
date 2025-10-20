@@ -265,6 +265,7 @@ class CoquiTTSProcessor:
         text: str,
         language: str = "en",
         speaker_id: Optional[str] = None,
+        speed: float = 1.0,
         **kwargs: Any,
     ) -> AsyncGenerator[AudioData, None]:
         """
@@ -293,7 +294,7 @@ class CoquiTTSProcessor:
 
                 # Synthesize sentence
                 audio_data = await self._synthesize_sentence(
-                    sentence, language, speaker_id, 1.0, **kwargs
+                    sentence, language, speaker_id, speed, **kwargs
                 )
 
                 if audio_data is not None:

@@ -86,6 +86,7 @@ rich = "^13.0.0"
 
 # Monitoring
 prometheus-client = "^0.17.0"
+torchcodec = "^0.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
