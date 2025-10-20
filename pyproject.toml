@@ -35,7 +35,7 @@ sentencepiece = "^0.1.99"
 
 # Audio processing
 librosa = "^0.10.0"
-soundfile = "^0.12.1"
+soundfile = "^0.13.1"
 sounddevice = "^0.4.6"  # Real-time audio I/O for microphone/speaker (requires portaudio19-dev)
 torchaudio = ">=2.8.0"  # SECURE VERSION: Updated to match torch 2.8.0+
 pydub = "^0.25.1"  # Simple audio manipulation for speed control
