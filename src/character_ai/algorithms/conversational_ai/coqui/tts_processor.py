@@ -155,6 +155,13 @@ class CoquiTTSProcessor:
                 if voice_path:
                     synthesis_kwargs["speaker_wav"] = voice_path
 
+                logger.debug(
+                    f"CoquiTTSProcessor._synthesize_sentence: synthesis_kwargs = {synthesis_kwargs}"
+                )
+                logger.debug(
+                    f"CoquiTTSProcessor._synthesize_sentence: voice_path = {voice_path}"
+                )
+
                 # Check if model is multilingual
                 if hasattr(self.tts, "is_multi_lingual") and self.tts.is_multi_lingual:
                     synthesis_kwargs["language"] = language

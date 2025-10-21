@@ -72,6 +72,7 @@ class TTSConfig:
     voice_cloning: bool = True
     model_name: str = "tts_models/multilingual/multi-dataset/xtts_v2"
     voice_cloning_sample_rate: int = 22050
+    output_sample_rate: int = 24000  # XTTS v2 actual output rate
     voice_cloning_max_duration: float = 30.0
     audio_bit_depth: int = 32
     streaming: TTSStreamingConfig = field(default_factory=TTSStreamingConfig)

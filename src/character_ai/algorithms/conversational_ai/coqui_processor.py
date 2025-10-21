@@ -47,6 +47,17 @@ class CoquiProcessor(BaseAudioProcessor):
         """Initialize the Coqui TTS model."""
         await self.coqui_config.initialize()
 
+        logger.debug(f"Coqui TTS initialized: model={self.model_name}")
+        logger.debug(
+            f"Coqui TTS settings: use_gpu={self.coqui_config.use_gpu}, use_half_precision={self.coqui_config.use_half_precision}"
+        )
+        if hasattr(self.coqui_config.tts, "output_sample_rate"):
+            logger.debug(
+                f"Coqui TTS sample_rate: {self.coqui_config.tts.output_sample_rate}"
+            )
+        else:
+            logger.debug("Coqui TTS sample_rate: unknown")
+
         # Initialize processors
         self.tts_processor = CoquiTTSProcessor(
             tts_model=self.coqui_config.tts, config=self.coqui_config

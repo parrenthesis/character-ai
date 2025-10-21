@@ -181,8 +181,11 @@ class ModelInstantiator:
         # Get hardware-specific TTS config
         hw_tts_config = self.model_registry.get_hardware_model_config("tts")
         if hw_tts_config:
-            # Use hardware-specific model
-            tts_model = hw_tts_config.get("model_name", "coqui-xtts-v2")
+            # Get the registry key from hardware config, not the resolved model name
+            if self.hardware_config and "models" in self.hardware_config:
+                tts_model = self.hardware_config["models"].get("tts", "coqui-xtts-v2")
+            else:
+                tts_model = "coqui-xtts-v2"
             logger.info(f"Using hardware-specific TTS model: {tts_model}")
         else:
             # Use default model
@@ -200,9 +203,15 @@ class ModelInstantiator:
             tts_hw_config = self.hardware_config.get("optimizations", {}).get("tts", {})
             use_half_precision = tts_hw_config.get("use_half_precision")
 
+        # Get model info from registry to get the full model name
+        model_info = self.model_registry.get_model_info("tts", tts_model)
+        if not model_info:
+            logger.warning(f"Model {tts_model} not found in registry for type tts")
+            return False
+
         tts_processor = CoquiProcessor(
             tts_config,
-            model_name=tts_model,
+            model_name=model_info["model_name"],  # Use full model name from registry
             gpu_device=None,  # Let it auto-detect
             use_half_precision=use_half_precision,
         )
@@ -246,10 +255,15 @@ class ModelInstantiator:
                 await processor.initialize()
 
                 # Store in loaded models
+                old_processor = loaded_models.get(model_type)
                 loaded_models[model_type] = processor
+                # Store the original registry key, not the resolved model name
                 loaded_model_names[model_type] = model_name
                 results[model_type] = True
 
+                logger.debug(
+                    f"preload_models_with_config: {model_type} model {model_name} - old processor: {id(old_processor) if old_processor else None}, new processor: {id(processor)}"
+                )
                 logger.info(f"✅ {model_type.upper()} model {model_name} pre-loaded")
 
             except Exception as e:
@@ -299,6 +313,17 @@ class ModelInstantiator:
                     "tts", {}
                 )
                 use_half_precision = tts_config.get("use_half_precision")
+
+            logger.debug(
+                f"TTS Processor Config: model_name={model_name}, model_info={model_info}"
+            )
+            logger.debug(f"Hardware Config TTS: {self.hardware_config.get('tts', {})}")
+            logger.debug(
+                f"TTS Hardware Optimizations: {self.hardware_config.get('optimizations', {}).get('tts', {})}"
+            )
+            logger.debug(
+                f"TTS use_half_precision: {use_half_precision}, gpu_device: {gpu_device}"
+            )
 
             return CoquiProcessor(
                 self.config,

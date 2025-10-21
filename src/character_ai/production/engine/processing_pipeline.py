@@ -88,8 +88,8 @@ class ProcessingPipeline:
         results = {}
         try:
             if self.resource_manager:
-                # Preload all models at once
-                await self.resource_manager.preload_models(["stt", "llm", "tts"])
+                # Preload all models including TTS for performance
+                await self.resource_manager.preload_models(["tts", "stt", "llm"])
                 results = {"stt": True, "llm": True, "tts": True}
             return results
         except Exception as e:

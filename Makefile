@@ -514,7 +514,7 @@ test-voice-pipeline-realtime: setup-audiobox
 	@echo "Testing real-time voice interaction (auto-detect hardware profile)..."
 	@echo "Test will run for 10 seconds with countdown"
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
-	CAI_QUIET_MODE=0
+	CAI_QUIET_MODE=0 CAI_LOG_LEVEL=DEBUG \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10
 
@@ -522,7 +522,7 @@ test-voice-pipeline-realtime-desktop: setup-audiobox
 	@echo "Testing real-time voice interaction with desktop hardware profile..."
 	@echo "Test will run for 10 seconds with countdown"
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
-	CAI_QUIET_MODE=1 \
+	CAI_QUIET_MODE=1 CAI_LOG_LEVEL=DEBUG \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10 --hardware-profile desktop --quiet
 
@@ -530,7 +530,7 @@ test-voice-pipeline-realtime-pi: setup-audiobox
 	@echo "Testing real-time voice interaction with Raspberry Pi hardware profile..."
 	@echo "Test will run for 10 seconds with countdown"
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
-	CAI_QUIET_MODE=1 \
+	CAI_QUIET_MODE=1 CAI_LOG_LEVEL=DEBUG \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10 --hardware-profile raspberry_pi --quiet
 

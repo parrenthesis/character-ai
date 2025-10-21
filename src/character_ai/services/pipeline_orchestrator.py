@@ -336,14 +336,36 @@ class PipelineOrchestrator:
         if not chunks:
             from ..core.protocols import AudioData
 
-            return AudioData(data=b"", sample_rate=44100, duration=0.0, channels=1)
+            # Get sample rate from TTS config instead of hardcoding
+            tts_sample_rate = getattr(
+                self.tts_service.resource_manager.config.tts,
+                "output_sample_rate",
+                24000,
+            )
+            return AudioData(
+                data=b"", sample_rate=tts_sample_rate, duration=0.0, channels=1
+            )
 
         # Delegate to audio_io utilities for proper audio processing
         from ..core.audio_io.audio_utils import concatenate_audio_chunks
 
-        result = concatenate_audio_chunks(chunks, target_sample_rate=44100)
+        # Get sample rate from TTS config instead of hardcoding
+        tts_sample_rate = getattr(
+            self.tts_service.resource_manager.config.tts,
+            "output_sample_rate",
+            24000,
+        )
+        result = concatenate_audio_chunks(chunks, target_sample_rate=tts_sample_rate)
         if result is None:
             from ..core.protocols import AudioData
 
-            return AudioData(data=b"", sample_rate=44100, duration=0.0, channels=1)
+            # Get sample rate from TTS config instead of hardcoding
+            tts_sample_rate = getattr(
+                self.tts_service.resource_manager.config.tts,
+                "output_sample_rate",
+                24000,
+            )
+            return AudioData(
+                data=b"", sample_rate=tts_sample_rate, duration=0.0, channels=1
+            )
         return result

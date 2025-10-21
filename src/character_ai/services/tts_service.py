@@ -99,7 +99,7 @@ class TTSService(BaseService):
         tts_model_name = None
 
         if hasattr(character.metadata, "get") and character.metadata:
-            tts_config = character.metadata.get("tts_config", {})
+            tts_config = character.metadata.get("tts", {})
             speed = (
                 tts_config.get("speed", 1.0) if isinstance(tts_config, dict) else 1.0
             )
@@ -107,6 +107,7 @@ class TTSService(BaseService):
                 tts_config.get("model") if isinstance(tts_config, dict) else None
             )
 
+        logger.debug(f"_get_tts_config: tts_model_name = {tts_model_name}")
         return speed, tts_model_name
 
     @handle_audio_error
@@ -130,9 +131,23 @@ class TTSService(BaseService):
 
         # Load character-specific TTS model if specified
         if tts_model_name:
-            logger.info(f"Loading character-specific TTS model: {tts_model_name}")
-            await self.resource_manager.preload_models_with_config(
-                {"tts": {"model": tts_model_name}}
+            # Check if the requested model is already loaded
+            loaded_model = self.resource_manager.get_loaded_model_name("tts")
+            if loaded_model != tts_model_name:
+                logger.debug(
+                    f"synthesize_blocking: Reloading TTS: {loaded_model} → {tts_model_name}"
+                )
+                logger.info(f"Loading character-specific TTS model: {tts_model_name}")
+                await self.resource_manager.preload_models_with_config(
+                    {"tts": {"model_name": tts_model_name}}
+                )
+            else:
+                logger.debug(
+                    f"synthesize_blocking: TTS model {tts_model_name} already loaded, reusing"
+                )
+        else:
+            logger.debug(
+                "synthesize_blocking: No character-specific model, using default"
             )
 
         # Use common processor initialization pattern
@@ -205,11 +220,25 @@ class TTSService(BaseService):
 
             # Load character-specific TTS model if specified
             if tts_model_name:
-                logger.info(
-                    f"Loading character-specific TTS model for streaming: {tts_model_name}"
-                )
-                await self.resource_manager.preload_models_with_config(
-                    {"tts": {"model": tts_model_name}}
+                # Check if the requested model is already loaded
+                loaded_model = self.resource_manager.get_loaded_model_name("tts")
+                if loaded_model != tts_model_name:
+                    logger.debug(
+                        f"synthesize_streaming: Reloading TTS: {loaded_model} → {tts_model_name}"
+                    )
+                    logger.info(
+                        f"Loading character-specific TTS model for streaming: {tts_model_name}"
+                    )
+                    await self.resource_manager.preload_models_with_config(
+                        {"tts": {"model_name": tts_model_name}}
+                    )
+                else:
+                    logger.debug(
+                        f"synthesize_streaming: TTS model {tts_model_name} already loaded, reusing"
+                    )
+            else:
+                logger.debug(
+                    "synthesize_streaming: No character-specific model, using default"
                 )
 
             # Get TTS processor

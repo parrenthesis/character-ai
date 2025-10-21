@@ -45,6 +45,10 @@ class ResourceManager:
         """Get model metadata from registry."""
         return self._model_registry.get_model_info(model_type, model_name)
 
+    def get_loaded_model_name(self, model_type: str) -> Optional[str]:
+        """Get the name of the currently loaded model for a given type."""
+        return self._loaded_model_names.get(model_type)
+
     def list_available_models(
         self, model_type: str, hardware_constraints: Optional[Dict] = None
     ) -> List[str]:

@@ -41,6 +41,7 @@ tts:
   voice_cloning: true # Native voice cloning support (replaces XTTS container)
   model_name: "tts_models/multilingual/multi-dataset/xtts_v2" # Multilingual Coqui TTS model
   voice_cloning_sample_rate: 22050 # Sample rate for voice cloning processing
+  output_sample_rate: 24000 # XTTS v2 actual output rate
   voice_cloning_max_duration: 30.0 # Maximum duration for voice samples (seconds)
   audio_bit_depth: 32 # PCM bit depth for WAV encoding (16, 24, or 32)
 

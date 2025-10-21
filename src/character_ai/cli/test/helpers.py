@@ -15,14 +15,22 @@ logger = logging.getLogger(__name__)
 
 
 def _configure_logging(verbose: bool) -> None:
-    """Configure logging based on verbosity level."""
-    if verbose:
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
+    """Configure logging based on verbosity level and CAI_LOG_LEVEL environment."""
+    import os
+
+    # Check for CAI_LOG_LEVEL environment variable first
+    log_level_str = os.getenv("CAI_LOG_LEVEL")
+    if log_level_str:
+        log_level = getattr(logging, log_level_str.upper(), logging.INFO)
+    elif verbose:
+        log_level = logging.INFO
     else:
-        logging.basicConfig(level=logging.WARNING)
+        log_level = logging.WARNING
+
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
 
 def _load_character(
@@ -211,8 +219,9 @@ async def _process_speech_chunk_with_metrics(
             click.echo("🔊 Playing response...")
 
             # Prepare audio for playback using consolidated utilities
+            # Convert from TTS sample rate (24000 Hz) to device sample rate (48000 Hz)
             audio_array, sample_rate = prepare_audio_for_playback(
-                result.audio_data.data, AudioConfig.DEFAULT_SAMPLE_RATE
+                result.audio_data.data, int(output_sample_rate)
             )
 
             if verbose:

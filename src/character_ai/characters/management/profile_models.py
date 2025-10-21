@@ -35,6 +35,9 @@ class TTSConfig(BaseModel):
     engine: str = "coqui_tts"
     voice_artifact: Optional[str] = None  # voice.wav or voice_emb.npz
     watermark: bool = True
+    model: Optional[str] = None  # TTS model name (e.g., "coqui-xtts-v2")
+    voice_id: Optional[str] = None  # Voice identifier
+    speed: float = 1.0  # Speech speed
 
 
 class ConsentMetadata(BaseModel):
