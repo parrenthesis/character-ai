@@ -88,10 +88,12 @@ class Wav2Vec2Processor(BaseAudioProcessor):
 
             # Load model and processor using local paths
             self.processor = Wav2Vec2Processor.from_pretrained(
-                local_path, local_files_only=True
+                local_path,
+                local_files_only=True,  # nosec B615 - local_files_only=True prevents network access
             )
             self.model = Wav2Vec2ForCTC.from_pretrained(
-                local_path, local_files_only=True
+                local_path,
+                local_files_only=True,  # nosec B615 - local_files_only=True prevents network access
             )
 
             # Move model to device
