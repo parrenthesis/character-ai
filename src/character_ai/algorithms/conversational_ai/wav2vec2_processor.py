@@ -27,6 +27,7 @@ except ImportError:
 
 from ...core.config import Config
 from ...core.exceptions import AudioProcessingError, ModelError
+from ...core.model_utils import get_local_model_path
 from ...core.protocols import AudioData, AudioResult, BaseAudioProcessor, ModelInfo
 
 logger = logging.getLogger(__name__)
@@ -50,9 +51,20 @@ class Wav2Vec2Processor(BaseAudioProcessor):
         self.device: Optional[torch.device] = None
 
     async def initialize(self) -> None:
-        """Initialize Wav2Vec2 model."""
+        """Initialize Wav2Vec2 model from local path."""
         try:
             logger.info(f"Loading Wav2Vec2 model: {self.model_name}")
+
+            # Get local model path from registry using shared utility
+            local_path = get_local_model_path(self.config, "stt", self.model_name)
+
+            if not local_path:
+                raise ModelError(
+                    f"Local model not found for {self.model_name}. "
+                    f"Run 'make download-models' to download models locally."
+                )
+
+            logger.info(f"Using local model: {local_path}")
 
             # Set device - respect force_cpu setting to avoid CUDA conflicts
             if self.force_cpu:
@@ -74,13 +86,13 @@ class Wav2Vec2Processor(BaseAudioProcessor):
             # Import transformers
             from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
-            # Load model and processor using cached models
+            # Load model and processor using local paths
             self.processor = Wav2Vec2Processor.from_pretrained(
-                self.model_name, revision="main"
-            )  # nosec B615
+                local_path, local_files_only=True
+            )
             self.model = Wav2Vec2ForCTC.from_pretrained(
-                self.model_name, revision="main"
-            )  # nosec B615
+                local_path, local_files_only=True
+            )
 
             # Move model to device
             self.model.to(self.device)

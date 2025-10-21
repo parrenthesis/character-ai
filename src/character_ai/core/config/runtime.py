@@ -35,6 +35,7 @@ class RuntimeConfig:
     streaming_enabled: bool = True
     predictive_loading: bool = True
     idle_timeout_s: int = 300
+    model_registry: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -64,9 +65,15 @@ class TTSStreamingConfig:
 class TTSConfig:
     """Text-to-speech configuration."""
 
+    processor: str = "coqui"
     language: str = "en"
     default_voice_style: str = "neutral"
     compute_voice_embedding_on_ingest: bool = False
+    voice_cloning: bool = True
+    model_name: str = "tts_models/multilingual/multi-dataset/xtts_v2"
+    voice_cloning_sample_rate: int = 22050
+    voice_cloning_max_duration: float = 30.0
+    audio_bit_depth: int = 32
     streaming: TTSStreamingConfig = field(default_factory=TTSStreamingConfig)
 
 

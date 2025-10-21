@@ -68,6 +68,7 @@ class ModelConfig:
     wav2vec2_model: str = "facebook/wav2vec2-base"  # Wav2Vec2 model for STT
     coqui_model: str = "tts_models/en/ljspeech/tacotron2-DDC"  # Coqui TTS model
     llama_model: str = "llama-2-7b-chat"
+    llama_model_name: str = "llama-3.2-3b-instruct"  # Model name for auto-discovery
     llama_quantization: str = "4bit"  # 4bit, 8bit, fp16
     llama_backend: str = "transformers"  # transformers | llama_cpp
     llama_gguf_path: str = "models/llm/tinyllama-1.1b-q4_k_m.gguf"

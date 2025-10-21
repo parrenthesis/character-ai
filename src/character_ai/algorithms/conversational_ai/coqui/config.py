@@ -12,6 +12,7 @@ from TTS.api import TTS
 
 from ....core.config import Config
 from ....core.exceptions import ModelError
+from ....core.model_utils import get_local_model_path
 from ....core.protocols import ModelInfo
 
 logger = logging.getLogger(__name__)
@@ -42,9 +43,20 @@ class CoquiConfig:
         self.model_info: Optional[ModelInfo] = None
 
     async def initialize(self) -> None:
-        """Initialize the Coqui TTS model."""
+        """Initialize the Coqui TTS model from local path."""
         try:
             logger.info(f"Initializing Coqui TTS with model: {self.model_name}")
+
+            # Get local model path from registry using shared utility
+            local_path = get_local_model_path(self.config, "tts", self.model_name)
+
+            if not local_path:
+                raise ModelError(
+                    f"Local model not found for {self.model_name}. "
+                    f"Run 'make download-models' to download models locally."
+                )
+
+            logger.info(f"Using local TTS model: {local_path}")
 
             # Determine device configuration
             self._configure_device()
@@ -54,9 +66,17 @@ class CoquiConfig:
                 warnings.simplefilter("ignore")
                 with redirect_stdout(open("/dev/null", "w")):
                     with redirect_stderr(open("/dev/null", "w")):
-                        # Initialize TTS model
-                        # TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 is set in Makefile to handle PyTorch 2.6+ weights_only issue
-                        self.tts = TTS(model_name=self.model_name, progress_bar=False)
+                        # Initialize TTS with local paths
+                        from pathlib import Path
+
+                        model_dir = Path(local_path)
+                        config_path = model_dir / "config.json"
+
+                        self.tts = TTS(
+                            model_path=str(model_dir),
+                            config_path=str(config_path),
+                            progress_bar=False,
+                        )
 
             # Move model to appropriate device
             if self.use_gpu and hasattr(self.tts, "to"):

@@ -25,7 +25,7 @@ class CoquiProcessor(BaseAudioProcessor):
     def __init__(
         self,
         config: Config,
-        model_name: str = "tts_models/en/ljspeech/tacotron2-DDC",
+        model_name: str = "tts_models/multilingual/multi-dataset/xtts_v2",
         gpu_device: Optional[str] = None,
         use_half_precision: Optional[bool] = None,
     ):

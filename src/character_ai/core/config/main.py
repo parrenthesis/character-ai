@@ -150,6 +150,10 @@ class Config:
 
             data = YAMLConfigLoader.load_yaml(runtime_path)
 
+            # Load model_registry from runtime.yaml
+            if "model_registry" in data:
+                self.runtime.model_registry = data["model_registry"]
+
             # Load TTS model from runtime.yaml
             tts_section = data.get("tts", {}) or {}
             if tts_section.get("model_name"):
@@ -302,6 +306,10 @@ class Config:
         tts_data = data.get("tts", {})
         safety_data = data.get("safety", {})
         paths_data = data.get("paths", {})
+
+        # Add model_registry to runtime_data
+        if "model_registry" in data:
+            runtime_data["model_registry"] = data["model_registry"]
 
         return cls(
             environment=data.get("environment", Environment.DEVELOPMENT),

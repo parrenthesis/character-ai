@@ -153,6 +153,7 @@ model_registry:
     wav2vec2-base:
       class: "Wav2Vec2Processor"
       model_name: "facebook/wav2vec2-base-960h"
+      model_path: "models/stt/wav2vec2-base-960h"
       requirements:
         min_memory_gb: 0.5
         cpu_only: true
@@ -225,6 +226,7 @@ model_registry:
     coqui-xtts-v2:
       class: "CoquiProcessor"
       model_name: "tts_models/multilingual/multi-dataset/xtts_v2"
+      model_path: "models/tts/xtts_v2"
       requirements:
         min_memory_gb: 2
         cpu_only: false
@@ -240,6 +242,7 @@ model_registry:
     coqui-tacotron2:
       class: "CoquiProcessor"
       model_name: "tts_models/en/ljspeech/tacotron2-DDC"
+      model_path: "models/tts/tacotron2-DDC"
       requirements:
         min_memory_gb: 1
         cpu_only: true

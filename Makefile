@@ -405,6 +405,21 @@ bundle:
 	@echo "Building models bundle..."
 	poetry run python scripts/build_model_bundle.py
 
+# Model management
+download-models:
+	@echo "Downloading STT/TTS models locally..."
+	poetry run python scripts/download_models.py
+
+verify-models:
+	@echo "Verifying local model availability..."
+	poetry run python scripts/verify_models.py
+
+setup-offline: setup-dev
+	@echo "Setting up fully offline environment..."
+	@$(MAKE) verify-models
+	@echo ""
+	@echo "✅ Offline operation ready"
+
 models-image:
 	@echo "Building Docker models image..."
 	docker build -f Dockerfile.models -t character-ai-models:latest .
