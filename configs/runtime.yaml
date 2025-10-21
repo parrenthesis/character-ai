@@ -42,10 +42,11 @@ tts:
   model_name: "tts_models/multilingual/multi-dataset/xtts_v2" # Multilingual Coqui TTS model
   voice_cloning_sample_rate: 22050 # Sample rate for voice cloning processing
   voice_cloning_max_duration: 30.0 # Maximum duration for voice samples (seconds)
+  audio_bit_depth: 32 # PCM bit depth for WAV encoding (16, 24, or 32)
 
   # Streaming TTS configuration for reduced latency
   streaming:
-    enabled: true # Feature flag - set to true to enable streaming synthesis
+    enabled: true # Re-enabled to test voice cloning in realtime
     method: "sentence" # sentence | full (future implementation)
     sentence_chunking: true # Split text into sentences for chunked synthesis
     fallback_to_blocking: true # Fall back to blocking synthesis if streaming fails

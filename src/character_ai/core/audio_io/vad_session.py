@@ -247,11 +247,14 @@ class VADSessionManager:
             logger.debug(
                 f"Silence accumulating: {self.silence_duration:.2f}s / {self.silence_threshold:.2f}s"
             )
-
         else:
             # No speech detected
             if not self.is_speaking:
                 self.total_silence_detections += 1
+            else:
+                # Not speaking, but still track silence duration for testing
+                if hasattr(self, "last_speech_time") and self.last_speech_time:
+                    self.silence_duration = current_time - self.last_speech_time
             if self.state != VADSessionState.IDLE:
                 self.state = VADSessionState.IDLE
 

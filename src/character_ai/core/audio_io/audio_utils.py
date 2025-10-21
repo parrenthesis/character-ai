@@ -459,6 +459,54 @@ def write_wav_file(
         raise
 
 
+def audio_data_to_wav_bytes(audio_data: "AudioData", bit_depth: int = 16) -> bytes:
+    """Convert AudioData object to WAV format bytes.
+
+    Uses the same pattern as concatenate_audio_chunks for consistency.
+
+    Args:
+        audio_data: AudioData object with audio data and sample rate
+        bit_depth: PCM bit depth for WAV encoding (e.g., 16, 24, 32)
+
+    Returns:
+        WAV format bytes
+
+    Raises:
+        ValueError: If audio_data is invalid
+    """
+    if not SOUNDFILE_AVAILABLE:
+        raise ValueError("soundfile not available")
+
+    import io
+
+    # Handle invalid data
+    if audio_data is None or audio_data.data is None:
+        return b""
+
+    # Handle bytes data (already encoded)
+    if isinstance(audio_data.data, bytes):
+        return audio_data.data
+
+    # Handle numpy arrays
+    if hasattr(audio_data.data, "size"):
+        if audio_data.data.size == 0:
+            return b""
+
+        # Convert numpy array to WAV bytes
+        wav_buffer = io.BytesIO()
+        sf.write(
+            wav_buffer,
+            audio_data.data,
+            audio_data.sample_rate,
+            format="WAV",
+            subtype=f"PCM_{bit_depth}",
+        )
+        return wav_buffer.getvalue()
+
+    # Fallback for other data types
+    return b""
+
+
 def load_audio_file(file_path: str) -> Optional["AudioData"]:
     """
     Load audio file and return AudioData object.

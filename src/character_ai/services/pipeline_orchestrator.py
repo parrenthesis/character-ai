@@ -200,6 +200,13 @@ class PipelineOrchestrator:
         tts_start = time.time()
         response_audio = None
 
+        # Get sample rate from TTS service config
+        tts_sample_rate = getattr(
+            self.tts_service.resource_manager.config.tts,
+            "voice_cloning_sample_rate",
+            22050,
+        )
+
         if streaming_enabled:
             # Streaming TTS synthesis
             if not quiet_mode:
@@ -236,7 +243,7 @@ class PipelineOrchestrator:
                     response_audio = self._concatenate_audio_chunks(audio_chunks)
 
                 tts_time = time.time() - tts_start
-                if response_audio:
+                if response_audio is not None:
                     logger.info(
                         f"⏱️  Streaming TTS: {tts_time:.2f}s ({len(audio_chunks)} chunks) - {len(response_audio.data)} samples"
                     )
@@ -265,13 +272,14 @@ class PipelineOrchestrator:
                         text, character
                     )
                     tts_time = time.time() - tts_start
-                    if audio_bytes:
+                    if audio_bytes and len(audio_bytes) > 0:
                         from ..core.protocols import AudioData
 
+                        # TTS already returns WAV bytes, just wrap in AudioData
                         response_audio = AudioData(
                             data=audio_bytes,
-                            sample_rate=22050,  # Default TTS sample rate
-                            duration=len(audio_bytes) / 22050,
+                            sample_rate=tts_sample_rate,
+                            duration=len(audio_bytes) / tts_sample_rate,
                             channels=1,
                         )
                         logger.info(
@@ -287,19 +295,23 @@ class PipelineOrchestrator:
             if not quiet_mode:
                 print("DEBUG: Using blocking TTS (streaming disabled)")
             audio_bytes = await self.tts_service.synthesize_blocking(text, character)
-            if audio_bytes:
+            print(
+                f"DEBUG: TTS returned - type: {type(audio_bytes)}, len: {len(audio_bytes) if hasattr(audio_bytes, '__len__') else 'no len'}"
+            )
+            if audio_bytes and len(audio_bytes) > 0:
                 from ..core.protocols import AudioData
 
+                # Create AudioData with bytes (as per protocol definition)
                 response_audio = AudioData(
                     data=audio_bytes,
-                    sample_rate=22050,  # Default TTS sample rate
-                    duration=len(audio_bytes) / 22050,
+                    sample_rate=tts_sample_rate,
+                    duration=len(audio_bytes) / tts_sample_rate,
                     channels=1,
                 )
             else:
                 response_audio = None
             tts_time = time.time() - tts_start
-            if response_audio:
+            if response_audio is not None:
                 logger.info(
                     f"⏱️  TTS: {tts_time:.2f}s - {len(response_audio.data)} bytes"
                 )

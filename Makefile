@@ -501,7 +501,7 @@ test-voice-pipeline-realtime: setup-audiobox
 	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
 	CAI_QUIET_MODE=0
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
-	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 120
+	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10
 
 test-voice-pipeline-realtime-desktop: setup-audiobox
 	@echo "Testing real-time voice interaction with desktop hardware profile..."

@@ -168,14 +168,33 @@ class CoquiTTSProcessor:
                     f"TTS generated audio: sample_rate={sample_rate} Hz, shape={audio_data.shape}"
                 )
 
-                # Apply speed adjustment if needed
+                # Apply speed adjustment only if needed (skip when speed = 1.0 to avoid quantization artifacts)
                 if speed != 1.0:
                     audio_data = await self._adjust_speed(
                         audio_data, sample_rate, speed
                     )
 
-                return AudioData(
+                # Use centralized audio_io utility for WAV encoding
+                from ....core.audio_io.audio_utils import audio_data_to_wav_bytes
+                from ....core.protocols import AudioData
+
+                # Get bit depth from config
+                bit_depth = getattr(self.config.tts, "audio_bit_depth", 32)
+
+                # Create temporary AudioData with numpy array
+                temp_audio_data = AudioData(
                     data=audio_data,
+                    sample_rate=sample_rate,
+                    duration=len(audio_data) / sample_rate,
+                    channels=1 if len(audio_data.shape) == 1 else audio_data.shape[1],
+                )
+
+                # Convert to WAV bytes using configurable bit depth
+                wav_bytes = audio_data_to_wav_bytes(temp_audio_data, bit_depth)
+
+                # Return AudioData with bytes (as per protocol)
+                return AudioData(
+                    data=wav_bytes,
                     sample_rate=sample_rate,
                     duration=len(audio_data) / sample_rate,
                     channels=1 if len(audio_data.shape) == 1 else audio_data.shape[1],
@@ -187,7 +206,10 @@ class CoquiTTSProcessor:
                     os.unlink(temp_path)
 
         except Exception as e:
+            import traceback
+
             logger.error(f"Failed to synthesize sentence: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return None
 
     async def _adjust_speed(
@@ -200,7 +222,7 @@ class CoquiTTSProcessor:
                 audio_data = audio_data.astype(np.float32)
 
             # Normalize to [-1, 1] range
-            if audio_data.max() > 1.0 or audio_data.min() < -1.0:
+            if np.any(audio_data > 1.0) or np.any(audio_data < -1.0):
                 audio_data = audio_data / np.max(np.abs(audio_data))
 
             # Convert to 16-bit integer for pydub

@@ -52,30 +52,37 @@ class TTSService(BaseService):
             if hasattr(character, "name")
             else str(character).lower()
         )
+
+        # Log character info for debugging
+        logger.debug(f"Getting voice path for character: {character_name}")
+        logger.debug(f"  Has metadata: {hasattr(character, 'metadata')}")
+        if hasattr(character, "metadata") and character.metadata:
+            logger.debug(f"  Metadata keys: {list(character.metadata.keys())}")
+            logger.debug(
+                f"  Voice path in metadata: {character.metadata.get('voice_path')}"
+            )
+
         voice_path = None
 
-        # First check if character already has a voice path in metadata
+        # Check metadata first
         if hasattr(character, "metadata") and character.metadata:
             voice_path = character.metadata.get("voice_path")
             if voice_path:
-                logger.info(f"Using voice path from character metadata: {voice_path}")
+                # Verify file exists
+                import os
 
-        # If no voice path in metadata, try voice manager
-        if not voice_path and self.voice_manager:
-            # Get franchise from character metadata or use character name as fallback
-            franchise = (
-                getattr(character, "franchise", None)
-                or (
-                    character.metadata.get("franchise")
-                    if hasattr(character, "metadata") and character.metadata
-                    else None
+                exists = os.path.exists(voice_path)
+                logger.debug(
+                    f"Voice path from metadata: {voice_path} (exists: {exists})"
                 )
-                or character_name
+                if not exists:
+                    logger.warning(f"Voice file not found at: {voice_path}")
+                    voice_path = None
+
+        if not voice_path:
+            logger.warning(
+                f"No valid voice path found for character '{character_name}' - will use default voice"
             )
-            voice_info = await self.voice_manager.get_character_voice_path(
-                character_name, franchise
-            )
-            voice_path = voice_info.get("voice_file_path") if voice_info else None
 
         return voice_path
 
@@ -145,13 +152,22 @@ class TTSService(BaseService):
             logger.warning(
                 "TTS synthesis called with voice_path=None - this will cause synthesis to fail!"
             )
-        result = await tts_processor.synthesize_speech(
-            text=tts_text, voice_path=voice_path, language="en", speed=speed
-        )
+        try:
+            result = await tts_processor.synthesize_speech(
+                text=tts_text, voice_path=voice_path, language="en", speed=speed
+            )
+        except Exception as e:
+            logger.error(f"TTS synthesis error: {e}")
+            logger.error(f"Error type: {type(e)}")
+            raise
         logger.info(
             f"TTS result: audio_data={result.audio_data is not None}, error={result.error}"
         )
-        if result.audio_data and result.audio_data.data is not None:
+        if (
+            result.audio_data
+            and result.audio_data.data is not None
+            and len(result.audio_data.data) > 0
+        ):
             logger.info(
                 f"TTS audio data size: {len(result.audio_data.data)} bytes, sample_rate: {result.audio_data.sample_rate} Hz"
             )
@@ -160,7 +176,14 @@ class TTSService(BaseService):
 
         # Mark model as used
         self.resource_manager.mark_model_used("tts")
-        return result.audio_data if result.audio_data else b""
+        if result.audio_data and result.audio_data.data:
+            # Ensure we return bytes (TTS processor should return bytes)
+            if isinstance(result.audio_data.data, bytes):
+                return result.audio_data.data
+            else:
+                # Convert numpy array to bytes if needed
+                return bytes(result.audio_data.data.tobytes())
+        return b""
 
     async def synthesize_streaming(
         self, text: str, character: Character
