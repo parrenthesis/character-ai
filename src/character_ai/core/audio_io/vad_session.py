@@ -251,10 +251,9 @@ class VADSessionManager:
             # No speech detected
             if not self.is_speaking:
                 self.total_silence_detections += 1
-            else:
-                # Not speaking, but still track silence duration for testing
-                if hasattr(self, "last_speech_time") and self.last_speech_time:
-                    self.silence_duration = current_time - self.last_speech_time
+            # Track silence duration for testing even when not speaking
+            if hasattr(self, "last_speech_time") and self.last_speech_time:
+                self.silence_duration = current_time - self.last_speech_time
             if self.state != VADSessionState.IDLE:
                 self.state = VADSessionState.IDLE
 
