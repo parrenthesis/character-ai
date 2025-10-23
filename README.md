@@ -1,7 +1,6 @@
 # Character AI Platform
 
 [![Tests](https://img.shields.io/badge/tests-98%20passing-green)](https://github.com/parrenthesis/character-ai/actions)
-[![Security](https://img.shields.io/badge/security-0%20vulnerabilities-green)](https://github.com/parrenthesis/character-ai/security)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 
@@ -12,8 +11,9 @@ A proof-of-concept platform for creating interactive AI characters that bring di
 ## What It Does
 
 - **Voice interaction**: Speech-to-text → LLM → Text-to-speech
-- **Character personalities**: Configurable AI personalities with memory
+- **Character personalities**: Configurable AI personalities with persistent memory
 - **Voice cloning**: Custom character voices using Coqui TTS
+- **Hybrid memory system**: Intelligent conversation memory and user preference tracking
 - **Edge deployment**: Designed for local hardware (Raspberry Pi, etc.)
 
 **Pipeline:**
@@ -25,7 +25,9 @@ Audio Input → Wav2Vec2 (STT) → LLM → Coqui TTS → Audio Output
 
 - **API Documentation**: `docs/api/`
 - **Character Examples**: `docs/api/character_examples.md`
+- **Memory System**: `docs/memory_system.md`
 - **Deployment**: `docs/production_deployment.md`
+- **Toy Deployment**: `docs/toy_deployment.md`
 
 ## Quick Start
 
@@ -53,9 +55,9 @@ make lint
 ## Architecture
 
 **Modular Components:**
-- **`algorithms/`**: AI algorithms (STT, TTS, voice cloning, safety)
+- **`algorithms/`**: AI algorithms (STT, TTS, voice cloning, safety, memory)
 - **`characters/`**: Character management (catalog, voices, safety, management)
-- **`core/`**: Core platform (config, audio I/O, LLM, persistence, caching)
+- **`core/`**: Core platform (config, audio I/O, LLM, persistence, caching, database)
 - **`features/`**: Feature modules (localization, security, parental controls, cost monitoring)
 - **`observability/`**: Monitoring (logging, metrics, crash reporting, Grafana)
 - **`production/`**: Production deployment (real-time engine, processing pipeline)

@@ -7,6 +7,7 @@ retention policies to maintain context while respecting memory constraints.
 
 import logging
 import time
+import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -22,7 +23,7 @@ class ConversationTurn:
     user_input: str
     character_response: str
     character_name: str
-    turn_id: str = field(default_factory=lambda: f"turn_{int(time.time() * 1000)}")
+    turn_id: str = field(default_factory=lambda: f"turn_{uuid.uuid4().hex[:8]}")
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

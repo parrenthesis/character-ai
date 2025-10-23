@@ -20,8 +20,9 @@ from .stt_service import STTService
 from .tts_service import TTSService
 
 if TYPE_CHECKING:
+    from ..algorithms.conversational_ai.hybrid_memory import HybridMemorySystem
     from ..algorithms.conversational_ai.session_memory import SessionMemory
-    from ..core.response_cache import ResponseCache
+    from ..core.caching import ResponseCache
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class PipelineOrchestrator:
         response_cache: "ResponseCache",
         safety_filter: Optional[Any] = None,
         streaming_config: Optional[Any] = None,
+        hybrid_memory: Optional["HybridMemorySystem"] = None,
     ):
         self.stt_service = stt_service
         self.llm_service = llm_service
@@ -48,6 +50,7 @@ class PipelineOrchestrator:
         self.session_memory = session_memory
         self.response_cache = response_cache
         self.safety_filter = safety_filter
+        self.hybrid_memory = hybrid_memory
         self.streaming_config = streaming_config
 
     async def process_pipeline(
@@ -99,6 +102,18 @@ class PipelineOrchestrator:
                 user_input=transcribed_text,
                 character_response=safe_response,
             )
+
+            # Store in hybrid memory system if available
+            if self.hybrid_memory:
+                try:
+                    self.hybrid_memory.process_turn(
+                        character_name=character.name,
+                        user_input=transcribed_text,
+                        character_response=safe_response,
+                    )
+                    logger.debug(f"Stored turn in hybrid memory for {character.name}")
+                except Exception as e:
+                    logger.error(f"Failed to store turn in hybrid memory: {e}")
 
             # response_audio is already an AudioData object from TTS service
             audio_data_obj = response_audio

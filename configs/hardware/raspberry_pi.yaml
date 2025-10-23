@@ -51,3 +51,9 @@ optimizations:
   tts:
     use_half_precision: false # CPU mode - FP32
     chunk_size: 512 # Larger chunks for efficiency on slower CPU
+
+# Memory system configuration for Raspberry Pi/low-end hardware
+memory_system:
+  enabled: true
+  summarization_enabled: false # Disable on low-end hardware
+  smart_caching_enabled: false

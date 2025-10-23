@@ -17,6 +17,7 @@ import warnings
 import click  # noqa: E402
 
 from ..core.llm import OpenModelService  # noqa: E402
+from . import memory as memory_commands  # noqa: E402
 from .character import character_commands  # noqa: E402
 from .config import config_commands  # noqa: E402
 from .deploy import deploy_commands  # noqa: E402
@@ -156,6 +157,12 @@ def config() -> None:
     pass
 
 
+@cli.group()
+def memory() -> None:
+    """Memory system management commands."""
+    pass
+
+
 # Import and register subcommands
 
 # Add all commands from each module to their respective groups
@@ -169,6 +176,13 @@ for command in deploy_commands.commands.values():
     deploy.add_command(command)
 for command in config_commands.commands.values():
     config.add_command(command)
+
+# Add memory commands
+memory.add_command(memory_commands.stats)
+memory.add_command(memory_commands.export_user)
+memory.add_command(memory_commands.cleanup)
+memory.add_command(memory_commands.vacuum)
+memory.add_command(memory_commands.clean)
 
 
 @cli.command()

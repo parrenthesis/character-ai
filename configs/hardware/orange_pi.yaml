@@ -52,3 +52,9 @@ optimizations:
   tts:
     use_half_precision: true # Use GPU if available
     chunk_size: 256
+
+# Memory system configuration for Orange Pi/mid-range hardware
+memory_system:
+  enabled: true
+  summarization_enabled: true
+  smart_caching_enabled: true

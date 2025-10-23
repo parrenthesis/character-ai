@@ -106,6 +106,9 @@ async def _test_realtime_interaction(
             click.echo(f"❌ Could not load character {character}", err=True)
             return
 
+        # Set active character (this starts the hybrid memory session)
+        engine.core_engine.lifecycle.set_active_character(character_obj)
+
         # Pre-load models BEFORE starting audio capture to avoid overflow
         click.echo("🔄 Pre-loading models for faster processing...")
         preload_results = await engine.preload_models()

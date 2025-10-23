@@ -227,7 +227,15 @@ class VADSessionManager:
         elif self.is_speaking:
             # Still in speech mode, check for silence
             self.speech_buffer.append(audio_chunk)  # Include low-level audio
-            self.silence_duration = current_time - self.last_speech_time
+
+            # Update silence duration based on current time
+            if audio_level < self.speech_threshold:
+                # This is silence - don't update last_speech_time
+                self.silence_duration = current_time - self.last_speech_time
+            else:
+                # This is still speech - update last_speech_time and reset silence
+                self.last_speech_time = current_time
+                self.silence_duration = 0.0
 
             # Check if we should end speech
             should_end = False

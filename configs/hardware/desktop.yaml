@@ -56,3 +56,9 @@ optimizations:
   tts:
     use_half_precision: false # FP32 for CUDA stability (no multi-model conflicts)
     chunk_size: 128
+
+# Memory system configuration for desktop/high-end hardware
+memory_system:
+  enabled: true
+  summarization_enabled: true
+  smart_caching_enabled: true

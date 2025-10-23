@@ -1,7 +1,7 @@
 """LLM response generation service."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from ..characters import Character, CharacterResponseFilter
 from ..core.exceptions import handle_model_error
@@ -9,6 +9,7 @@ from .base_service import BaseService
 from .error_messages import ServiceErrorMessages
 
 if TYPE_CHECKING:
+    from ..algorithms.conversational_ai.hybrid_memory import HybridMemorySystem
     from ..algorithms.conversational_ai.session_memory import SessionMemory
     from ..algorithms.conversational_ai.text_normalizer import TextNormalizer
     from ..core.llm.template_prompt_builder import TemplatePromptBuilder
@@ -29,11 +30,13 @@ class LLMService(BaseService):
         text_normalizer: "TextNormalizer",
         prompt_builder: "TemplatePromptBuilder",
         session_memory: "SessionMemory",
+        hybrid_memory: Optional["HybridMemorySystem"] = None,
     ):
         super().__init__(resource_manager)
         self.text_normalizer = text_normalizer
         self.prompt_builder = prompt_builder
         self.session_memory = session_memory
+        self.hybrid_memory = hybrid_memory
         self.character_filters: Dict[str, CharacterResponseFilter] = {}
 
     def _get_processor(self, model_type: str) -> Any:
@@ -73,13 +76,21 @@ class LLMService(BaseService):
         # Get conversation depth for template selection
         conversation_depth = self.session_memory.get_conversation_depth(character_name)
 
+        # Build conversation context using hybrid memory if available, fallback to session memory
+        if self.hybrid_memory:
+            conversation_context = self.hybrid_memory.build_context_for_llm(
+                character_name, text
+            )
+        else:
+            conversation_context = self.session_memory.format_context_for_llm(
+                character_name=character_name, current_user_input=text, max_turns=5
+            )
+
         # Build prompt using Jinja2 template (conversation-aware)
         character_prompt = self.prompt_builder.build_prompt(
             user_input=text,
             character=character,
-            conversation_context=self.session_memory.format_context_for_llm(
-                character_name=character_name, current_user_input=text, max_turns=5
-            ),
+            conversation_context=conversation_context,
             conversation_depth=conversation_depth,
         )
 

@@ -73,6 +73,7 @@ class CoreRealTimeEngine:
                 safety_filter=self.lifecycle.safety_filter
                 or self._create_default_safety_filter(),
                 response_cache=self.lifecycle.response_cache,
+                hybrid_memory=self.lifecycle.hybrid_memory,
             )
             await self.processing_pipeline.initialize()
 

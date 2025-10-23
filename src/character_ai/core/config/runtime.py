@@ -105,6 +105,34 @@ class MemoryConfig:
 
 
 @dataclass
+class MemorySystemConfig:
+    """Hybrid memory system configuration."""
+
+    enabled: bool = True
+    data_directory: str = "data"
+
+    # Preference settings
+    preferences_enabled: bool = True
+    preferences_storage_path: str = "data/user_preferences.json"
+
+    # Storage settings
+    storage_enabled: bool = True
+    storage_db_path: str = "data/conversations.db"
+    max_age_days: int = 30
+
+    # Summarization settings
+    summarization_enabled: bool = True
+    summarize_every_n_turns: int = 10
+    keep_recent_turns: int = 5
+    max_summary_tokens: int = 150
+
+    # Context building settings
+    include_recent_turns: int = 3
+    include_summaries: bool = True
+    include_preferences: bool = True
+
+
+@dataclass
 class SecurityConfig:
     """Security configuration."""
 

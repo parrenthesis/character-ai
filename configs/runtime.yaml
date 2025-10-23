@@ -136,6 +136,32 @@ streaming:
   max_response_time_ms: 30000 # Maximum response time (milliseconds)
   simulation_delays: false # Enable simulation delays in performance API
 
+# Memory system configuration
+memory_system:
+  enabled: true # Global feature flag
+  data_directory: "data" # Configurable path
+
+  preferences:
+    enabled: true
+    use_llm_extraction: false # Pattern matching only
+    storage_path: "{data_directory}/user_preferences.json"
+
+  storage:
+    enabled: true
+    db_path: "{data_directory}/conversations.db"
+    max_age_days: 30 # Auto-cleanup
+
+  summarization:
+    enabled: true # Disable on low-end hardware
+    summarize_every_n_turns: 10
+    keep_recent_turns: 5
+    max_summary_tokens: 150
+
+  context:
+    include_recent_turns: 3
+    include_summaries: true
+    include_preferences: true
+
 # LLM configuration (canonical defaults; env can override)
 llm:
   runtime:

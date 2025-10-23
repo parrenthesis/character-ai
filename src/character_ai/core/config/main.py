@@ -27,6 +27,7 @@ from .runtime import (
     InteractionConfig,
     LanguageSupportConfig,
     MemoryConfig,
+    MemorySystemConfig,
     MonitoringConfig,
     MultilingualAudioConfig,
     ParentalControlsConfig,
@@ -66,6 +67,7 @@ class Config:
     tts: TTSConfig = field(default_factory=TTSConfig)
     safety: SafetyConfig = field(default_factory=SafetyConfig)
     memory: MemoryConfig = field(default_factory=MemoryConfig)
+    memory_system: MemorySystemConfig = field(default_factory=MemorySystemConfig)
     security: SecurityConfig = field(default_factory=SecurityConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
 
@@ -305,6 +307,7 @@ class Config:
         interaction_data = data.get("interaction", {})
         tts_data = data.get("tts", {})
         safety_data = data.get("safety", {})
+        memory_system_data = data.get("memory_system", {})
         paths_data = data.get("paths", {})
 
         # Add model_registry to runtime_data
@@ -322,6 +325,7 @@ class Config:
             interaction=InteractionConfig(**interaction_data),
             tts=TTSConfig(**tts_data),
             safety=SafetyConfig(**safety_data),
+            memory_system=MemorySystemConfig(**memory_system_data),
             paths=PathsConfig(**paths_data),
             data_dir=Path(data.get("data_dir", "data")),
             models_dir=Path(data.get("models_dir", "models")),

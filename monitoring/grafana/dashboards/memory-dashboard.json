@@ -1,0 +1,201 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Character AI Memory System",
+    "tags": ["character-ai", "memory", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Memory System Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "memory_active_sessions",
+            "legendFormat": "Active Sessions"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Preference Extractions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_preference_extractions_total[5m])",
+            "legendFormat": "{{extraction_type}} - {{success}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Extractions/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Storage Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_storage_operations_total[5m])",
+            "legendFormat": "{{operation_type}} - {{success}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Operations/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Database Size",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "memory_database_size_bytes",
+            "legendFormat": "Database Size"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Summarization Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_summarization_requests_total[5m])",
+            "legendFormat": "Requests/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(memory_summarization_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile duration"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate/Duration",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_cache_hits_total[5m])",
+            "legendFormat": "Cache Hits - {{cache_type}}"
+          },
+          {
+            "expr": "rate(memory_cache_misses_total[5m])",
+            "legendFormat": "Cache Misses - {{cache_type}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Operations/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "Context Building Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_context_builds_total[5m])",
+            "legendFormat": "Context Builds/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(memory_context_build_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile duration"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Rate/Duration",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "User Data Size",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "memory_user_data_size_bytes",
+            "legendFormat": "User {{user_id}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 9,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(memory_errors_total[5m])",
+            "legendFormat": "{{error_type}} - {{component}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Errors/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}

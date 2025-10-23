@@ -2,7 +2,10 @@
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from ...algorithms.conversational_ai.hybrid_memory import HybridMemorySystem
 
 from ...algorithms.conversational_ai.session_memory import SessionMemory
 from ...algorithms.conversational_ai.text_normalizer import TextNormalizer
@@ -29,6 +32,7 @@ class ProcessingPipeline:
         voice_manager: SchemaVoiceService,
         safety_filter: ChildSafetyFilter,
         response_cache: ResponseCache,
+        hybrid_memory: Optional["HybridMemorySystem"] = None,
     ):
         self.resource_manager = resource_manager
         self.text_normalizer = text_normalizer
@@ -37,6 +41,7 @@ class ProcessingPipeline:
         self.voice_manager = voice_manager
         self.safety_filter = safety_filter
         self.response_cache = response_cache
+        self.hybrid_memory = hybrid_memory
 
         # Services
         self.stt_service: Optional[STTService] = None
@@ -56,6 +61,7 @@ class ProcessingPipeline:
                 self.text_normalizer,
                 self.prompt_builder,
                 self.session_memory,
+                self.hybrid_memory,
             )
             self.tts_service = TTSService(
                 self.resource_manager, self.text_normalizer, self.voice_manager
@@ -76,6 +82,7 @@ class ProcessingPipeline:
                 self.response_cache,
                 self.safety_filter,
                 streaming_config,
+                self.hybrid_memory,
             )
 
             logger.info("Processing pipeline initialized successfully")
@@ -111,6 +118,23 @@ class ProcessingPipeline:
             else:
                 # Fallback to individual service processing
                 result = await self._process_audio_fallback(audio_stream, character)
+
+            # Process turn through hybrid memory system if available
+            if self.hybrid_memory and result.text:
+                logger.debug(
+                    f"Processing turn through hybrid memory system for {character.name}"
+                )
+                self.hybrid_memory.process_turn(
+                    character.name,
+                    result.metadata.get("transcribed_text", "")
+                    if result.metadata
+                    else "",
+                    result.text,
+                )
+            else:
+                logger.debug(
+                    f"Hybrid memory system not available: hybrid_memory={self.hybrid_memory}, result.text={result.text}"
+                )
 
             return result
 
