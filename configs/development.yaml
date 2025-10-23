@@ -21,7 +21,7 @@ tts:
   voice_cloning_sample_rate: 22050 # Sample rate for voice cloning processing
   output_sample_rate: 24000 # XTTS v2 actual output rate
   voice_cloning_max_duration: 30.0 # Maximum duration for voice samples (seconds)
-  voice_cloning: true # Native voice cloning support (replaces XTTS container) → CoquiVoiceCloningService
+  voice_cloning: true # Native voice cloning support (replaces XTTS container) → CoquiProcessor
   model_name: "tts_models/en/ljspeech/tacotron2-DDC" # Default Coqui TTS model → CoquiTTSProcessor
 
 safety:

@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from ...observability.memory_metrics import get_memory_metrics
-from .conversation_storage import ConversationStorage
 from .conversation_summarizer import ConversationSummarizer, LLMProvider
+from .optimized_conversation_storage import OptimizedConversationStorage
 from .preference_extractor import (
     PreferenceExtractor,
     PreferenceStorage,
@@ -67,7 +67,7 @@ class HybridMemorySystem:
         self.preference_storage = PreferenceStorage(
             self.config.preferences_storage_path
         )
-        self.conversation_storage = ConversationStorage(
+        self.conversation_storage = OptimizedConversationStorage(
             self.config.storage_db_path, self.config.max_age_days
         )
         self.conversation_summarizer = ConversationSummarizer(
@@ -344,7 +344,7 @@ class HybridMemorySystem:
         if not self.config.enabled or not self.config.storage_enabled:
             return {}
 
-        return self.conversation_storage.get_conversation_stats(
+        return self.conversation_storage.get_session_stats(
             self.device_id, character_name
         )
 

@@ -66,7 +66,7 @@ context = hybrid_memory.build_context_for_llm(
 HybridMemorySystem
 ├── PreferenceExtractor (Pattern-based extraction)
 ├── PreferenceStorage (JSON persistence)
-├── ConversationStorage (SQLite with connection pooling)
+├── OptimizedConversationStorage (SQLite with connection pooling)
 ├── ConversationSummarizer (LLM-based compression)
 └── MemoryMetrics (Prometheus monitoring)
 ```
