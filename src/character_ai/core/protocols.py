@@ -7,7 +7,9 @@ interaction and flexible architecture.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Dict, List, Optional, Protocol, TypeVar
+from typing import Any, AsyncGenerator, Dict, List, Optional, Protocol, TypeVar, Union
+
+import numpy as np
 
 # Type variables for generic protocols
 T = TypeVar("T")
@@ -17,7 +19,7 @@ T = TypeVar("T")
 class AudioData:
     """Audio data container."""
 
-    data: bytes
+    data: Union[bytes, np.ndarray]
     sample_rate: int
     channels: int
     duration: float = 0.0

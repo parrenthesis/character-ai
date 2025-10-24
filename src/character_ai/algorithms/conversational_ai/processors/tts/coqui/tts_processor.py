@@ -199,15 +199,16 @@ class CoquiTTSProcessor:
                 )
 
                 # Convert to WAV bytes using configurable bit depth
-                wav_bytes = audio_data_to_wav_bytes(temp_audio_data, bit_depth)
+                wav_bytes: bytes = audio_data_to_wav_bytes(temp_audio_data, bit_depth)
 
                 # Return AudioData with bytes (as per protocol)
-                return AudioData(
+                audio_result: AudioData = AudioData(
                     data=wav_bytes,
                     sample_rate=sample_rate,
                     duration=len(audio_data) / sample_rate,
                     channels=1 if len(audio_data.shape) == 1 else audio_data.shape[1],
                 )
+                return audio_result
 
             finally:
                 # Clean up temporary file
@@ -277,15 +278,38 @@ class CoquiTTSProcessor:
             # Get sample rate from first segment
             sample_rate = audio_segments[0].sample_rate
 
-            # Combine all audio data
-            combined_data = np.concatenate([seg.data for seg in audio_segments])
+            # Extract raw audio data from AudioData objects
+            raw_chunks = []
+            for seg in audio_segments:
+                if isinstance(seg.data, np.ndarray):
+                    raw_chunks.append(seg.data)
+                elif isinstance(seg.data, bytes):
+                    # Use existing utility to convert bytes to numpy array
+                    from ......core.audio_io.audio_utils import decode_wav_bytes
 
-            return AudioData(
-                data=combined_data,
-                sample_rate=sample_rate,
-                duration=len(combined_data) / sample_rate,
-                channels=1 if len(combined_data.shape) == 1 else combined_data.shape[1],
+                    audio_array, _ = decode_wav_bytes(seg.data)
+                    raw_chunks.append(audio_array)
+                else:
+                    logger.warning(f"Unsupported audio data type: {type(seg.data)}")
+                    # Skip this segment but continue processing others
+                    continue
+
+            if not raw_chunks:
+                return audio_segments[0]  # Fallback to first segment
+
+            # Use existing concatenate_audio_chunks function (DRY principle)
+            from ......core.audio_io.audio_utils import concatenate_audio_chunks
+
+            result: Optional[AudioData] = concatenate_audio_chunks(
+                raw_chunks, sample_rate
             )
+
+            if result is None:
+                return audio_segments[0]  # Fallback to first segment
+
+            # Explicitly cast to AudioData to help mypy
+            audio_result: AudioData = result
+            return audio_result
 
         except Exception as e:
             logger.error(f"Failed to combine audio segments: {e}")

@@ -9,6 +9,7 @@ import io
 import logging
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -153,11 +154,26 @@ async def synthesize_speech(
         # Encode audio data to base64
         import base64
 
-        audio_b64 = base64.b64encode(
-            result.audio_result.audio_data.data
-            if result.audio_result.audio_data
-            else b""
-        ).decode("utf-8")
+        # Convert audio data to bytes if it's a numpy array
+        if result.audio_result.audio_data is None:
+            audio_bytes = b""
+        else:
+            audio_data = result.audio_result.audio_data.data
+            if isinstance(audio_data, np.ndarray):
+                # Convert numpy array to bytes using WAV format
+                from ...core.audio_io.audio_utils import audio_data_to_wav_bytes
+
+                audio_bytes = audio_data_to_wav_bytes(
+                    AudioData(
+                        data=audio_data,
+                        sample_rate=result.audio_result.audio_data.sample_rate,
+                        channels=result.audio_result.audio_data.channels,
+                    )
+                )
+            else:
+                audio_bytes = audio_data
+
+        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
         return TTSResponse(
             audio_data=audio_b64,
@@ -338,13 +354,28 @@ async def stream_tts_audio(
             text=text, language_code=parsed_language_code, voice_style=voice_style
         )
 
+        # Convert audio data to bytes if it's a numpy array
+        if result.audio_result.audio_data is None:
+            audio_bytes = b""
+        else:
+            audio_data = result.audio_result.audio_data.data
+            if isinstance(audio_data, np.ndarray):
+                # Convert numpy array to bytes using WAV format
+                from ...core.audio_io.audio_utils import audio_data_to_wav_bytes
+
+                audio_bytes = audio_data_to_wav_bytes(
+                    AudioData(
+                        data=audio_data,
+                        sample_rate=result.audio_result.audio_data.sample_rate,
+                        channels=result.audio_result.audio_data.channels,
+                    )
+                )
+            else:
+                audio_bytes = audio_data
+
         # Return audio as streaming response
         return StreamingResponse(
-            io.BytesIO(
-                result.audio_result.audio_data.data
-                if result.audio_result.audio_data
-                else b""
-            ),
+            io.BytesIO(audio_bytes),
             media_type="audio/wav",
             headers={
                 "Content-Disposition": "inline",
@@ -404,11 +435,26 @@ async def batch_tts_synthesis(
             # Encode audio data to base64
             import base64
 
-            audio_b64 = base64.b64encode(
-                result.audio_result.audio_data.data
-                if result.audio_result.audio_data
-                else b""
-            ).decode("utf-8")
+            # Convert audio data to bytes if it's a numpy array
+            if result.audio_result.audio_data is None:
+                audio_bytes = b""
+            else:
+                audio_data = result.audio_result.audio_data.data
+                if isinstance(audio_data, np.ndarray):
+                    # Convert numpy array to bytes using WAV format
+                    from ...core.audio_io.audio_utils import audio_data_to_wav_bytes
+
+                    audio_bytes = audio_data_to_wav_bytes(
+                        AudioData(
+                            data=audio_data,
+                            sample_rate=result.audio_result.audio_data.sample_rate,
+                            channels=result.audio_result.audio_data.channels,
+                        )
+                    )
+                else:
+                    audio_bytes = audio_data
+
+            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
             results.append(
                 TTSResponse(
