@@ -9,9 +9,9 @@ from .base_service import BaseService
 from .error_messages import ServiceErrorMessages
 
 if TYPE_CHECKING:
-    from ..algorithms.conversational_ai.hybrid_memory import HybridMemorySystem
-    from ..algorithms.conversational_ai.session_memory import SessionMemory
-    from ..algorithms.conversational_ai.text_normalizer import TextNormalizer
+    from ..algorithms.conversational_ai.memory.hybrid_memory import HybridMemorySystem
+    from ..algorithms.conversational_ai.memory.session_memory import SessionMemory
+    from ..algorithms.conversational_ai.utils.text_normalizer import TextNormalizer
     from ..core.llm.template_prompt_builder import TemplatePromptBuilder
     from ..core.resource_manager import ResourceManager
 

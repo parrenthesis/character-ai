@@ -10,7 +10,7 @@ import numpy as np
 import soundfile as sf
 from pydub import AudioSegment
 
-from ....core.protocols import AudioData, AudioResult
+from ......core.protocols import AudioData, AudioResult
 from .text_processor import CoquiTextProcessor
 
 logger = logging.getLogger(__name__)
@@ -182,8 +182,10 @@ class CoquiTTSProcessor:
                     )
 
                 # Use centralized audio_io utility for WAV encoding
-                from ....core.audio_io.audio_utils import audio_data_to_wav_bytes
-                from ....core.protocols import AudioData
+                from src.character_ai.core.audio_io.audio_utils import (
+                    audio_data_to_wav_bytes,
+                )
+                from src.character_ai.core.protocols import AudioData
 
                 # Get bit depth from config
                 bit_depth = getattr(self.config.tts, "audio_bit_depth", 32)
@@ -279,7 +281,7 @@ class CoquiTTSProcessor:
             combined_data = np.concatenate([seg.data for seg in audio_segments])
 
             return AudioData(
-                data=combined_data,  # type: ignore
+                data=combined_data,
                 sample_rate=sample_rate,
                 duration=len(combined_data) / sample_rate,
                 channels=1 if len(combined_data.shape) == 1 else combined_data.shape[1],

@@ -139,7 +139,7 @@ class LocalLLMProvider(LLMInterface):
             # Enforce single-line, no role labels, no leading stage directions
             try:
                 # Use TextNormalizer for consistent text cleaning
-                from ...algorithms.conversational_ai.text_normalizer import (
+                from ...algorithms.conversational_ai.utils.text_normalizer import (
                     TextNormalizer,
                 )
 

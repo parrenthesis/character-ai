@@ -6,7 +6,7 @@ from __future__ import annotations
 
 # CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
 # isort: off
-from ...core import torch_init  # noqa: F401
+from .....core import torch_init  # noqa: F401
 
 # isort: on
 
@@ -15,9 +15,14 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from ...core.config import Config
-from ...core.exceptions import AudioProcessingError, ModelError
-from ...core.protocols import BaseTextProcessor, EmbeddingResult, ModelInfo, TextResult
+from .....core.config import Config
+from .....core.exceptions import AudioProcessingError, ModelError
+from .....core.protocols import (
+    BaseTextProcessor,
+    EmbeddingResult,
+    ModelInfo,
+    TextResult,
+)
 
 logger = logging.getLogger(__name__)
 

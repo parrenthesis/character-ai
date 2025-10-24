@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from ...observability.memory_metrics import get_memory_metrics
+from ....observability.memory_metrics import get_memory_metrics
 from .conversation_summarizer import ConversationSummarizer, LLMProvider
 from .optimized_conversation_storage import OptimizedConversationStorage
 from .preference_extractor import (

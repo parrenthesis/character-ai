@@ -5,7 +5,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from ...algorithms.conversational_ai.session_memory import ConversationTurn
+from ...algorithms.conversational_ai.memory.session_memory import ConversationTurn
 from ..management.types import Character
 
 logger = logging.getLogger(__name__)

@@ -9,10 +9,10 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from character_ai.algorithms.conversational_ai.llama_cpp_processor import (
+from character_ai.algorithms.conversational_ai.processors.llm.llama_cpp_processor import (
     LlamaCppProcessor,
 )
-from character_ai.algorithms.conversational_ai.wav2vec2_processor import (
+from character_ai.algorithms.conversational_ai.processors.stt.wav2vec2_processor import (
     Wav2Vec2Processor,
 )
 from character_ai.core.config import Config

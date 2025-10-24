@@ -7,7 +7,7 @@ with secure PyTorch compatibility.
 
 # CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
 # isort: off
-from ...core import torch_init  # noqa: F401
+from .....core import torch_init  # noqa: F401
 
 # isort: on
 
@@ -25,10 +25,10 @@ except ImportError:
     torchaudio = None
     TORCHAUDIO_AVAILABLE = False
 
-from ...core.config import Config
-from ...core.exceptions import AudioProcessingError, ModelError
-from ...core.model_utils import get_local_model_path
-from ...core.protocols import AudioData, AudioResult, BaseAudioProcessor, ModelInfo
+from .....core.config import Config
+from .....core.exceptions import AudioProcessingError, ModelError
+from .....core.model_utils import get_local_model_path
+from .....core.protocols import AudioData, AudioResult, BaseAudioProcessor, ModelInfo
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,9 @@ class Wav2Vec2Processor(BaseAudioProcessor):
             # Convert audio to numpy array (support bytes or ndarray)
             raw_data: Any = audio.data  # allow runtime to pass bytes or ndarray
             try:
-                from ...core.audio_io.audio_utils import convert_audio_input
+                from src.character_ai.core.audio_io.audio_utils import (
+                    convert_audio_input,
+                )
 
                 audio_array = convert_audio_input(raw_data)
             except ValueError as e:
@@ -164,7 +166,7 @@ class Wav2Vec2Processor(BaseAudioProcessor):
 
             # Resample if necessary
             if audio.sample_rate != 16000:
-                from ...core.audio_io.audio_utils import resample_audio
+                from src.character_ai.core.audio_io.audio_utils import resample_audio
 
                 audio_array = resample_audio(audio_array, audio.sample_rate, 16000)
 

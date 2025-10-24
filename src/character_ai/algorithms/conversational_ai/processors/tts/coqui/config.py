@@ -10,10 +10,10 @@ from typing import Any, Optional
 import torch
 from TTS.api import TTS
 
-from ....core.config import Config
-from ....core.exceptions import ModelError
-from ....core.model_utils import get_local_model_path
-from ....core.protocols import ModelInfo
+from ......core.config import Config
+from ......core.exceptions import ModelError
+from ......core.model_utils import get_local_model_path
+from ......core.protocols import ModelInfo
 
 logger = logging.getLogger(__name__)
 

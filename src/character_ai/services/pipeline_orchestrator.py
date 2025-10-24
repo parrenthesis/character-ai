@@ -20,8 +20,8 @@ from .stt_service import STTService
 from .tts_service import TTSService
 
 if TYPE_CHECKING:
-    from ..algorithms.conversational_ai.hybrid_memory import HybridMemorySystem
-    from ..algorithms.conversational_ai.session_memory import SessionMemory
+    from ..algorithms.conversational_ai.memory.hybrid_memory import HybridMemorySystem
+    from ..algorithms.conversational_ai.memory.session_memory import SessionMemory
     from ..core.caching import ResponseCache
 
 logger = logging.getLogger(__name__)

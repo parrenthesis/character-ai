@@ -131,7 +131,7 @@ class StreamingAudioProcessor:
         try:
             # Initialize STT processor
             try:
-                from ..algorithms.conversational_ai.wav2vec2_processor import (
+                from ..algorithms.conversational_ai.processors.stt.wav2vec2_processor import (
                     Wav2Vec2Processor,
                 )
 
@@ -148,7 +148,7 @@ class StreamingAudioProcessor:
 
             # Initialize TTS processor
             try:
-                from ..algorithms.conversational_ai.coqui_processor import (
+                from ..algorithms.conversational_ai.processors.tts.coqui_processor import (
                     CoquiProcessor,
                 )
                 from ..config import Config

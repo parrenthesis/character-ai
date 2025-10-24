@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from ...core.database.connection_pool import PoolConfig, SQLiteConnectionPool
+from ....core.database.connection_pool import PoolConfig, SQLiteConnectionPool
 from .session_memory import ConversationTurn
 
 logger = logging.getLogger(__name__)
@@ -569,7 +569,8 @@ class OptimizedConversationStorage:
 
     def get_pool_stats(self) -> Dict[str, Any]:
         """Get connection pool statistics."""
-        return self.pool.get_stats()
+        stats = self.pool.get_stats()
+        return dict(stats) if stats else {}
 
     def close(self) -> None:
         """Close the connection pool."""

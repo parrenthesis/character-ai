@@ -14,7 +14,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ...algorithms.conversational_ai.coqui_processor import CoquiProcessor
+from ...algorithms.conversational_ai.processors.tts.coqui_processor import (
+    CoquiProcessor,
+)
 from ...core.config import Config
 from ...core.exceptions import AudioProcessingError
 from ...core.protocols import AudioData, AudioResult
@@ -346,7 +348,7 @@ class MultiLanguageSTTService:
             logger.info("Initializing multi-language STT manager")
 
             # Initialize Wav2Vec2 processor
-            from ..algorithms.conversational_ai.wav2vec2_processor import (
+            from ..algorithms.conversational_ai.processors.stt.wav2vec2_processor import (
                 Wav2Vec2Processor,
             )
 

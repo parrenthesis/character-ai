@@ -1,14 +1,14 @@
 # CRITICAL: Import torch_init FIRST to set environment variables before any torch imports
 # isort: off
-from ...core import torch_init  # noqa: F401
+from .....core import torch_init  # noqa: F401
 
 # isort: on
 
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from ...core.config import Config
-from ...core.protocols import AudioData, AudioResult, BaseAudioProcessor, ModelInfo
+from .....core.config import Config
+from .....core.protocols import AudioData, AudioResult, BaseAudioProcessor, ModelInfo
 from .coqui import CoquiConfig, CoquiTTSProcessor, CoquiVoiceCloner
 
 logger = logging.getLogger(__name__)

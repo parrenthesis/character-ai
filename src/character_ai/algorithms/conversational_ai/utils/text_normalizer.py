@@ -3,7 +3,7 @@
 import re
 from typing import Optional
 
-from ...core.config import Config
+from ....core.config import Config
 
 
 class TextNormalizer:

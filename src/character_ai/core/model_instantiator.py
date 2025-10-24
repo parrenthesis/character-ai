@@ -61,7 +61,9 @@ class ModelInstantiator:
         self, loaded_models: Dict[str, Any], loaded_model_names: Dict[str, str]
     ) -> bool:
         """Pre-initialize STT with hardware-specific configuration."""
-        from ..algorithms.conversational_ai.wav2vec2_processor import Wav2Vec2Processor
+        from ..algorithms.conversational_ai.processors.stt.wav2vec2_processor import (
+            Wav2Vec2Processor,
+        )
 
         # Get hardware-specific STT config
         hw_stt_config = self.model_registry.get_hardware_model_config("stt")
@@ -110,7 +112,9 @@ class ModelInstantiator:
         self, loaded_models: Dict[str, Any], loaded_model_names: Dict[str, str]
     ) -> bool:
         """Pre-initialize LLM with hardware-specific configuration."""
-        from ..algorithms.conversational_ai.llama_cpp_processor import LlamaCppProcessor
+        from ..algorithms.conversational_ai.processors.llm.llama_cpp_processor import (
+            LlamaCppProcessor,
+        )
 
         # Get hardware-specific LLM config
         hw_llm_config = self.model_registry.get_hardware_model_config("llm")
@@ -176,7 +180,9 @@ class ModelInstantiator:
         self, loaded_models: Dict[str, Any], loaded_model_names: Dict[str, str]
     ) -> bool:
         """Pre-initialize TTS with hardware-specific configuration."""
-        from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
+        from ..algorithms.conversational_ai.processors.tts.coqui_processor import (
+            CoquiProcessor,
+        )
 
         # Get hardware-specific TTS config
         hw_tts_config = self.model_registry.get_hardware_model_config("tts")
@@ -282,13 +288,13 @@ class ModelInstantiator:
         """Dynamically instantiate processor based on registry info."""
         # Import based on class name
         if model_type == "stt":
-            from ..algorithms.conversational_ai.wav2vec2_processor import (
+            from ..algorithms.conversational_ai.processors.stt.wav2vec2_processor import (
                 Wav2Vec2Processor,
             )
 
             return Wav2Vec2Processor(self.config, model_name=model_info["model_name"])
         elif model_type == "llm":
-            from ..algorithms.conversational_ai.llama_cpp_processor import (
+            from ..algorithms.conversational_ai.processors.llm.llama_cpp_processor import (
                 LlamaCppProcessor,
             )
 
@@ -303,7 +309,9 @@ class ModelInstantiator:
                 self.config, use_cpu=force_cpu, hardware_config=self.hardware_config
             )
         elif model_type == "tts":
-            from ..algorithms.conversational_ai.coqui_processor import CoquiProcessor
+            from ..algorithms.conversational_ai.processors.tts.coqui_processor import (
+                CoquiProcessor,
+            )
 
             # Get TTS hardware configuration (use_half_precision)
             # Note: gpu_device is already passed as parameter, don't override it here

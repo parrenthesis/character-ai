@@ -10,7 +10,7 @@ from ..core.exceptions import handle_audio_error
 from .base_service import BaseService
 
 if TYPE_CHECKING:
-    from ..algorithms.conversational_ai.text_normalizer import TextNormalizer
+    from ..algorithms.conversational_ai.utils.text_normalizer import TextNormalizer
     from ..core.resource_manager import ResourceManager
 
 logger = logging.getLogger(__name__)

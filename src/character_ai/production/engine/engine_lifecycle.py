@@ -6,12 +6,12 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
-from ...algorithms.conversational_ai.hybrid_memory import (
+from ...algorithms.conversational_ai.memory.hybrid_memory import (
     HybridMemorySystem,
     MemoryConfig,
 )
-from ...algorithms.conversational_ai.session_memory import SessionMemory
-from ...algorithms.conversational_ai.text_normalizer import TextNormalizer
+from ...algorithms.conversational_ai.memory.session_memory import SessionMemory
+from ...algorithms.conversational_ai.utils.text_normalizer import TextNormalizer
 from ...characters import (
     Character,
     CharacterResponseFilter,

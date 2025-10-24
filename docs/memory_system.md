@@ -22,7 +22,7 @@ memory_system:
 ### 2. Initialize in Code
 
 ```python
-from src.character_ai.algorithms.conversational_ai.hybrid_memory import HybridMemorySystem, MemoryConfig
+from src.character_ai.algorithms.conversational_ai.memory.hybrid_memory import HybridMemorySystem, MemoryConfig
 
 # Create config
 memory_config = MemoryConfig(

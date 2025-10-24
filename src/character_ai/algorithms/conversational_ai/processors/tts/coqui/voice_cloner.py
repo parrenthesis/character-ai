@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 import soundfile as sf
 
-from ....core.protocols import AudioData, AudioResult
+from ......core.protocols import AudioData, AudioResult
 
 logger = logging.getLogger(__name__)
 

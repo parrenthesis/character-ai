@@ -5,10 +5,10 @@ import time
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
-    from ...algorithms.conversational_ai.hybrid_memory import HybridMemorySystem
+    from ...algorithms.conversational_ai.memory.hybrid_memory import HybridMemorySystem
 
-from ...algorithms.conversational_ai.session_memory import SessionMemory
-from ...algorithms.conversational_ai.text_normalizer import TextNormalizer
+from ...algorithms.conversational_ai.memory.session_memory import SessionMemory
+from ...algorithms.conversational_ai.utils.text_normalizer import TextNormalizer
 from ...characters import Character, ChildSafetyFilter
 from ...characters.voices import SchemaVoiceService
 from ...core.caching import ResponseCache
