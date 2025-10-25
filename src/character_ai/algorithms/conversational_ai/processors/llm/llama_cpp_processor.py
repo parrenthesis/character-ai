@@ -44,15 +44,43 @@ class LlamaCppProcessor(BaseTextProcessor):
         try:
             from llama_cpp import Llama
 
-            gguf_path = getattr(self.config.models, "llama_gguf_path", "")
+            # Use hardware config model path if available, otherwise fall back to config
+            gguf_path = ""
+            if self.hardware_config:
+                # Check if hardware config has model path in optimizations
+                hw_llm_config = self.hardware_config.get("optimizations", {}).get(
+                    "llm", {}
+                )
+                if "model_path" in hw_llm_config:
+                    gguf_path = hw_llm_config["model_path"]
+                    logger.info(f"Using hardware config model path: {gguf_path}")
+
+            # Fall back to config model path if hardware config doesn't specify
+            if not gguf_path:
+                gguf_path = getattr(self.config.models, "llama_gguf_path", "")
+                logger.info(f"Using config model path: {gguf_path}")
+
             if not Path(gguf_path).exists():
                 raise FileNotFoundError(f"GGUF model not found: {gguf_path}")
 
             # Get context size from config
             n_ctx = getattr(self.config.models, "llama_n_ctx", 2048)
 
-            # Get optimization parameters from config
-            n_threads = getattr(self.config, "max_cpu_threads", 2)
+            # Get n_threads from hardware config first, then fall back to config
+            n_threads = None
+            if self.hardware_config:
+                hw_llm_config = self.hardware_config.get("optimizations", {}).get(
+                    "llm", {}
+                )
+                n_threads = hw_llm_config.get("n_threads")
+
+            # Fall back to config or environment variable
+            if n_threads is None:
+                n_threads = getattr(self.config, "max_cpu_threads", None)
+
+            # Final fallback to reasonable default
+            if n_threads is None:
+                n_threads = 2
             n_batch = 128
 
             # Check for GPU availability and enable offloading if possible
@@ -86,6 +114,14 @@ class LlamaCppProcessor(BaseTextProcessor):
                 except ImportError:
                     logger.info("PyTorch not available, using CPU-only mode")
 
+            # Log which model is being loaded
+            model_name = Path(gguf_path).stem
+            logger.info(f"🔄 Loading LLM model: {model_name}")
+            logger.info(f"   Model path: {gguf_path}")
+            logger.info(
+                f"   GPU layers: {n_gpu_layers}, Threads: {n_threads}, Context: {n_ctx}"
+            )
+
             self.model = Llama(
                 model_path=gguf_path,
                 n_threads=n_threads,
@@ -95,6 +131,8 @@ class LlamaCppProcessor(BaseTextProcessor):
                 n_batch=n_batch,
                 verbose=False,
             )
+
+            logger.info(f"✅ LLM model loaded successfully: {model_name}")
 
             self.model_info = ModelInfo(
                 name="llama_cpp",

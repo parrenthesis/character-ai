@@ -190,3 +190,21 @@ class HardwareProfileService:
                 f"Hardware auto-detection failed: {e}, defaulting to desktop"
             )
             return "desktop"
+
+    def validate_thread_config(self, hardware_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate and adjust n_threads based on cpu_cores constraint."""
+        constraints = hardware_config.get("constraints", {})
+        cpu_cores = constraints.get("cpu_cores")
+
+        if cpu_cores and "optimizations" in hardware_config:
+            llm_config = hardware_config.get("optimizations", {}).get("llm", {})
+            n_threads = llm_config.get("n_threads")
+
+            if n_threads and n_threads > cpu_cores:
+                logger.warning(
+                    f"n_threads ({n_threads}) exceeds cpu_cores ({cpu_cores}), "
+                    f"adjusting to {cpu_cores}"
+                )
+                hardware_config["optimizations"]["llm"]["n_threads"] = cpu_cores
+
+        return hardware_config

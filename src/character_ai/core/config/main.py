@@ -254,20 +254,42 @@ class Config:
     def _apply_cpu_limiting(self) -> None:
         """Apply CPU limiting for development/testing."""
         # Set environment variables for BLAS/LAPACK threading
+        # Check if hardware config has already set higher thread counts
+        current_openblas = os.environ.get("OPENBLAS_NUM_THREADS")
+        current_mkl = os.environ.get("MKL_NUM_THREADS")
+
         if self.blas_threads is not None:
-            os.environ["OPENBLAS_NUM_THREADS"] = str(self.blas_threads)
-            os.environ["MKL_NUM_THREADS"] = str(self.blas_threads)
+            if not current_openblas or int(current_openblas) <= self.blas_threads:
+                os.environ["OPENBLAS_NUM_THREADS"] = str(self.blas_threads)
+            if not current_mkl or int(current_mkl) <= self.blas_threads:
+                os.environ["MKL_NUM_THREADS"] = str(self.blas_threads)
             os.environ["VECLIB_MAXIMUM_THREADS"] = str(self.blas_threads)
         else:
-            os.environ["OPENBLAS_NUM_THREADS"] = str(self.max_cpu_threads)
-            os.environ["MKL_NUM_THREADS"] = str(self.max_cpu_threads)
-            os.environ["VECLIB_MAXIMUM_THREADS"] = str(self.max_cpu_threads)
+            if self.max_cpu_threads is not None:
+                if (
+                    not current_openblas
+                    or int(current_openblas) <= self.max_cpu_threads
+                ):
+                    os.environ["OPENBLAS_NUM_THREADS"] = str(self.max_cpu_threads)
+                if not current_mkl or int(current_mkl) <= self.max_cpu_threads:
+                    os.environ["MKL_NUM_THREADS"] = str(self.max_cpu_threads)
+                os.environ["VECLIB_MAXIMUM_THREADS"] = str(self.max_cpu_threads)
 
         # Set OpenMP threading
-        if self.omp_threads is not None:
-            os.environ["OMP_NUM_THREADS"] = str(self.omp_threads)
+        # Check if hardware config has already set a higher thread count
+        current_omp = os.environ.get("OMP_NUM_THREADS")
+        if (
+            current_omp
+            and self.max_cpu_threads is not None
+            and int(current_omp) > self.max_cpu_threads
+        ):
+            # Hardware config has set a higher limit, respect it
+            pass
         else:
-            os.environ["OMP_NUM_THREADS"] = str(self.max_cpu_threads)
+            if self.omp_threads is not None:
+                os.environ["OMP_NUM_THREADS"] = str(self.omp_threads)
+            else:
+                os.environ["OMP_NUM_THREADS"] = str(self.max_cpu_threads)
 
         # Set NumExpr threading
         os.environ["NUMEXPR_NUM_THREADS"] = str(self.max_cpu_threads)

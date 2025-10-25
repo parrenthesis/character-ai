@@ -1,6 +1,7 @@
 """Model instantiation and preloading coordination."""
 
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 from .config import Config
@@ -61,6 +62,8 @@ class ModelInstantiator:
         self, loaded_models: Dict[str, Any], loaded_model_names: Dict[str, str]
     ) -> bool:
         """Pre-initialize STT with hardware-specific configuration."""
+        start_time = time.time()
+
         from ..algorithms.conversational_ai.processors.stt.wav2vec2_processor import (
             Wav2Vec2Processor,
         )
@@ -97,7 +100,18 @@ class ModelInstantiator:
         await stt_processor.initialize()
         loaded_models["stt"] = stt_processor
         loaded_model_names["stt"] = stt_model  # Track which model was loaded
-        logger.info("✅ STT model pre-loaded")
+        load_time = time.time() - start_time
+        logger.info(f"✅ STT model pre-loaded in {load_time:.2f}s")
+        # Console echo for test visibility
+        try:
+            import os as _os
+
+            if _os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                import click as _click
+
+                _click.echo(f"✅ STT model pre-loaded in {load_time:.2f}s")
+        except Exception:
+            pass
 
         # Clear CUDA cache after STT loads
         import torch
@@ -112,6 +126,8 @@ class ModelInstantiator:
         self, loaded_models: Dict[str, Any], loaded_model_names: Dict[str, str]
     ) -> bool:
         """Pre-initialize LLM with hardware-specific configuration."""
+        start_time = time.time()
+
         from ..algorithms.conversational_ai.processors.llm.llama_cpp_processor import (
             LlamaCppProcessor,
         )
@@ -120,8 +136,20 @@ class ModelInstantiator:
         hw_llm_config = self.model_registry.get_hardware_model_config("llm")
         if hw_llm_config:
             # Use hardware-specific model and optimizations
-            model_name = hw_llm_config.get("model_name", "llama-3.2-3b-instruct")
+            # Get model name from hardware config, not from the registry config
+            if self.hardware_config and "models" in self.hardware_config:
+                model_name = self.hardware_config["models"].get(
+                    "llm", "llama-3.2-3b-instruct"
+                )
+            else:
+                model_name = hw_llm_config.get("model_name", "llama-3.2-3b-instruct")
             optimizations = hw_llm_config.get("optimizations", {})
+
+            # Set the model path in the config so the LLM processor uses it
+            if "model_path" in hw_llm_config:
+                self.config.models.llama_gguf_path = hw_llm_config["model_path"]
+                logger.info(f"Set model path in config: {hw_llm_config['model_path']}")
+
             logger.info(
                 f"Using hardware-specific LLM: {model_name} with optimizations: {optimizations}"
             )
@@ -165,7 +193,34 @@ class ModelInstantiator:
         await llm_processor.initialize()
         loaded_models["llm"] = llm_processor
         loaded_model_names["llm"] = model_name
-        logger.info("✅ LLM model pre-loaded")
+        load_time = time.time() - start_time
+        model_name = (
+            self.hardware_config.get("models", {}).get("llm", "unknown")
+            if self.hardware_config
+            else "unknown"
+        )
+        hw_config = (
+            self.hardware_config.get("optimizations", {}).get("llm", {})
+            if self.hardware_config
+            else {}
+        )
+        n_threads = hw_config.get("n_threads", "?")
+        n_gpu_layers = hw_config.get("n_gpu_layers", 0)
+        logger.info(
+            f"✅ LLM model pre-loaded in {load_time:.2f}s ({model_name}, {n_threads} threads, {n_gpu_layers} GPU layers)"
+        )
+        # Console echo for test visibility
+        try:
+            import os as _os
+
+            if _os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                import click as _click
+
+                _click.echo(
+                    f"✅ LLM model pre-loaded in {load_time:.2f}s ({model_name}, {n_threads} threads, {n_gpu_layers} GPU layers)"
+                )
+        except Exception:
+            pass
 
         # Clear CUDA cache after LLM loads
         import torch
@@ -180,6 +235,8 @@ class ModelInstantiator:
         self, loaded_models: Dict[str, Any], loaded_model_names: Dict[str, str]
     ) -> bool:
         """Pre-initialize TTS with hardware-specific configuration."""
+        start_time = time.time()
+
         from ..algorithms.conversational_ai.processors.tts.coqui_processor import (
             CoquiProcessor,
         )
@@ -224,7 +281,18 @@ class ModelInstantiator:
         await tts_processor.initialize()
         loaded_models["tts"] = tts_processor
         loaded_model_names["tts"] = tts_model  # Track which model was loaded
-        logger.info("✅ TTS model pre-loaded")
+        load_time = time.time() - start_time
+        logger.info(f"✅ TTS model pre-loaded in {load_time:.2f}s")
+        # Console echo for test visibility
+        try:
+            import os as _os
+
+            if _os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                import click as _click
+
+                _click.echo(f"✅ TTS model pre-loaded in {load_time:.2f}s")
+        except Exception:
+            pass
 
         return True
 

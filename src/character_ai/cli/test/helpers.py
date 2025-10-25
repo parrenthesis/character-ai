@@ -9,28 +9,27 @@ import click
 
 from ...characters import Character
 from ...hardware.toy_hardware_manager import ToyHardwareManager
+from ...observability.logging import configure_logging
 from ...production.real_time_engine import RealTimeInteractionEngine
 
 logger = logging.getLogger(__name__)
 
 
 def _configure_logging(verbose: bool) -> None:
-    """Configure logging based on verbosity level and CAI_LOG_LEVEL environment."""
+    """Configure logging for tests using observability's structured logger."""
     import os
 
-    # Check for CAI_LOG_LEVEL environment variable first
-    log_level_str = os.getenv("CAI_LOG_LEVEL")
-    if log_level_str:
-        log_level = getattr(logging, log_level_str.upper(), logging.INFO)
-    elif verbose:
-        log_level = logging.INFO
-    else:
-        log_level = logging.WARNING
-
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    # Determine level from env or verbosity
+    level = os.getenv("CAI_LOG_LEVEL", "INFO" if verbose else "WARNING").upper()
+    # Use console-friendly (non-JSON) rendering during tests
+    try:
+        configure_logging(level=level, json_format=False)
+    except Exception:
+        # Fallback to basicConfig if observability fails for any reason
+        logging.basicConfig(
+            level=getattr(logging, level, logging.INFO),
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        )
 
 
 def _load_character(

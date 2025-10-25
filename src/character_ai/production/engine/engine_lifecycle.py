@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import logging
 from pathlib import Path
 from typing import Any, Optional
 
@@ -25,10 +24,11 @@ from ...core.config import Config
 from ...core.llm.template_prompt_builder import TemplatePromptBuilder
 from ...core.resource_manager import ResourceManager
 from ...hardware.toy_hardware_manager import ToyHardwareManager
+from ...observability import get_logger
 from ...services import HardwareProfileService
 from ...services.edge_optimizer import EdgeModelOptimizer
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class EngineLifecycle:
@@ -73,6 +73,9 @@ class EngineLifecycle:
             )
         else:
             self.resource_manager = resource_manager
+
+        # Phase 2: Apply CPU limiting from hardware config (AFTER Config() creation to override main config)
+        self._apply_hardware_cpu_limits()
 
         # Initialize safety filter and voice manager directly
         self.safety_filter: Optional[ChildSafetyFilter] = ChildSafetyFilter()
@@ -125,6 +128,74 @@ class EngineLifecycle:
         except Exception as e:
             logger.error(f"Failed to load device ID: {e}")
             return "default_device"
+
+    def _apply_hardware_cpu_limits(self) -> None:
+        """Apply CPU thread limits from hardware config."""
+        import os
+
+        # Check if user explicitly set CPU limiting via env var (testing override)
+        if os.environ.get("CAI_ENABLE_CPU_LIMITING", "false").lower() == "true":
+            max_threads = os.environ.get("CAI_MAX_CPU_THREADS")
+            if max_threads:
+                logger.info(
+                    f"⚠️  Using env var override: {max_threads} threads (ignoring hardware config)"
+                )
+                return  # Don't apply hardware config, respect user's test override
+
+        # Normal operation: use hardware config
+        if not self.hardware_config:
+            return
+
+        # Get n_threads from hardware config
+        llm_config = self.hardware_config.get("optimizations", {}).get("llm", {})
+        n_threads = llm_config.get("n_threads")
+
+        # Debug logging to see what's being loaded
+        logger.debug(
+            f"Hardware config optimizations: {self.hardware_config.get('optimizations', {})}"
+        )
+        logger.debug(f"LLM config: {llm_config}")
+        logger.debug(f"n_threads from config: {n_threads}")
+
+        if n_threads is None:
+            logger.debug("No n_threads in hardware config, skipping CPU limiting")
+            return
+
+        # Set environment variables for all threading libraries
+        os.environ["OPENBLAS_NUM_THREADS"] = str(n_threads)
+        os.environ["MKL_NUM_THREADS"] = str(n_threads)
+        os.environ["OMP_NUM_THREADS"] = str(n_threads)
+        os.environ["NUMEXPR_NUM_THREADS"] = str(n_threads)
+        os.environ["VECLIB_MAXIMUM_THREADS"] = str(n_threads)
+
+        # Set PyTorch threads
+        try:
+            import torch
+
+            torch.set_num_threads(n_threads)
+
+            # Also set PyTorch threading at the module level
+            try:
+                torch.set_num_interop_threads(n_threads)
+            except RuntimeError:
+                # Interop threads already set in torch_init.py - this is expected
+                pass
+
+            logger.info(
+                f"✅ CPU limiting applied: {n_threads} threads (from {self.hardware_profile} profile)"
+            )
+            # Console echo for test visibility
+            try:
+                if os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                    import click
+
+                    click.echo(
+                        f"✅ CPU limiting applied: {n_threads} threads (from {self.hardware_profile} profile)"
+                    )
+            except Exception:
+                pass
+        except ImportError:
+            logger.debug("PyTorch not available, skipping torch thread limiting")
 
     async def initialize(self) -> None:
         """Initialize the real-time interaction engine."""

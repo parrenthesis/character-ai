@@ -476,37 +476,37 @@ setup-audiobox:
 	@pactl list sinks short | grep -q "alsa_output.hw_3_0" && pactl list sources short | grep -q "alsa_input.hw_3_0" && echo "✅ AudioBox setup complete" || echo "⚠️  AudioBox setup may have issues"
 test-voice-pipeline-list: setup-audiobox
 	@echo "Listing available input files for Data..."
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --list-inputs
 
 test-voice-pipeline-stt: setup-audiobox
 	@echo "Testing STT component only..."
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --test-stt-only --input tests_dev/audio_samples/star_trek/data/input/what_are_you_doing.wav
 
 test-voice-pipeline-llm: setup-audiobox
 	@echo "Testing LLM component only..."
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --test-llm-only --input tests_dev/audio_samples/star_trek/data/input/what_are_you_doing.wav
 
 test-voice-pipeline-tts: setup-audiobox
 	@echo "Testing TTS component only..."
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --test-tts-only --input tests_dev/audio_samples/star_trek/data/input/what_are_you_doing.wav
 
 test-voice-pipeline-single: setup-audiobox
 	@echo "Testing single file (what_are_you_doing.wav)..."
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --input tests_dev/audio_samples/star_trek/data/input/what_are_you_doing.wav
 
 test-voice-pipeline-all: setup-audiobox
 	@echo "Testing all available input files..."
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --test-all
 
@@ -514,27 +514,36 @@ test-voice-pipeline-realtime: setup-audiobox
 	@echo "Testing real-time voice interaction (auto-detect hardware profile)..."
 	@echo "Test will run for 10 seconds with countdown"
 	@echo "Cleaning previous memory data..."
-	CAI_MAX_CPU_THREADS=6 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	CAI_QUIET_MODE=0 CAI_LOG_LEVEL=DEBUG \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
-	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 120
+	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10
 
 test-voice-pipeline-realtime-desktop: setup-audiobox
 	@echo "Testing real-time voice interaction with desktop hardware profile..."
 	@echo "Test will run for 10 seconds with countdown"
 	@echo "Cleaning previous memory data..."
 	@rm -rf data/
-	CAI_MAX_CPU_THREADS=6 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	CAI_QUIET_MODE=1 CAI_LOG_LEVEL=DEBUG \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10 --hardware-profile desktop --quiet
+
+test-voice-pipeline-realtime-production: setup-audiobox
+	@echo "Testing real-time voice interaction (production mode - no testing environment)..."
+	@echo "Test will run for 10 seconds with countdown"
+	@echo "Cleaning previous memory data..."
+	@rm -rf data/
+	CAI_QUIET_MODE=0 CAI_LOG_LEVEL=INFO \
+	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
+	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10
 
 test-voice-pipeline-realtime-pi: setup-audiobox
 	@echo "Testing real-time voice interaction with Raspberry Pi hardware profile..."
 	@echo "Test will run for 10 seconds with countdown"
 	@echo "Cleaning previous memory data..."
 	@rm -rf data/
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	CAI_QUIET_MODE=1 CAI_LOG_LEVEL=DEBUG \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test voice-pipeline --character data --franchise star_trek --realtime --duration 10 --hardware-profile raspberry_pi --quiet
@@ -542,7 +551,7 @@ test-voice-pipeline-realtime-pi: setup-audiobox
 test-voice-pipeline-benchmark: setup-audiobox
 	@echo "Running performance benchmark test..."
 	@echo "This will test multiple components and measure latency"
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run cai test benchmark --character data --franchise star_trek --component all --iterations 3
 
@@ -550,14 +559,14 @@ test-performance-benchmarks: setup-audiobox
 	@echo "Running automated performance benchmarks..."
 	@echo "Testing Alexa-level latency targets:"
 	@echo "  STT: <200ms, LLM: <800ms, TTS: <800ms, Total: <2s"
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run pytest tests_dev/test_performance_benchmarks.py -v -s
 
 test-performance-benchmarks-direct:
 	@echo "Running performance benchmarks directly..."
 	@echo "This will show detailed performance metrics"
-	CAI_MAX_CPU_THREADS=2 CAI_ENABLE_CPU_LIMITING=true CAI_ENVIRONMENT=testing \
+	CAI_ENVIRONMENT=testing \
 	TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 \
 	poetry run python tests_dev/test_performance_benchmarks.py
 

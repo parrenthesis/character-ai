@@ -48,23 +48,8 @@ os.environ.setdefault(
 
 logger = logging.getLogger(__name__)
 
-# CPU limiting for development
-if os.environ.get("CAI_ENABLE_CPU_LIMITING", "false").lower() == "true":
-    max_threads = int(os.environ.get("CAI_MAX_CPU_THREADS", "2"))
-    os.environ["OPENBLAS_NUM_THREADS"] = str(max_threads)
-    os.environ["MKL_NUM_THREADS"] = str(max_threads)
-    os.environ["OMP_NUM_THREADS"] = str(max_threads)
-    os.environ["NUMEXPR_NUM_THREADS"] = str(max_threads)
-
-    # Also limit PyTorch threads
-    try:
-        import torch
-
-        torch.set_num_threads(max_threads)
-    except ImportError:
-        pass
-
-    logger.info(f"CPU limiting enabled: {max_threads} threads")
+# Note: CPU thread limiting is now handled in torch_init.py (before library imports)
+# and engine_lifecycle.py (for PyTorch-specific limits after torch is imported)
 
 # Default model constants
 DEFAULT_COQUI_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"

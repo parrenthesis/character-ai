@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 from typing import Any, Dict, Optional
 
 import numpy as np
@@ -42,6 +43,7 @@ class ModelWarmup:
 
     async def _warmup_stt(self) -> None:
         """Run dummy audio through STT to warm up caches."""
+        start_time = time.time()
         logger.info("Warming up STT model...")
         processor = self.loaded_models.get("stt")
         if processor:
@@ -53,19 +55,43 @@ class ModelWarmup:
                 duration=1.0,
             )
             await processor.process_audio(dummy_audio)
-            logger.info("✅ STT warmed up")
+            warmup_time = time.time() - start_time
+            logger.info(f"✅ STT warmed up in {warmup_time:.2f}s")
+            # Console echo for test visibility
+            try:
+                import os as _os
+
+                if _os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                    import click as _click
+
+                    _click.echo(f"✅ STT warmed up in {warmup_time:.2f}s")
+            except Exception:
+                pass
 
     async def _warmup_llm(self) -> None:
         """Run dummy prompt through LLM to warm up."""
+        start_time = time.time()
         logger.info("Warming up LLM model...")
         processor = self.loaded_models.get("llm")
         if processor:
             # Short dummy prompt to trigger JIT/cache
             await processor.process_text("Hello")
-            logger.info("✅ LLM warmed up")
+            warmup_time = time.time() - start_time
+            logger.info(f"✅ LLM warmed up in {warmup_time:.2f}s")
+            # Console echo for test visibility
+            try:
+                import os as _os
+
+                if _os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                    import click as _click
+
+                    _click.echo(f"✅ LLM warmed up in {warmup_time:.2f}s")
+            except Exception:
+                pass
 
     async def _warmup_tts(self, character: Optional[Any] = None) -> None:
         """Run dummy text through TTS to warm up."""
+        start_time = time.time()
         logger.info("Warming up TTS model...")
         processor = self.loaded_models.get("tts")
         if processor:
@@ -87,7 +113,22 @@ class ModelWarmup:
                             speed=1.0,
                             voice_path=voice_path,
                         )
-                        logger.info("✅ TTS warmed up with character voice")
+                        warmup_time = time.time() - start_time
+                        logger.info(
+                            f"✅ TTS warmed up with character voice in {warmup_time:.2f}s"
+                        )
+                        # Console echo for test visibility
+                        try:
+                            import os as _os
+
+                            if _os.getenv("CAI_ENVIRONMENT", "").lower() == "testing":
+                                import click as _click
+
+                                _click.echo(
+                                    f"✅ TTS warmed up with character voice in {warmup_time:.2f}s"
+                                )
+                        except Exception:
+                            pass
                     else:
                         logger.warning(
                             "No voice path found for character - TTS warmup skipped"
