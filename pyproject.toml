@@ -18,7 +18,7 @@ pydantic-core = "^2.0.0"
 # numpy = "==1.22.0"  # Installed via Makefile due to TTS conflicts
 # pandas = ">=1.4,<2.0"  # Replaced with version below
 psutil = ">=5.9.0,<6.0.0"
-structlog = "^23.0.0"
+structlog = "^25.5.0"
 tenacity = "^8.2.0"
 diskcache = "^5.6.0"
 
